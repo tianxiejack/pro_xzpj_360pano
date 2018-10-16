@@ -86,7 +86,7 @@ int window; /* The number of our GLUT window */
 
 Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),pano360textureh(0),MOUSEx(0),MOUSEy(0),BUTTON(0),
 	MOUSEST(0),mousex(0),mousey(0),mouseflag(0),pano360renderw(0),pano360renderH(0),pano360renderLux(0),pano360renderLuy(0),
-	CameraFov(0),maxtexture(0),pano360texturenum(0),pano360texturewidth(0),pano360textureheight(0),selecttexture(0)
+	CameraFov(0),maxtexture(0),pano360texturenum(0),pano360texturewidth(0),pano360textureheight(0),selecttexture(0),shotcutnum(0)
 	{
 		displayMode=SINGLE_VIDEO_VIEW_MODE;
 		panosrcwidth=0;
@@ -289,6 +289,7 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 						break;
 					case GLUT_KEY_F5://singprint
 						shotcut=1;
+						shotcutnum++;
 						break;
 			
 					default:
@@ -338,8 +339,8 @@ void Render::ProcessOitKeys(unsigned char key, int x, int y)
 				SeamEable=0;
 				setfusionenalge(SeamEable);
 				break;
-			//case 'p':
-			//d	shotcut=(shotcut+1)%2;
+			case 'j':
+//				shotcut=(shotcut+1)%2;
 				break;
 			
 			
@@ -571,7 +572,7 @@ void Render::Angle2pos()
 	//printf("the Angle2pos angle=%f\n",angle);
 	yoffset=PANOEXTRAH/2;
 	width=dst.cols;
-	printf("the Angle2pos angle=%f  width=%d\n",angle,width);
+	//printf("the Angle2pos angle=%f  width=%d\n",angle,width);
 	height=panosrcheight;
 	setPanoSubPos(xoffset,yoffset,width,height);
 	
@@ -613,7 +614,7 @@ void Render::Pano360fun()
 	getnumofpano360texture(xoffset,xoffset+width,&textureFnum,&textureSnum);
 
 
-	OSA_printf("textureFnum=%d textureSnum=%d \n",textureFnum,textureSnum);
+	//OSA_printf("textureFnum=%d textureSnum=%d \n",textureFnum,textureSnum);
 
 	for(int i=textureFnum;i<textureSnum+1;i++)
 		{
@@ -626,7 +627,7 @@ void Render::Pano360fun()
 			glBindTexture(GL_TEXTURE_2D, 0);
 			
 		}
-	OSA_printf("[F=%s L=%d] x=%d y=%d w=%d h=%d p=%p\n",__func__,__LINE__,xoffset,yoffset,width,height,pBits);
+	//OSA_printf("[F=%s L=%d] x=%d y=%d w=%d h=%d p=%p\n",__func__,__LINE__,xoffset,yoffset,width,height,pBits);
 	
 	
 	
@@ -797,6 +798,7 @@ void Render::Pano360init()
 }
 void Render::singleView(int x,int y,int width,int height)
 {
+	char numflame[100];
 	 glViewport(0,0,width,height);
 	 modelViewMatrix.PushMatrix();
         modelViewMatrix.Translate(0.0f, 0.0f, -10);
@@ -816,6 +818,12 @@ void Render::singleView(int x,int y,int width,int height)
 	#endif
     	triangleBatch.Draw();	
 	modelViewMatrix.PopMatrix();
+
+	glUseProgram(0);
+	glColor3f(0.0, 0.0, 1.0);
+    	glRasterPos2f(0.5, -0.9);
+	sprintf(numflame,"image cutnum :%d\n",shotcutnum);
+      glutBitmapString(GLUT_BITMAP_HELVETICA_18, (unsigned char *)numflame);
 	//
 	testcylinder();
 
@@ -961,8 +969,8 @@ void Render::pano360View(int x,int y,int width,int height)
 
 	glUseProgram(0);
 	glColor3f(0.0, 0.0, 1.0);
-    	glRasterPos2f(0.9, -0.5);
-	sprintf(numflame,"%d\n",Panpicenum);
+    	glRasterPos2f(0.5, -0.9);
+	sprintf(numflame,"image cutnum :%d\n",shotcutnum);
       glutBitmapString(GLUT_BITMAP_HELVETICA_18, (unsigned char *)numflame);
 
 }
@@ -1238,7 +1246,7 @@ void Render::CapturePreprocess(Mat& src)
 
 		memcpy(dst.data,src.data,src.rows*dst.cols*src.channels());
 	#endif
-	printf("CapturePreprocessthe w=%d h=%d\n",dst.cols,dst.rows);
+	//printf("CapturePreprocessthe w=%d h=%d\n",dst.cols,dst.rows);
 	//dst=src.clone();
 	//resize(src,dst,Size(PANO360WIDTH,PANO360HEIGHT),0,0,INTER_LINEAR);
 	//cylinderproject(Pano360tempframe,dst,1.0*CAMERAFOCUSLENGTH*PANO360WIDTH/PANO360SRCWIDTH);
@@ -1447,14 +1455,14 @@ void Render::selectupdate()
 	 if(selecty>h/2)
 	 	{
 	 	y=y+h/2;
-		printf("**selecty***=%d\n",selecty);
+		//printf("**selecty***=%d\n",selecty);
 		setselecttexture(1);
 		yshift=h/2;
 	 	}
 	 else
 	 	setselecttexture(0);
 	 	;
-	 printf("**selecty*************************=%d\n",selecty);
+	// printf("**selecty*************************=%d\n",selecty);
 	 	//
 	 h=h/2;
 	// selecty=selecty-yshift;

@@ -254,6 +254,7 @@ public:
 	unsigned char * matbuf[8];
 
 	unsigned int shotcut;
+	unsigned int shotcutnum;
 
 	Mat Capture;
 	Mat ProcessCapture;

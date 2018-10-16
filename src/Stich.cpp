@@ -6,6 +6,8 @@ unsigned int panowidth=0;
 unsigned int panoheight=0;
 double angle=0.0;
 
+
+static unsigned int zeroimagpenum=0;
 bool imgprocessenable =false;
 
 void setfusionenalge(bool enable)
@@ -40,7 +42,7 @@ double offet2angle(int  offsetx)
 double offet2anglerelative(int  offsetx)
 {
 	//int xoffset=PANOSCALE*angle*panowidth/360;
-	int angle;
+	double angle;
 	angle=offsetx*360.0/(panowidth*PANOSCALE);
 	return angle;
 
@@ -114,7 +116,8 @@ void FusionSeam(Mat& src,Mat & dst,int seampostion)
 
 int  getPanoOffset(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset)
 {
-	return getPano360Offset( src, dst,xoffset ,yoffset);
+	//return getPano360Offset( src, dst,xoffset ,yoffset);
+	return getPano360OffsetT( src, dst,xoffset ,yoffset);
 }
 
 
@@ -124,14 +127,20 @@ bool zerocalibration(Mat src,Mat dst,double *angleoffset)
 	int status=0;
 	int xoffsetfeat=0;
 	int yoffsetfeat=0;
-
+	char dstbuf[50];
+	memset(dstbuf,0,sizeof(char)*50);
+	sprintf(dstbuf,"zero_%d.jpg",zeroimagpenum);
+	OSA_printf("zerocalibration begin\n");
 	imwrite("src.jpg",src);
-	imwrite("dst.jpg",dst);
+	imwrite(dstbuf,dst);
+	
 	status=getPanoOffset(src,dst,&xoffsetfeat,&yoffsetfeat);
 	if(status==-1)
 		return ret;
 	*angleoffset=offet2anglerelative(xoffsetfeat);
-	OSA_printf("the oofset=%d  angle=%f\n",xoffsetfeat,*angleoffset);
+	
+	OSA_printf("the zeroimagpenum=%d oofset=%d  angle=%f\n",zeroimagpenum,xoffsetfeat,*angleoffset);
+	zeroimagpenum++;
 	return true;
 }
 

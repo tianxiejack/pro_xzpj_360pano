@@ -16,5 +16,6 @@
 void FindHomographyfromPicture(cv::Mat& src,cv::Mat & dst,cv::Mat &H);
 int  getPano360Rotation(cv::Mat & src,cv::Mat & dst,double *rotation );
 int  getPano360Offset(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset);
+int  getPano360OffsetT(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset) ;
 
 #endif /* HOMOGRAPHY_HPP_ */

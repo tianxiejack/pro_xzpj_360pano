@@ -234,7 +234,7 @@ void ImageProcess::zeroprocess()
 			//setcamerazeroossfet(angle-(currentgyroA-zeroA));
 			setyawbase(gyroangleoffset-angle);
 			setzerocalib(1);
-			printf("*********************zerocalibration****camerazeroossfet=%f****img=%f  gy=%f* \n",getcamerazeroossfet(),angle,gyroangleoffset);
+			printf("********basioffset=%f********zeroA=%f  gyroangleoffset=%f currentgyroA=%d \n",gyroangleoffset-angle,zeroA,gyroangleoffset,currentgyroA);
 			//setzeroflag(0);
 		}
 	
@@ -351,12 +351,12 @@ void ImageProcess::main_proc_func()
 			
 		}
 		else	
-		angle=infocap->framegyroyaw*1.0/ANGLESCALE;
+		angle=infocap->framegyroyaw*1.0/ANGLESCALE+getcamerazeroossfet();
 
 		setgyroangle(angle);
 		
 		//OSA_printf("the algle is %f\n",angle);
-		imageangle=angle+getcamerazeroossfet();
+		imageangle=angle;
 		if(imageangle<0)
 			imageangle+=360;
 		else if(imageangle>=360)
@@ -374,13 +374,23 @@ void ImageProcess::main_proc_func()
 		#endif
 		//setSeamPos(rotsita*panowidth/360-getPanoPrepos());
 		/********************zero*********************/
+		
 		setcurrentflame(src);
 		if(getzeroflameupdate())
 			{
-				setzeroflameupdate(0);
-				setzeroflame(src);
-				imwrite("zero.jpg",src);
-				setzeroangle(getcurrentangle());
+				if(getcurrentangle()<10&&getcurrentangle()>1)
+					{
+						setzeroflameupdate(0);
+						setzeroflame(src);
+						imwrite("zero.jpg",src);
+						//setgyrozero(getcurrentangle());
+						//setcamerazeroossfet(-getcurrentangle());
+						
+						setcamerazeroossfet(-getcurrentangle());
+						setzeroangle(0);
+					}
+				else
+					setcurrentangle(0);
 			}
 		
 		zeroprocess();

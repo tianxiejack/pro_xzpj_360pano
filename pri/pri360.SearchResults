@@ -1,4 +1,3 @@
----- PANOSRCSHIFT Matches (3 in 3 files) ----
-Config.h (z:\home\wj\cuda-workspace\360pano\src):#define PANOSRCSHIFT (PANO360WIDTH/2)
-ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):		Matcpy(src,temp,PANOSRCSHIFT);
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):		Seamframe[i]=Mat(PANO360HEIGHT,PANO360WIDTH-PANOSRCSHIFT,CV_8UC3,cv::Scalar(0,0,0));
+---- **selecty Matches (2 in 1 files) ----
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):		printf("**selecty***=%d\n",selecty);
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	// printf("**selecty*************************=%d\n",selecty);

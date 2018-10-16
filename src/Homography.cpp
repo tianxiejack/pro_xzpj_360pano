@@ -10,6 +10,7 @@
 #include "extra.h" 
 using namespace cv;
 using namespace std;
+//unsigned int Templatex=0;
 void FindHomographyfromPicture(Mat& src,Mat & dst,Mat &Ha)
 {
 /*
@@ -138,6 +139,160 @@ Vec3f rotationMatrixToEulerAngles(Mat &R)
     }
     return Vec3f(x, y, z);
 }
+Point2i getOffset(Mat img, Mat img1) {
+	Mat templ(img1, Rect(0, 0.4*img1.rows, 0.2*img1.cols, 0.2*img1.rows)); 
+	Mat result(img.cols - templ.cols + 1, img.rows - templ.rows + 1, CV_8UC1);
+	
+	matchTemplate(img, templ, result, CV_TM_CCORR_NORMED); 
+	
+	normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat()); 
+	
+	double minVal; double maxVal; Point minLoc; Point maxLoc;
+	Point matchLoc; 
+	
+	minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, Mat()); 
+	matchLoc = maxLoc;
+	int dx = matchLoc.x; 
+	int dy = matchLoc.y - 0.4*img1.rows;
+	Point2i a(dx, dy); 
+	return a; 
+	}
+double dotProduct(const vector<float>& v1, const vector<float>& v2) 
+	{
+		assert(v1.size() == v2.size());
+		double ret = 0.0; 
+		for (vector<float>::size_type i = 0; i != v1.size(); ++i)
+		{ 
+			ret += v1[i] * v2[i]; 
+		} 
+		return ret;
+	} 
+	double module(const vector<float>& v) 
+	{ double ret = 0.0;
+		for (vector<float>::size_type i = 0; i != v.size(); ++i) 
+		{ 
+			ret += v[i] * v[i]; 
+		}
+		return sqrt(ret);
+	} 
+	double cosine(const vector<float>& v1, const vector<float>& v2) 
+	{ 
+		assert(v1.size() == v2.size()); 
+		return dotProduct(v1, v2) / (module(v1) * module(v2));
+	}
+void retinewithdistance(vector<DMatch>& match,   Mat descriptors_1,Mat descriptors_2)
+{
+
+		double min_dist=10000, max_dist=0;
+
+    std::vector< DMatch > matches;
+    for ( int i = 0; i < match.size(); i++ )
+    {
+        double dist = match[i].distance;
+        if ( dist < min_dist ) min_dist = dist;
+        if ( dist > max_dist ) max_dist = dist;
+    }
+
+   
+
+
+    sort(match.begin(), match.end()); 
+    printf ( "-- Max dist : %f \n", max_dist );
+    printf ( "-- Min dist : %f \n", min_dist );
+
+  
+  //  for ( int i = 0; i < descriptors_1.rows; i++ )
+
+   for ( int i = 0; i < match.size(); i++ )
+    {
+        if ( match[i].distance <= max ( 2*min_dist,30.0 ) )
+        {
+            matches.push_back ( match[i] );
+        }
+    }
+
+    match.swap(matches);
+
+
+}
+void retinefeature(vector<DMatch>& goodMatches,   Mat descriptors1,Mat descriptors2)
+{
+	vector<float> vec_all1;
+	vector<float> vec_all2; 
+	vector<float>vec_all3;
+	double cosine_sum = 0; 
+	double cosine_average; 
+	double value; 
+	vector<double>value_all;
+
+	for (int i = 0; i < goodMatches.size(); i++) 
+	{ 
+	
+		int *data1 = descriptors1.ptr<int>(goodMatches[i].queryIdx); 
+		int *data2 = descriptors2.ptr<int>(goodMatches[i].trainIdx); 
+		//cout << "******************1***********" << endl;
+		for (int j = 0; j < 128; j++) 
+		{
+			int vec1 = data1[j];
+			int vec2 = data2[j]; 
+			vec_all1.push_back(vec1);
+			vec_all2.push_back(vec2); 
+		} 
+		
+		value = cosine(vec_all1, vec_all2);
+		
+		value_all.push_back(value); 
+		cosine_sum = cosine_sum + value;
+		
+		vec_all1.clear();
+		vec_all2.clear();
+		//vec_all1.swap(vec_all3); 
+		//vec_all2.swap(vec_all3); 
+	} 
+
+	cosine_average = cosine_sum / goodMatches.size();
+	cout << "22" << cosine_average << endl; 
+	vector<DMatch>angle_matches; 
+	for (int n = 0; n < goodMatches.size(); n++) 
+	{
+		if (value_all[n] > cosine_average) 
+		{
+			angle_matches.push_back(goodMatches[n]); 
+		}
+	} 
+	cout << "12" << angle_matches.size() << endl; 
+	cout << "12" << goodMatches.size() - angle_matches.size() << endl;
+	goodMatches.swap(angle_matches);
+
+}
+void refineMatcheswithHomography(vector<DMatch>& matches, double reprojectionThreshold ,std::vector<KeyPoint>& keypoints_1,
+                            std::vector<KeyPoint>& keypoints_2){
+    const int minNumbermatchesAllowed = 8;
+    Mat homography;
+    if (matches.size() < minNumbermatchesAllowed)
+        return;
+
+    //Prepare data for findHomography
+    vector<Point2f> srcPoints(matches.size());
+    vector<Point2f> dstPoints(matches.size());
+
+    for (size_t i = 0; i < matches.size(); i++) {
+        srcPoints[i] = keypoints_1[matches[i].trainIdx].pt;
+        dstPoints[i] =keypoints_2[matches[i].queryIdx].pt;
+    }
+
+    //find homography matrix and get inliers mask
+    vector<uchar> inliersMask(srcPoints.size());
+    homography = findHomography(srcPoints, dstPoints, CV_FM_RANSAC, reprojectionThreshold, inliersMask);
+
+    vector<DMatch> inliers;
+    for (size_t i = 0; i < inliersMask.size(); i++){
+        if (inliersMask[i])
+            inliers.push_back(matches[i]);
+    }
+    matches.swap(inliers);
+}
+
 
 void find_feature_matches ( const Mat& img_1, const Mat& img_2,
                             std::vector<KeyPoint>& keypoints_1,
@@ -183,42 +338,17 @@ void find_feature_matches ( const Mat& img_1, const Mat& img_2,
 	 exec_time = ((double)getTickCount() - exec_time)*1000./getTickFrequency();
      OSA_printf("the %s match exec_time=%f\n",__func__,exec_time);
 	
-    double min_dist=10000, max_dist=0;
-	
-       
-    for ( int i = 0; i < descriptors_1.rows; i++ )
-    {
-        double dist = match[i].distance;
-        if ( dist < min_dist ) min_dist = dist;
-        if ( dist > max_dist ) max_dist = dist;
-    }
-
-
-
-
-#if 1
-	sort(matches.begin(), matches.end()); 
-    printf ( "-- Max dist : %f \n", max_dist );
-    printf ( "-- Min dist : %f \n", min_dist );
-
-  
-  //  for ( int i = 0; i < descriptors_1.rows; i++ )
-   for ( int i = 0; i < descriptors_1.rows; i++ )
-    {
-        if ( match[i].distance <= max ( 2*min_dist, 30.0 ) )
-        {
-            matches.push_back ( match[i] );
-        }
-    }
-  #else
-  	for(int i=0; i<match.size(); i++)  
+	for(int i=0; i<match.size(); i++)  
 	{  
-		if(match[i].distance < 0.2 * max_dist)  
-		{  
+		
 			matches.push_back(match[i]);  
-		}  
+	 
 	} 
- #endif
+
+     refineMatcheswithHomography(matches,3,keypoints_1,keypoints_2);
+  
+     retinefeature(matches,descriptors_1,descriptors_2);
+     retinewithdistance(matches,descriptors_1,descriptors_2);
     
 }
 
@@ -409,7 +539,7 @@ int  getPano360Offset(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset)
   
 	waitKey(1);
 */
-    if(matches.size()<10)
+    if(matches.size()<3)
     	{
 		cout<<"the matches num is low="<<matches.size()<<endl;
 		status= -1;
@@ -430,4 +560,58 @@ int  getPano360Offset(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset)
     return status;
 
 }
+
+
+int  getPano360OffsetT(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset) 
+	{
+		double exec_time = (double)getTickCount();
+		 int status=0;
+             Mat tempsrc;
+             if(RESIZE)
+             resize(src,tempsrc,Size(960,540),0,0,INTER_LINEAR);
+             
+             // resize(src,tempsrc,Size(1920,1080),0,0,INTER_LINEAR);
+             if(RESIZE)
+             cvtColor(tempsrc,tempsrc,CV_BGR2GRAY);
+             else
+             cvtColor(src,tempsrc,CV_BGR2GRAY);
+             
+             Mat tempdst;
+             if(RESIZE)
+             resize(dst,tempdst,Size(960,540),0,0,INTER_LINEAR);
+             
+             //resize(dst,tempdst,Size(1920,1080),0,0,INTER_LINEAR);
+             if(RESIZE)
+             cvtColor(tempdst,tempdst,CV_BGR2GRAY);
+             else
+             cvtColor(dst,tempdst,CV_BGR2GRAY);
+	
+		
+		Rect temprect=Rect(0,0.5*tempsrc.rows-0.4*tempsrc.rows,0.2*tempsrc.cols, 0.2*tempsrc.rows);
+		Mat templ(tempsrc, temprect); 
+		Mat result(tempdst.cols - templ.cols + 1, tempdst.rows - templ.rows + 1, CV_8UC1);
+		
+		matchTemplate(tempdst, templ, result, CV_TM_CCORR_NORMED); 
+		
+		normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat()); 
+		
+		double minVal; double maxVal; Point minLoc; Point maxLoc;
+		Point matchLoc; 
+		
+		minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, Mat()); 
+		matchLoc = maxLoc;
+		int dx = matchLoc.x-temprect.x; 
+		int dy = matchLoc.y - temprect.y;
+		 if(RESIZE)
+		 	{
+				dx=dx*2;
+				dy=dy*2;
+		 	}
+		*xoffset=-dx;
+		*yoffset=-dy;
+		 exec_time = ((double)getTickCount() - exec_time)*1000./getTickFrequency();
+		 OSA_printf("the %s exec_time=%f\n",__func__,exec_time);
+	//Point2i a(dx, dy); 
+	return status; 
+	}
 

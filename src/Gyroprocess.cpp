@@ -12,7 +12,7 @@ double Rollbase=0.0;
 double Pitchbase=0.0;
 double Yawbase=0.0;
 
-
+double zeroangle=0.0;
 double pretimestamp=0.0;
 
 void setyawbase(double base)
@@ -170,7 +170,7 @@ void GyrogetRPY()
 		}
 		Roll=mpu.roll*180/pi;
 		Pitch=mpu.pitch*180/pi;
-		Yaw=mpu.yaw*180/pi+Yawbase;
+		Yaw=mpu.yaw*180/pi+Yawbase-zeroangle;
 		if(Yaw>360)
 			Yaw=Yaw-360;
 		else if(Yaw<-360)
@@ -203,7 +203,13 @@ void getEuler(int *roll,int *pitch,int *yaw)
 	*pitch=-1000*Pitch;
 	*yaw=-1000*Yaw;
 	
-	if(Yaw>0)
-		*yaw=0;
+	//if(Yaw>0)
+	//	*yaw=0;
+
+}
+
+void setgyrozero(double zero)
+{
+	zeroangle=zero;
 
 }

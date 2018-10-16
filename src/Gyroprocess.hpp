@@ -22,4 +22,5 @@ void getGyroprocess(Mat& frame,GYRO_DATA_T *gyro);
 	};
 void getEuler(int *roll,int *pitch,int *yaw);
 void setyawbase(double base);
+void setgyrozero(double zero);
 #endif /* GYROPROCESS_HPP_ */

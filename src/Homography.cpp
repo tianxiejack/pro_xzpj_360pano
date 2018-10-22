@@ -567,6 +567,8 @@ int  getPano360OffsetT(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset)
 		double exec_time = (double)getTickCount();
 		 int status=0;
              Mat tempsrc;
+		static unsigned int tempcount=0;
+		char bufname[50];
              if(RESIZE)
              resize(src,tempsrc,Size(960,540),0,0,INTER_LINEAR);
              
@@ -587,16 +589,23 @@ int  getPano360OffsetT(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset)
              cvtColor(dst,tempdst,CV_BGR2GRAY);
 	
 		
-		Rect temprect=Rect(0,0.5*tempsrc.rows-0.4*tempsrc.rows,0.2*tempsrc.cols, 0.2*tempsrc.rows);
+		Rect temprect=Rect(0,0.5*tempsrc.rows-0.2*tempsrc.rows,0.2*tempsrc.cols, 0.4*tempsrc.rows);
 		Mat templ(tempsrc, temprect); 
 		Mat result(tempdst.cols - templ.cols + 1, tempdst.rows - templ.rows + 1, CV_8UC1);
 		
-		matchTemplate(tempdst, templ, result, CV_TM_CCORR_NORMED); 
+		matchTemplate(tempdst, templ, result, CV_TM_CCOEFF_NORMED); 
 		
-		normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat()); 
+		
+		
 		
 		double minVal; double maxVal; Point minLoc; Point maxLoc;
 		Point matchLoc; 
+		minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, Mat()); 
+		if(maxVal<0.90)
+			return -1;
+		OSA_printf("the %s  maxVal=%f  minVal=%f\n",__func__,maxVal,minVal);
+
+		normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat()); 
 		
 		minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, Mat()); 
 		matchLoc = maxLoc;
@@ -609,8 +618,13 @@ int  getPano360OffsetT(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset)
 		 	}
 		*xoffset=-dx;
 		*yoffset=-dy;
+
+		rectangle(tempdst, Rect(matchLoc.x,matchLoc.y,temprect.width,temprect.height), Scalar(255,0,0),1,  8);
+		sprintf(bufname,"/home/ubuntu/calib/%d.bmp",tempcount);
+		imwrite(bufname,tempdst);
+		tempcount++;
 		 exec_time = ((double)getTickCount() - exec_time)*1000./getTickFrequency();
-		 OSA_printf("the %s exec_time=%f\n",__func__,exec_time);
+		 OSA_printf("the %s exec_time=%f  maxVal=%f  minVal=%f\n",__func__,exec_time,maxVal,minVal);
 	//Point2i a(dx, dy); 
 	return status; 
 	}

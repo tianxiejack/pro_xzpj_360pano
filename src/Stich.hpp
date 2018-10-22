@@ -27,8 +27,23 @@ void setfusionenalge(bool enable);
 bool getfusionenable();
 int  getPanoOffset(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset);
 double offet2angle(int  offsetx);
-bool zerocalibration(Mat src,Mat dst,double *angleoffset);
+//bool zerocalibration(Mat src,Mat dst,double *angleoffset);
+bool zerocalibration(Mat src,Mat dst,double *angleoffset,int *xoffset);
 void Matcpy(Mat src,Mat dst,int offset);
 double offet2anglerelative(int  offsetx);
+void setpanomap(Mat pano[]);
+Mat getpanomap();
+void getpanoparam(unsigned int * w,unsigned int * h);
+void setnextnum();
+Mat getpanolastmap();
+void setmvdetect(std::vector<cv::Rect> &mv,int chid);
+void  getmvdetect(std::vector<cv::Rect> &mv,int chid);
+void Multipotionto360(std::vector<cv::Rect> &mv,int chid);
+void mvdetectup(std::vector<cv::Rect> &mv);
+void mvclassification(std::vector<cv::Rect> &mv,std::vector<cv::Rect> &mv180,std::vector<cv::Rect> &mv360);
+void stichinit();
+void Matblack(Mat src,int offset);
+double offet2anglerelative2(int  offsetx);
+void histequision(Mat& src);
 
 #endif /* STICH_HPP_ */

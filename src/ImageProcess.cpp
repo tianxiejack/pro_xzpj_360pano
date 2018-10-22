@@ -4,23 +4,24 @@
 #include"osa.h"
 #include"Stich.hpp"
 #include"Gyroprocess.hpp"
+
 #define IMAGEQUEUESIZE 4
-#define IMAGCAPEQUEUESIZE 4
+#define IMAGCAPEQUEUESIZE 2
 #define IMAGEQUEUEWIDTH 1920
 #define IMAGEQUEUEHEIGHT 1080
 #define IMAGEQUEUECHANNEL 3
 
 #define SIGNALEQUEUEID 0
 
-
+ImageProcess *ImageProcess::Pthis;
 
 ImageProcess::ImageProcess():pinpang(0),currentcount(0),AngleStich(-ANGLEINTREVAL),seamid(0),SeamEable(0),Seampostion(0),
 			preflag(0),preangle(0),currentangle(0),xoffsetfeat(0),yoffsetfeat(0),camerazeroossfet(0),zeroflag(0),zeroangle(0),zerocalibflag(1),
-			zeroflameupdate(1),gyroangle(0)
+			zeroflameupdate(1),gyroangle(0),pp(0),blocknum(0),zeroprocessflag(0),zerocalibing(0)
 {
 	memset(m_bufQue, 0, sizeof(m_bufQue));
 	memset(mcap_bufQue, 0, sizeof(mcap_bufQue));
-	
+	Pthis=this;
 
 }
 ImageProcess::~ImageProcess()
@@ -32,6 +33,7 @@ ImageProcess::~ImageProcess()
 void ImageProcess::Init()
 {
 	//processgray[0]=
+	stichinit();
 	for(int i=0;i<FRAMEFIFO;i++)
 		{
 			processgray[i]=Mat(CAPTURETVHEIGHT,CAPTURETVWIDTH,CV_8UC1,cv::Scalar(0));
@@ -55,10 +57,43 @@ void ImageProcess::Init()
 			Seamframe[i]=Mat(PANO360HEIGHT,PANO360WIDTH,CV_8UC3,cv::Scalar(0));
 		}
 	zeroflame=Mat(PANO360SRCHEIGHT,PANO360SRCWIDTH,CV_8UC3,cv::Scalar(0));
+
+	for(int i=0;i<MOVEBLOCKNUM;i++)
+		{
+			if(PANOGRAYDETECT)
+			panoblock[i]=Mat(MOVDETECTSRCHEIGHT,MOVDETECTSRCWIDTH,CV_8UC1,cv::Scalar(0));
+			else
+			panoblock[i]=Mat(MOVDETECTSRCHEIGHT,MOVDETECTSRCWIDTH,CV_8UC3,cv::Scalar(0));	
+		}
+	for(int i=0;i<2;i++)
+	MvtestFRrame[i]=Mat(PANO360HEIGHT,PANO360WIDTH,CV_8UC1,cv::Scalar(0));
+	panograysrc=Mat(PANO360HEIGHT,PANO360WIDTH,CV_8UC1,cv::Scalar(0));
+
+	panoblockdown=Mat(PANO360HEIGHT/MOVDETECTDOW,MOVDETECTSRCWIDTH/(MOVDETECTDOW),CV_8UC1,cv::Scalar(0));
 	
 	MAIN_threadCreate();
+	MAIN_detectthreadCreate();
 }
+void ImageProcess::Create()
+{
 
+	char bufname[50];
+	m_pMovDetector=MvDetector_Create();
+	m_pMovDetector->init(NotifyFunc,( void *) this);
+	
+	double rate = 2.0;
+	Size videoSize(MOVDETECTSRCWIDTH/MOVDETECTDOW,MOVDETECTSRCHEIGHT/MOVDETECTDOW);
+	//videowriter=VideoWriter("mov.avi", CV_FOURCC('M', 'J', 'P', 'G'), rate, videoSize);
+	//bool status=videowriter.open("mov.avi", CV_FOURCC('X', 'V', 'I', 'D'),rate, videoSize, false);
+	for(int i=0;i<MULTICPUPANONUM;i++)
+		{
+			sprintf(bufname,"/home/ubuntu/calib/mov%d.avi",i);
+			videowriter[i].open(bufname, CV_FOURCC('M', 'J', 'P', 'G'),rate, videoSize, false);
+		}
+	
+	OSA_printf("***********Create* end=**************\n");
+	
+}
 void ImageProcess::unInit()
 {
 	
@@ -104,11 +139,10 @@ void ImageProcess::CaptureThreadProcess(Mat src,OSA_BufInfo* frameinfo)
 	setnextImagePinpang();
 #endif
 	//OSA_semSignal(&mainProcThrObj.procNotifySem);
-	if(abs(frameinfo->framegyroyaw/ANGLESCALE-AngleStich)<ANGLEINTREVAL)
+	if(getzeroflameupdate()==0)
+	if(abs(frameinfo->framegyroyaw*1.0/ANGLESCALE-AngleStich)<ANGLEINTREVAL&&(getzerocalibing()==0))
 		{
-			
 			return ;
-
 		}
 	OSA_BufInfo* info=NULL;
 	info = image_queue_getEmpty(&mcap_bufQue[queueid]);
@@ -126,7 +160,7 @@ void ImageProcess::CaptureThreadProcess(Mat src,OSA_BufInfo* frameinfo)
 	info->framegyroyaw=frameinfo->framegyroyaw;
 	image_queue_putFull(&mcap_bufQue[queueid], info);
 
-	AngleStich=frameinfo->framegyroyaw/ANGLESCALE;
+	AngleStich=frameinfo->framegyroyaw*1.0/ANGLESCALE;
 
 
 }
@@ -154,7 +188,24 @@ int ImageProcess::MAIN_threadCreate(void)
 
 	return iRet;
 }
+int ImageProcess::MAIN_detectthreadCreate(void)
+{
+	int iRet = OSA_SOK;
+	iRet = OSA_semCreate(&mainProcThrdetectObj.procNotifySem ,1,0) ;
+	OSA_assert(iRet == OSA_SOK);
 
+
+	mainProcThrdetectObj.exitProcThread = false;
+
+	mainProcThrdetectObj.initFlag = true;
+
+	mainProcThrdetectObj.pParent = (void*)this;
+
+	iRet = OSA_thrCreate(&mainProcThrdetectObj.thrHandleProc, maindetectTsk, 0, 0, &mainProcThrdetectObj);
+
+	return iRet;
+
+}
 
 int ImageProcess::MAIN_threadDestroy(void)
 {
@@ -170,7 +221,20 @@ int ImageProcess::MAIN_threadDestroy(void)
 
 	return iRet;
 }
+int ImageProcess::MAIN_detectthreadDestroy(void)
+{
+	int iRet = OSA_SOK;
 
+	mainProcThrdetectObj.exitProcThread = true;
+	OSA_semSignal(&mainProcThrdetectObj.procNotifySem);
+
+	iRet = OSA_thrDelete(&mainProcThrdetectObj.thrHandleProc);
+
+	mainProcThrdetectObj.initFlag = false;
+	OSA_semDelete(&mainProcThrdetectObj.procNotifySem);
+
+	return iRet;
+}
 
 void ImageProcess::OptiSeam()
 {
@@ -210,14 +274,18 @@ void ImageProcess::zeroprocess()
 {
 	double angle=0;
 	double gyroangleoffset=0;
-
+	setzeroprocessflag(0);
 	judgezero();
+	int zerooffset=0;
 	
 	int zerobool=getzeroflag();
 	int calibool=getzerocalib();
 	if(zerobool==0||calibool==1)
+		{
+		setzerocalibing(0);
 		return ;
-	
+		}
+	setzerocalibing(1);
 	Mat zeroF=getzeroflame();
 	Mat currentF=getcurrentflame();
 
@@ -228,15 +296,22 @@ void ImageProcess::zeroprocess()
 	gyroangleoffset=currentgyroA-zeroA;
 
 	//setyawbase();
-	if(zerocalibration(zeroF,currentF,&angle))
+	if(zerocalibration(zeroF,currentF,&angle,&zerooffset))
 		{
 			
 			//setcamerazeroossfet(angle-(currentgyroA-zeroA));
+			setcurrentangle(0);
+			setzerocaliboffset(zerooffset);
+			setzeroprocessflag(1);
+
+			
 			setyawbase(gyroangleoffset-angle);
 			setzerocalib(1);
+			zeroprocessflag=1;
 			printf("********basioffset=%f********zeroA=%f  gyroangleoffset=%f currentgyroA=%d \n",gyroangleoffset-angle,zeroA,gyroangleoffset,currentgyroA);
 			//setzeroflag(0);
 		}
+
 	
 
 	
@@ -253,6 +328,19 @@ void ImageProcess::Panoprocess(Mat src,Mat dst)
 	temp=src;//getCurrentFame();
 	else
 	temp=dst;
+
+	/*******************************/
+	int flag=getzeroprocessflag();
+	int getoffst=getzerocaliboffset();
+	if(flag==1)
+		{
+			Matcpy(src,src,abs(getoffst));
+			Matblack(src,src.cols-abs(getoffst));
+			
+		}
+
+
+	/******************************/
 	
 	//Mat dst
 	if(src.cols!=PANO360WIDTH||src.rows!=PANO360HEIGHT)
@@ -265,7 +353,7 @@ void ImageProcess::Panoprocess(Mat src,Mat dst)
 		}
 	//return ;
 	if(CYLINDER)
-	cylinder(temp,dst,1.0*CAMERAFOCUSLENGTH*PANO360WIDTH/PANO360SRCWIDTH,500);
+		cylinder(temp,dst,1.0*(CAMERAFOCUSLENGTH)*PANO360WIDTH/PANO360SRCWIDTH,PANOSRCSHIFT);
 
 		
 
@@ -283,12 +371,304 @@ void ImageProcess::Panoprocess(Mat src,Mat dst)
 	if(getfusionenable())
 		{
 			//Mat pre=getpreframe();
-			FusionSeam(pre,dst,getSeamPos());
-			OSA_printf("the preoffset=%d curoffset=%d\n",preoffset,curoffset);
+			//if((getcurrentangle()<360-ZEROJUEGE)&&(getcurrentangle()>0))
+				FusionSeam(pre,dst,getSeamPos());
+			//	histequision(dst);
+				//equalizeHist(dst, dst);
+			//OSA_printf("the preoffset=%d curoffset=%d\n",preoffset,curoffset);
 		}
+
+	/***********detect process **********************/
+	//if(getcurrentangle()>360-ZEROJUEGE)
+	//	return ;
+      if(MULTICPUPANO)
+	Multicpupanoprocess(dst);
+	 else
+	cpupanoprocess(dst);
+
+
+	
+	
 	
 
 }
+
+
+void ImageProcess::NotifyFunc(void *context, int chId)
+{
+	std::vector<cv::Rect>	detect;
+	ImageProcess *pParent = (ImageProcess*)context;
+	pParent->m_pMovDetector->getMoveTarget(pParent->detect_vect,chId);
+	for(int i=0;i<pParent->detect_vect.size();i++)
+		{
+			detect.push_back(pParent->detect_vect[i].targetRect);
+		}
+	setmvdetect(detect,chId);
+	//if()
+}
+#define MINAREDETECT (1500)
+void ImageProcess::panomoveprocess()
+{
+	Mat process;
+	char recoardnum[50];
+	int blocknum=movblocknum;
+	if(DETECTTEST)
+		{
+			if(MOVDETECTDOWENABLE)
+			resize(MvtestFRrame[pp^1],MvtestFRrame[pp^1],Size(PANO360WIDTH/MOVDETECTDOW,PANO360HEIGHT/MOVDETECTDOW),0,0,INTER_LINEAR);
+			
+			m_pMovDetector->setFrame(MvtestFRrame[pp^1],MvtestFRrame[pp^1].cols,MvtestFRrame[pp^1].rows,0,10,MINAREDETECT,200000,30);
+			return ;
+		}
+	if(MULTICPUPANO)
+		{
+
+			for(int i=0;i<=MULDETECTTRAIN;i++)
+				{
+					blocknum=(blocknum+MULTICPUPANONUM-i)%MULTICPUPANONUM;
+					if(MOVDETECTDOWENABLE)
+						{
+							resize(panoblock[blocknum],panoblockdown,Size(MOVDETECTSRCWIDTH/MOVDETECTDOW,MOVDETECTSRCHEIGHT/MOVDETECTDOW),0,0,INTER_LINEAR);
+							process=panoblockdown;
+						}
+					else
+						process=panoblock[blocknum];
+					//sprintf(recoardnum,"%d.bmp",blocknum);
+					//imwrite(recoardnum,process);
+					//imshow(recoardnum,process);
+					//waitKey(1);
+					//if(blocknum==0||blocknum==1)
+						{
+						//cout<<"************panomoveprocess*************"<<endl;
+						videowriter[blocknum]<<process;
+						m_pMovDetector->setFrame(process,process.cols,process.rows,blocknum,10,MINAREDETECT,200000,30);
+				}
+				}
+			return;
+		}
+	//videocapture
+	Mat pano360=getpanolastmap();
+	
+#if PANOGRAYDETECT
+	if(MOVEBLOCKENABLE)
+		{
+			pano360(Rect(1920*5+15000,0,PANO360WIDTH*2,PANO360HEIGHT)).copyTo(panoblock[0]);
+			if(MOVDETECTDOWENABLE)
+				{
+					resize(panoblock[0],panoblockdown,Size(PANO360WIDTH*2/MOVDETECTDOW,PANO360HEIGHT/MOVDETECTDOW),0,0,INTER_LINEAR);
+					process=panoblockdown;
+				}
+			else
+				process=panoblock[0];
+			//videowriter<<process;
+			//videowriter.write(process);
+			//videowriter<<process;
+			//waitKey(1);
+			//OSA_printf("***********video write***************\n");
+			//VideoWriter
+			//imwrite("blockpano.bmp",panoblock[0]);
+			m_pMovDetector->setFrame(process,process.cols,process.rows,0,10,MINAREDETECT,200000,30);
+
+
+		}
+
+#else
+	imwrite("pano.bmp",pano360);
+
+	
+		
+		//m_pMovDetector->setFrame(frame_gray,frame_gray.cols,frame_gray.rows,0,2,8,200,30);
+
+#endif
+		
+
+}
+void ImageProcess::getnumofpano360image(int startx,int endx,int *texturestart,int *textureend)
+{
+	
+	unsigned int pan360w=0;
+	unsigned int pan360h=0;
+
+	getpanoparam(&pan360w,&pan360h);
+
+	int num=ceil(1.0*pan360w/MOVDETECTSRCWIDTH);
+	*texturestart=(startx/MOVDETECTSRCWIDTH)%num;
+	if(endx%MOVDETECTSRCWIDTH==0)
+	  *textureend=*texturestart;
+	else
+	*textureend=(endx/MOVDETECTSRCWIDTH)%num;
+	//if(*texturestart>=num)
+
+}
+
+void ImageProcess::Multicpupanoprocess(Mat& src)
+{
+	int startnum=0;
+	int endnum=0;
+	int multipanx=0;
+	int multipany=0;
+	int multipanw=0;
+	int multipanh=0;
+	//static int singalstartnum=0;
+	unsigned int pan360w=0;
+	unsigned int pan360h=0;
+
+	getpanoparam(&pan360w,&pan360h);
+	double exec_time = (double)getTickCount();
+		Mat processsrc;
+	if(PANOGRAYDETECT)
+		{
+		cvtColor(src,panograysrc,CV_BGR2GRAY);
+		processsrc=panograysrc;
+		}
+	else
+		processsrc=src;
+
+	double angle=getcurrentangle();
+	int panx=getpanooffet(angle);
+	int pany=0;
+	int panw=processsrc.cols-PANOSRCSHIFT;
+	int panh=processsrc.rows;
+	Rect panorio(panx,pany,panw,panh);
+	Rect srcrio(0,0,processsrc.cols-PANOSRCSHIFT,processsrc.rows);
+
+	
+	
+	getnumofpano360image(panx,panx+panw,&startnum,&endnum);
+
+	//cout<<"startnum"<<startnum<<"**endnum"<<endnum<<endl;
+
+	if(startnum==MULTICPUPANONUM-1&&panx+panw>pan360w)
+		{
+			;
+		}
+	else if(startnum==endnum)
+	{
+		multipanx=panx-startnum*MOVDETECTSRCWIDTH;
+		multipany=pany;
+		multipanw=panw;
+		multipanh=panh;
+		panorio=Rect(multipanx,multipany,multipanw,multipanh);
+		processsrc(srcrio).copyTo(panoblock[startnum](panorio));
+
+	}
+	else
+	{
+		multipanx=panx-startnum*MOVDETECTSRCWIDTH;
+		multipany=pany;
+		multipanw=MOVDETECTSRCWIDTH-multipanx;
+		multipanh=panh;
+		//Rect srcrio(0,0,multipanw,processsrc.rows);
+		srcrio=Rect(0,0,multipanw,processsrc.rows);
+		panorio=Rect(multipanx,multipany,multipanw,multipanh);
+		//cout<<"panorio"<<panorio<<endl;
+		//cout<<"srcrio"<<srcrio<<endl;
+		processsrc(srcrio).copyTo(panoblock[startnum](panorio));
+
+
+		multipanx=0;
+		multipanw=panw-multipanw;
+		srcrio=Rect(panw-multipanw,0,multipanw,processsrc.rows);
+		panorio=Rect(0,multipany,multipanw,multipanh);
+		//cout<<"2panorio"<<panorio<<endl;
+		//cout<<"2srcrio"<<srcrio<<endl;
+		processsrc(srcrio).copyTo(panoblock[endnum](panorio));
+
+
+	}
+	if(blocknum!=startnum)
+		{
+			movblocknum=blocknum;
+			blocknum=startnum;
+			OSA_semSignal(&mainProcThrdetectObj.procNotifySem);
+			//OSA_printf("*********detect*OSA_semSignal*movblocknum=%d*******************\n",movblocknum);
+
+
+		}
+
+
+
+	
+	
+	
+
+
+	exec_time = ((double)getTickCount() - exec_time)*1000./getTickFrequency();
+     //  OSA_printf("the %s exec_time=%f\n",__func__,exec_time);
+}
+void ImageProcess::cpupanoprocess(Mat& src)
+{
+	double exec_time = (double)getTickCount();
+	Mat processsrc;
+	if(PANOGRAYDETECT)
+		{
+		cvtColor(src,panograysrc,CV_BGR2GRAY);
+		processsrc=panograysrc;
+		}
+	else
+		processsrc=src;
+	static unsigned int cpupanoonce=0;
+
+	Mat cpupano=getpanomap();
+	double angle=getcurrentangle();
+	int panx=getpanooffet(angle);
+	int pany=PANOEXTRAH/2;
+	int panw=processsrc.cols-PANOSRCSHIFT;
+	int panh=processsrc.rows;
+	Rect panorio(panx,pany,panw,panh);
+	
+
+	
+		
+		
+		
+	Rect srcrio(0,0,processsrc.cols-PANOSRCSHIFT,processsrc.rows);
+	unsigned int pan360w=0;
+	unsigned int pan360h=0;
+
+	getpanoparam(&pan360w,&pan360h);
+
+	//OSA_printf("**********%s begin********************\n",__func__);
+
+	
+	//OSA_printf("");
+	//cout<<"panorio"<<panorio<<endl;
+	//cout<<"srcrio"<<srcrio<<endl;
+	if(panx+panw>pan360w)
+		{
+			if(cpupanoonce==0)
+				{
+					setnextnum();
+					cpupanoonce=1;
+					if(DETECTTEST==0)
+					OSA_semSignal(&mainProcThrdetectObj.procNotifySem);
+					OSA_printf("*********detect*OSA_semSignal********************\n");
+				}
+
+		}
+	else
+		{
+			cpupanoonce=0;
+		      processsrc(srcrio).copyTo(cpupano(panorio));
+		}
+
+	//OSA_printf("**********%s end********************\n",__func__);
+	//
+	 exec_time = ((double)getTickCount() - exec_time)*1000./getTickFrequency();
+     //  OSA_printf("the %s exec_time=%f\n",__func__,exec_time);
+	
+
+
+}
+
+
+
+
+
+
+
+
+
 void ImageProcess::main_proc_func()
 {
 	OSA_printf("%s: Main Proc Tsk Is Entering...\n",__func__);
@@ -310,6 +690,15 @@ void ImageProcess::main_proc_func()
 		//waitKey(2);
 		//OSA_printf("1****************************\n");
 
+
+		if(DETECTTEST)
+		{
+			//src.copyTo(MvtestFRrame[pp]);
+			cvtColor(src,MvtestFRrame[pp],CV_BGR2GRAY);
+			pp^=1;
+			OSA_semSignal(&mainProcThrdetectObj.procNotifySem);
+		}
+		//OSA_semSignal(&mainProcThrdetectObj.procNotifySem);
 		
 		
 		//OSA_semWait(&mainProcThrObj.procNotifySem, OSA_TIMEOUT_FOREVER);
@@ -328,16 +717,16 @@ void ImageProcess::main_proc_func()
 		int count=image_queue_fullCount(&m_bufQue[SIGNALEQUEUEID]);
 		if(count>0)
 			{
-			setpreframeflag(1);
-			char *data=(char *)m_bufQue[queueid].bufInfo[(info->currentbufid-1+IMAGEQUEUESIZE)%IMAGEQUEUESIZE].virtAddr;
-			unsigned w=m_bufQue[queueid].bufInfo[(info->currentbufid-1+IMAGEQUEUESIZE)%IMAGEQUEUESIZE].width;
-			unsigned h=m_bufQue[queueid].bufInfo[(info->currentbufid-1+IMAGEQUEUESIZE)%IMAGEQUEUESIZE].height;
-			double angle=m_bufQue[queueid].bufInfo[(info->currentbufid-1+IMAGEQUEUESIZE)%IMAGEQUEUESIZE].framegyroyaw*1.0/ANGLESCALE;
-			setpreangle(angle);
-			pre=Mat(h,w,CV_8UC3,data);
-			//imshow("t",pre);
-			//waitKey(2);
-			setpreframe(pre);
+				setpreframeflag(1);
+				char *data=(char *)m_bufQue[queueid].bufInfo[(info->currentbufid-1+IMAGEQUEUESIZE)%IMAGEQUEUESIZE].virtAddr;
+				unsigned w=m_bufQue[queueid].bufInfo[(info->currentbufid-1+IMAGEQUEUESIZE)%IMAGEQUEUESIZE].width;
+				unsigned h=m_bufQue[queueid].bufInfo[(info->currentbufid-1+IMAGEQUEUESIZE)%IMAGEQUEUESIZE].height;
+				double angle=m_bufQue[queueid].bufInfo[(info->currentbufid-1+IMAGEQUEUESIZE)%IMAGEQUEUESIZE].framegyroyaw*1.0/ANGLESCALE;
+				setpreangle(angle);
+				pre=Mat(h,w,CV_8UC3,data);
+				//imshow("t",pre);
+				//waitKey(2);
+				setpreframe(pre);
 			}
 		else
 			setpreframeflag(0);
@@ -353,8 +742,6 @@ void ImageProcess::main_proc_func()
 		else	
 		angle=infocap->framegyroyaw*1.0/ANGLESCALE+getcamerazeroossfet();
 
-		setgyroangle(angle);
-		
 		//OSA_printf("the algle is %f\n",angle);
 		imageangle=angle;
 		if(imageangle<0)
@@ -362,6 +749,7 @@ void ImageProcess::main_proc_func()
 		else if(imageangle>=360)
 			imageangle-=360;
 		
+		setgyroangle(imageangle);
 		setcurrentangle(imageangle);
 
 		/*****************************************/
@@ -376,9 +764,11 @@ void ImageProcess::main_proc_func()
 		/********************zero*********************/
 		
 		setcurrentflame(src);
+
+		
 		if(getzeroflameupdate())
 			{
-				if(getcurrentangle()<10&&getcurrentangle()>1)
+				if(getcurrentangle()<ANGLEINTREVAL&&getcurrentangle()>1)
 					{
 						setzeroflameupdate(0);
 						setzeroflame(src);
@@ -388,6 +778,10 @@ void ImageProcess::main_proc_func()
 						
 						setcamerazeroossfet(-getcurrentangle());
 						setzeroangle(0);
+						///////////////zero angle
+						setgyroangle(0);
+						setcurrentangle(0);
+						
 					}
 				else
 					setcurrentangle(0);
@@ -424,3 +818,31 @@ void ImageProcess::main_proc_func()
 	}
 }
 
+
+
+void ImageProcess::main_detect_func()
+{
+	OSA_printf("%s: Main Proc Tsk Is Entering...\n",__func__);
+	unsigned int framecount=0;
+	OSA_BufInfo* info=NULL;
+	OSA_BufInfo* infocap=NULL;
+	int queueid=0;
+	Mat pre;
+	int xoffset,yoffset;
+	double imageangle=0;
+	while(mainProcThrdetectObj.exitProcThread ==  false)
+	{
+		OSA_semWait(&mainProcThrdetectObj.procNotifySem, OSA_TIMEOUT_FOREVER);
+		//OSA_printf("**********%s***********\n",__func__);
+		double exec_time = (double)getTickCount();
+		panomoveprocess();
+		exec_time = ((double)getTickCount() - exec_time)*1000./getTickFrequency();
+	 	//OSA_printf("the panomoveprocess=%f MS\n",exec_time);
+		
+		
+
+	}
+
+
+
+}

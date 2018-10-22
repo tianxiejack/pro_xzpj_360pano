@@ -43,7 +43,7 @@
 
 #define PANOSHIFT (0)
 
-#define ANGLEINTREVAL (0)
+#define ANGLEINTREVAL (15)
 
 #define ANGLESHIFT (0)
 
@@ -51,10 +51,42 @@
 
 #define FEATURESTICH (0)
 
-#define CYLINDER (0)
+#define CYLINDER (1)
+
+#define PANODETECTNUM (2)
+
+#define PANOEXTRAH 20
+
+#define PANOSRCSHIFT (100)
 
 
-#define PANOSRCSHIFT (PANO360WIDTH/2)
+#define PANOGRAYDETECT (1)
+
+#define MOVEBLOCKNUM (10)
+
+#define MOVEBLOCKENABLE (1)
+
+
+
+#define MOVDETECTDOW (2)
+
+#define MOVDETECTDOWENABLE (1)
+
+#define DETECTTEST (0)
+
+#define FILEVIDEO (0)
+
+#define MULTICPUPANO (1)
+
+#define MOVDETECTSRCWIDTH (PANO360WIDTH*2)
+#define MOVDETECTSRCHEIGHT (PANO360HEIGHT)
+
+
+#define MULTICPUPANONUM (8)
+
+#define ZEROJUEGE (10)
+
+#define MULDETECTTRAIN (0)
 //#define PANOSRCSHIFT (0)
 
 #endif /* CONFIG_H_ */

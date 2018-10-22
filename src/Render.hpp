@@ -23,8 +23,10 @@
 #include <GLMatrixStack.h>
 #include <GLGeometryTransform.h>
 #include <GLFrustum.h>
-
+#include "config.h"
 #include <iostream>
+#include "Glosd.hpp"
+//#include "mvdectInterface.hpp"
 //static const int ALPHA_MASK_HEIGHT= DEFAULT_IMAGE_HEIGHT;
 //static const int ALPHA_MASK_WIDTH = (DEFAULT_IMAGE_WIDTH/16);
 /* A general OpenGL initialization function. */
@@ -115,17 +117,45 @@ public:
 	void Pano360init();
 
 
+
+
 	void pano(int num);
+
+	/******************osd ***********************/
+	void Drawosd();
+	void Drawmovdetect();
+	void DrawmovMultidetect();
+	int movviewx;
+	int movviewy;
+	int movvieww;
+	int movviewh;
+
+	int mov180viewx;
+	int mov180viewy;
+	int mov180vieww;
+	int mov180viewh;
+
+	int mov360viewx;
+	int mov360viewy;
+	int mov360vieww;
+	int mov360viewh;
+
+	//std::vector<TRK_RECT_INFO>	detect_vect;
+
+	GLOSD Glosdhandle;
 	/******************select function mod ***********************/
 
 	void selectupdate();
 	int selecttexture;
 	void setselecttexture(int mod){selecttexture=mod;};
 	int  getselecttexture(){return selecttexture;};
+	
 	unsigned int selectx;
 	unsigned int selecty;
 	unsigned int selectw;
 	unsigned int selecth;
+
+	std::vector<cv::Rect>	detect_vect;
 	
 
 
@@ -226,6 +256,10 @@ public:
 	unsigned int pano360textureheight;
 
 	void getnumofpano360texture(int startx,int endx,int* texturestart,int* textureend);
+
+
+	/******************mov detect***********************/
+	Mat cpuPANO[PANODETECTNUM];
 	
 public:
 	unsigned int Fullscreen;
@@ -260,7 +294,7 @@ public:
 	Mat ProcessCapture;
 	
 
-#define PANOEXTRAH 20
+
 
 public:
 	GLShaderManager		shaderManager;

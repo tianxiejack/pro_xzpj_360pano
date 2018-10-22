@@ -86,7 +86,8 @@ int window; /* The number of our GLUT window */
 
 Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),pano360textureh(0),MOUSEx(0),MOUSEy(0),BUTTON(0),
 	MOUSEST(0),mousex(0),mousey(0),mouseflag(0),pano360renderw(0),pano360renderH(0),pano360renderLux(0),pano360renderLuy(0),
-	CameraFov(0),maxtexture(0),pano360texturenum(0),pano360texturewidth(0),pano360textureheight(0),selecttexture(0),shotcutnum(0)
+	CameraFov(0),maxtexture(0),pano360texturenum(0),pano360texturewidth(0),pano360textureheight(0),selecttexture(0),shotcutnum(0),
+	movviewx(0),movviewy(0),movvieww(0),movviewh(0)
 	{
 		displayMode=SINGLE_VIDEO_VIEW_MODE;
 		panosrcwidth=0;
@@ -187,6 +188,11 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 	
 	//printf("*******************\n");
 	cameraFrame.MoveForward(-7.0f);
+
+	/********osd**********/
+	Glosdhandle.create();
+	Glosdhandle.setwindow(windowWidth, windowHeight);
+	Glosdhandle.createunicode("/home/ubuntu/default.ttf", 40, 512, 512);
 
 
 }
@@ -373,7 +379,7 @@ void Render::RenderScene(void)
 				break;
 		}
 
-
+	Drawosd();
 
 
 	// Perform the buffer swap to display back buffer
@@ -458,6 +464,8 @@ void Render::Panotexture(void)
 
 
 	pano360texturewidth=texturewidth/pano360texturenum;
+
+	
 	
 	printf("******the fov=%f****texturewidth=%d  pano360texturenum=%d\n",CameraFov,texturewidth,pano360texturenum);
 	//texturewidth=1920*4;
@@ -482,6 +490,16 @@ void Render::Panotexture(void)
 						 eFormat, GL_UNSIGNED_BYTE, NULL);
 	
 		}
+
+	for(int i=0;i<PANODETECTNUM;i++)
+		{
+			if(PANOGRAYDETECT)
+			cpuPANO[i]=Mat(textureheith,texturewidth,CV_8UC1,cv::Scalar(0));
+			else
+			cpuPANO[i]=Mat(textureheith,texturewidth,CV_8UC3,cv::Scalar(0));
+		
+		}
+	setpanomap(cpuPANO);
 
 	pano360texturew=texturewidth;
 	pano360textureh=textureheith;
@@ -586,8 +604,8 @@ void Render::Angle2pos()
 
 void Render::getnumofpano360texture(int startx,int endx,int *texturestart,int *textureend)
 {
-	*texturestart=startx/pano360texturewidth;
-	*textureend=endx/pano360texturewidth;
+	*texturestart=(startx/pano360texturewidth)%pano360texturenum;
+	*textureend=(endx/pano360texturewidth)%pano360texturenum;
 
 }
 void Render::Pano360fun()
@@ -604,6 +622,9 @@ void Render::Pano360fun()
 	unsigned int width=0;
 	unsigned int height=0;
 	currentdis=getcurrentDis();
+	Mat combin1;
+	Mat combin2;
+	
 	//Angle2pos();
 	
 	getPanoSubPos(&xoffset,&yoffset,&width,&height);
@@ -612,6 +633,32 @@ void Render::Pano360fun()
 	pBits=(GLbyte *)currentdis.data;
 
 	getnumofpano360texture(xoffset,xoffset+width,&textureFnum,&textureSnum);
+	
+	if(textureFnum==textureSnum)
+		{
+			glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE+textureFnum]);	
+			glTexSubImage2D(GL_TEXTURE_2D, 0, xoffset-textureFnum*pano360texturewidth, yoffset, width,height, panoformat, GL_UNSIGNED_BYTE, pBits);
+			glBindTexture(GL_TEXTURE_2D, 0);
+		}
+	else
+		{
+			
+			currentdis(Rect(0,0,(textureFnum+1)*pano360texturewidth-xoffset,currentdis.rows)).copyTo(combin1);
+			
+			currentdis(Rect((textureFnum+1)*pano360texturewidth-xoffset,0,currentdis.cols-(textureFnum+1)*pano360texturewidth+xoffset,currentdis.rows)).copyTo(combin2);
+
+			glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE+textureFnum]);	
+			glTexSubImage2D(GL_TEXTURE_2D, 0, xoffset-textureFnum*pano360texturewidth, yoffset, combin1.cols,height, panoformat, GL_UNSIGNED_BYTE, combin1.data);
+			glBindTexture(GL_TEXTURE_2D, 0);
+			
+			glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE+textureSnum]);	
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, yoffset, combin2.cols,height, panoformat, GL_UNSIGNED_BYTE, combin2.data);
+			glBindTexture(GL_TEXTURE_2D, 0);
+
+			
+
+
+		}
 
 
 	//OSA_printf("textureFnum=%d textureSnum=%d \n",textureFnum,textureSnum);
@@ -789,6 +836,9 @@ void Render::Pano360init()
 {
 	for(int i=0;i<MAXSEAM;i++)
 	{
+		if(CYLINDER)
+		Seamframe[i]=Mat(PANO360HEIGHT,PANO360WIDTH-PANOSRCSHIFT-100,CV_8UC3,cv::Scalar(0,0,0));
+		else
 		Seamframe[i]=Mat(PANO360HEIGHT,PANO360WIDTH-PANOSRCSHIFT,CV_8UC3,cv::Scalar(0,0,0));
 		
 	}
@@ -829,6 +879,137 @@ void Render::singleView(int x,int y,int width,int height)
 
 }
 
+void Render::DrawmovMultidetect()
+{
+	unsigned int pan360w=pano360texturew;
+	unsigned int pan360whalf=pano360texturew/2;
+	std::vector<cv::Rect>	detect_vect180;
+	std::vector<cv::Rect>	detect_temp;
+	std::vector<cv::Rect>	detect_vect360;
+	std::vector<cv::Rect>	detect_vectcombination;
+
+	for(int i=0;i<MULTICPUPANONUM;i++)
+		{
+			getmvdetect(detect_temp,i);
+			mvdetectup(detect_temp);
+			Multipotionto360(detect_temp,i);
+			mvclassification(detect_temp,detect_vect180,detect_vect360);
+			//detect_vect360.insert(detect_vect360.end(),detect_temp.begin(),detect_temp.end());
+		}
+	//cout<<"***************DrawmovMultidetect***********************"<<detect_vect180.size()<<endl;
+	int size=detect_vect180.size();
+	if(size!=0)
+	glViewport(mov180viewx,mov180viewy,mov180vieww,mov180viewh);
+	Glosdhandle.setwindow(pan360whalf,pano360textureh);
+		Glosdhandle.drawbegin();
+	for(int i=0;i<size;i++)
+		{
+			Glosdhandle.drawrect(detect_vect180[i].x, detect_vect180[i].y, detect_vect180[i].width, detect_vect180[i].height);
+		}
+	Glosdhandle.drawend();
+
+	size=detect_vect360.size();
+	if(size!=0)
+	glViewport(mov360viewx,mov360viewy,mov360vieww,mov360viewh);
+	else
+		return;
+	Glosdhandle.setwindow(pan360whalf,pano360textureh);
+		Glosdhandle.drawbegin();
+	for(int i=0;i<size;i++)
+		{
+			Glosdhandle.drawrect(detect_vect360[i].x, detect_vect360[i].y, detect_vect360[i].width, detect_vect360[i].height);
+		}
+	Glosdhandle.drawend();
+	
+
+	
+	
+	
+	
+
+}
+void Render::Drawmovdetect()
+{
+	glUseProgram(0);
+	//#define DETECTTEST (1)
+	if(DETECTTEST)
+		{
+			glViewport(0,0,PANO360WIDTH,PANO360HEIGHT);
+			Glosdhandle.setwindow(PANO360WIDTH,PANO360HEIGHT);
+		}
+	else
+		{
+			glViewport(movviewx,movviewy,movvieww,movviewh);
+			Glosdhandle.setwindow(PANO360WIDTH*2,PANO360HEIGHT);
+		}
+
+
+	//detect_vect.clear();
+	//detect_vect.push_back(Rect(0,0,PANO360WIDTH,PANO360HEIGHT));
+	getmvdetect(detect_vect,0);
+	int size=detect_vect.size();
+	if(size==0)
+		return;
+
+	if(MOVDETECTDOWENABLE)
+		{
+	for(int i=0;i<size;i++)
+		{
+			detect_vect[i].x=detect_vect[i].x*MOVDETECTDOW;
+			detect_vect[i].y=detect_vect[i].y*MOVDETECTDOW;
+			detect_vect[i].width=detect_vect[i].width*MOVDETECTDOW;
+			detect_vect[i].height=detect_vect[i].height*MOVDETECTDOW;
+
+		
+		}
+		}
+		
+	//1920*PANO360WIDTH*2/15000
+
+	
+	
+	Glosdhandle.drawbegin();
+	for(int i=0;i<size;i++)
+		{
+			Glosdhandle.drawrect(detect_vect[i].x, detect_vect[i].y, detect_vect[i].width, detect_vect[i].height);
+
+
+		}
+	
+	
+	
+	Glosdhandle.drawend();
+
+}
+void Render::Drawosd()
+{
+
+	if(MULTICPUPANO)
+		DrawmovMultidetect();
+	else
+		Drawmovdetect();
+
+/*
+	wchar_t intext3[] = {
+	L"X3APPPPPP\u8fdb\\n"
+	};
+	glUseProgram(0);
+	char buffers[20];
+
+	Glosdhandle.drawbegin();
+	sprintf(buffers, "%d\n", 2);
+	Glosdhandle.drawstrings(100,100,buffers);
+	Glosdhandle.drawend();
+
+
+	glUseProgram(0);
+	Glosdhandle.drawunicodebegin();
+	Glosdhandle.drawunicode(-100, 100, intext3);
+	Glosdhandle.drawunicode(100, 100, intext3);
+	Glosdhandle.drawunicodeend();
+*/
+
+}
 void Render::pano360View(int x,int y,int width,int height)
 {
 	int startnum=0;
@@ -863,6 +1044,10 @@ void Render::pano360View(int x,int y,int width,int height)
 	ly=height*5/7;
 	w=width;
 	h=height*2/7;
+	mov180viewx=lx;
+	mov180viewy=ly;
+	mov180vieww=w;
+	mov180viewh=h;
 
 
 	glViewport(lx,ly,w,h);
@@ -894,6 +1079,16 @@ void Render::pano360View(int x,int y,int width,int height)
 	ly=height*3/7;
 	w=width;
 	h=height*2/7;
+	mov360viewx=lx;
+	mov360viewy=ly;
+	mov360vieww=w;
+	mov360viewh=h;
+
+	
+	movviewx=lx;
+	movviewy=ly;
+	movvieww=w;
+	movviewh=h;
 	glViewport(lx,ly,w,h);
        glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE+1]);
 	#if 0
@@ -953,6 +1148,10 @@ void Render::pano360View(int x,int y,int width,int height)
 
 	
 	/**************************select display***********************************************/
+	movviewx=width/2+extrablackw;
+	movviewy=0;
+	movvieww=width/2;
+	movviewh=ly;
 	glViewport(width/2+extrablackw,0,width/2,ly);
 	
 	glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE+getselecttexture()]);
@@ -1374,14 +1573,14 @@ void Render::CaptureSavepicture(Mat& src)
 
 	if(src.cols==0||src.rows==0||src.data==NULL)
 		return ;
-	static int64 tstart = 0;
+	static double tstart = 0;
 	#if 1
 	if((getTickCount()-tstart)*1000/getTickFrequency()<100)
 		return;
 	#else
 	
 	#endif
-	tstart = getTickCount();
+	tstart = (double)getTickCount();
 	CaptureSavebmp(src);
 
 }
@@ -1452,6 +1651,7 @@ void Render::selectupdate()
 	 unsigned int x=0;unsigned int y=0;unsigned int w=0;unsigned int h=0;
 	 getPano360RenderPos(&x,&y,&w,&h);
 	 int yshift=0;
+	 //selecty=h/2+1;
 	 if(selecty>h/2)
 	 	{
 	 	y=y+h/2;
@@ -1467,6 +1667,11 @@ void Render::selectupdate()
 	 h=h/2;
 	// selecty=selecty-yshift;
 
+	//selectx=1920*5*PANO360WIDTH/15000;
+	
+	//selectw=1920*PANO360WIDTH*2/15000;
+	//selecth=h;
+	
 	vTexselectCoords[0]=1.0*selectx/w;
 	vTexselectCoords[1]=1.0*(selecty-yshift)/h;
 
@@ -1479,7 +1684,7 @@ void Render::selectupdate()
 
 	vTexselectCoords[6]=1.0*(selectx+selectw)/w;
 	vTexselectCoords[7]=1.0*(selecty+selecth-yshift)/h;
-
+	
 
 	//panselectrectBatch.Begin(GLenum primitive, GLuint nVerts, GLuint nTextureUnits)
 

@@ -1,3 +1,5 @@
----- **selecty Matches (2 in 1 files) ----
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):		printf("**selecty***=%d\n",selecty);
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	// printf("**selecty*************************=%d\n",selecty);
+---- setcamerazeroossfet Matches (4 in 2 files) ----
+ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):			//setcamerazeroossfet(angle-(currentgyroA-zeroA));
+ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):						//setcamerazeroossfet(-getcurrentangle());
+ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):						setcamerazeroossfet(-getcurrentangle());
+ImageProcess.hpp (z:\home\wj\cuda-workspace\360pano\src):		void setcamerazeroossfet(double flag){camerazeroossfet=flag;};

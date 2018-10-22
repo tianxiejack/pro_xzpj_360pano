@@ -18,6 +18,7 @@
 #include"osa_mutex.h"
 #include"osa_buf.h"
 #include"config.h"
+#include "mvdectInterface.hpp"
 using namespace cv;
 //#define DS_CHAN_MAX         (4)
 typedef struct
@@ -49,7 +50,7 @@ typedef struct _main_thr_obj{
 	void 						*pParent;
 }MAIN_ProcThrObj;
 
-#define ZEROJUEGE 4
+
 class ImageProcess
 {
 public:
@@ -57,12 +58,15 @@ public:
 	~ImageProcess();
 
 	void Init();
+	void Create();
+	
 	void unInit();
 	void CaptureThreadProcess(Mat src,OSA_BufInfo* frameinfo);
 
 
 public:
 		MAIN_ProcThrObj	mainProcThrObj;
+		MAIN_ProcThrObj	mainProcThrdetectObj;
 		Mat processgray[FRAMEFIFO];
 		Mat processtest;
 		Mat processgraytemp[FRAMEFIFO];
@@ -124,7 +128,24 @@ public:
 		void setSeamPos(unsigned int sem){ Seampostion=sem;};
 
 
+		/*******************detect******************/
+		CMvDectInterface *m_pMovDetector;
+		Mat panograysrc;
+		Mat panoblock[MOVEBLOCKNUM];
+		Mat panoblockdown;
+		void panomoveprocess();
+		void getnumofpano360image(int startx,int endx,int *texturestart,int *textureend);
+		static void NotifyFunc(void *context, int chId);
+		void Multicpupanoprocess(Mat& src);
+		static ImageProcess *Pthis;
+		std::vector<TRK_RECT_INFO>	detect_vect;
+		int blocknum;
+		int movblocknum;
 		
+		Mat MvtestFRrame[2];
+		unsigned int pp;
+		VideoWriter videowriter[MULTICPUPANONUM];
+		VideoCapture videocapture;
 		
 		/********angle********/
 		double gyroangle;
@@ -143,6 +164,17 @@ public:
 		int zeroflag;
 		int zerocalibflag;
 		double zeroangle;
+		int zeroprocessflag;
+		int zerocaliboffset;
+		int zerocalibing;
+		void setzerocalibing(int flag){zerocalibing=flag;};
+		int getzerocalibing(){return zerocalibing;};
+		
+		void setzeroprocessflag(int flag){zeroprocessflag=flag;};
+		int getzeroprocessflag(){return zeroprocessflag;};
+
+		void setzerocaliboffset(int offset){zerocaliboffset=offset;};
+		int getzerocaliboffset(){return zerocaliboffset;};
 
 		void setzeroflameupdate(int flag){zeroflameupdate=flag;};
 		int getzeroflameupdate(){return zeroflameupdate;};
@@ -158,13 +190,17 @@ public:
 
 
 		/********frame********/
-		Mat zeroflame;\
+		Mat zeroflame;
 		Mat getzeroflame(){return zeroflame;};
 		void setzeroflame(Mat flame){memcpy(zeroflame.data,flame.data,flame.cols*flame.rows*flame.channels());};
 
 		Mat currentflame;
 		Mat getcurrentflame(){return currentflame;};
 		void setcurrentflame(Mat flame){currentflame=flame;};
+
+
+		/********cpu  process********/
+		void cpupanoprocess(Mat& src);
 	
 		
 private:
@@ -185,6 +221,24 @@ private:
 			}
 		ImageProcess *ctxHdl = (ImageProcess *) pObj->pParent;
 		ctxHdl->main_proc_func();
+		printf("****************************************************\n");
+		return NULL;
+	}
+
+	void main_detect_func();
+	int MAIN_detectthreadCreate(void);
+	int MAIN_detectthreadDestroy(void);
+	static void *maindetectTsk(void *context)
+	{
+		MAIN_ProcThrObj  * pObj= (MAIN_ProcThrObj*) context;
+		if(pObj==NULL)
+			{
+
+			printf("++++++++++++++++++++++++++\n");
+
+			}
+		ImageProcess *ctxHdl = (ImageProcess *) pObj->pParent;
+		ctxHdl->main_detect_func();
 		printf("****************************************************\n");
 		return NULL;
 	}

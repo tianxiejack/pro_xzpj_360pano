@@ -20,14 +20,20 @@ static GLMain render;
 ImageProcess *Imageprocesspt;
 using namespace cv;
 static OSA_BufHndl *imgQ[QUE_CHID_COUNT];
+VideoCapture videocapture;
+Mat fileframe;
+
+#define AVINAME "/home/ubuntu/mov5.avi"
 //static OSA_BufHndl *procossQ[QUE_CHID_COUNT];
 void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capInfo, int format)
 {
+	bool status=0;
 	char WindowName[64]={0};
 	Mat img;
 	int queueid=0;
 	OSA_BufInfo* info=NULL;
 	Mat cap = Mat(TV_HEIGHT,TV_WIDTH,CV_8UC2,src);
+	
 	GYRO_DATA_T gyro;
 	
 	//OSA_printf("%d %s. 1 chid=%d", OSA_getCurTimeInMsec(), __func__,cap_chid);
@@ -43,8 +49,38 @@ void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capIn
 			return;
 			}
 		}
+	
 	img = Mat(TV_HEIGHT,TV_WIDTH,CV_8UC3, info->virtAddr);
-	cvtColor(cap,img,CV_YUV2BGR_YUYV);
+	
+	if(FILEVIDEO)
+		{
+			status=videocapture.read(fileframe);
+			if(!fileframe.empty())
+				{
+					//printf("********1*file cap ok******\n");
+					resize(fileframe,fileframe,Size(PANO360WIDTH,PANO360HEIGHT),0,0,INTER_LINEAR);
+					//printf("********2*file cap ok******\n");
+					fileframe.copyTo(img);
+					//cvtColor(fileframe,img,CV_GRAY2BGR);
+					//printf("********3*file cap ok******\n");
+				}
+			else
+				{
+				//videocapture.set(CV_CAP_PROP_POS_FRAMES,0);
+				videocapture.release();
+				videocapture.open(AVINAME);
+				videocapture.read(fileframe);
+
+				}
+		
+
+
+		}
+	else
+		cvtColor(cap,img,CV_YUV2BGR_YUYV);
+		
+
+	
 	FrameINFO fameinfo;
 	
 	getEuler(&info->framegyroroll,&info->framegyropitch,&info->framegyroyaw);
@@ -76,8 +112,11 @@ int main_pano(int argc, char **argv)
 {
 
 	GLMain_InitPrm dsInit;
+	videocapture=VideoCapture(AVINAME);
+	videocapture.read(fileframe);
 	Imageprocesspt=new ImageProcess();
 	Imageprocesspt->Init();
+	Imageprocesspt->Create();
 	//procossQ[0]=&Imageprocesspt->mcap_bufQue;
 	render.IPocess_bufQue[0]=&Imageprocesspt->m_bufQue[0];
 	//memcpy(render.IPocess_bufQue,Imageprocesspt->m_bufQue,sizeof(Imageprocesspt->m_bufQue));

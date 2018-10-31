@@ -12,6 +12,11 @@
 
 
 
+#define TV  (1)
+#define FIRWIDTH (720)
+#define FIRHEIGHT (576)
+
+
 
 #define camerafov	            (18)
 
@@ -43,7 +48,7 @@
 
 #define PANOSHIFT (0)
 
-#define ANGLEINTREVAL (15)
+#define ANGLEINTREVAL (0)
 
 #define ANGLESHIFT (0)
 
@@ -51,24 +56,27 @@
 
 #define FEATURESTICH (0)
 
-#define CYLINDER (1)
+#define CYLINDER (0)
 
 #define PANODETECTNUM (2)
 
 #define PANOEXTRAH 20
 
-#define PANOSRCSHIFT (100)
+#define PANOSRCSHIFT (0)
 
+#define PANOCYLINDCUT (100)
 
 #define PANOGRAYDETECT (1)
 
-#define MOVEBLOCKNUM (10)
+#define MOVEBLOCKNUM (20)
 
 #define MOVEBLOCKENABLE (1)
 
+#define MOVELKBLOCKNUM (20)
 
+#define LKMOVANGLE (0.5)
 
-#define MOVDETECTDOW (2)
+#define MOVDETECTDOW (4)
 
 #define MOVDETECTDOWENABLE (1)
 
@@ -78,15 +86,30 @@
 
 #define MULTICPUPANO (1)
 
-#define MOVDETECTSRCWIDTH (PANO360WIDTH*2)
+#define MULTICPUPANOLK (1)
+
+#define MOVDETECTSRCWIDTH (PANO360WIDTH)
 #define MOVDETECTSRCHEIGHT (PANO360HEIGHT)
 
 
-#define MULTICPUPANONUM (8)
+#define MULTICPUPANONUM (20)
 
-#define ZEROJUEGE (10)
+#define ZEROJUEGE (15)
 
 #define MULDETECTTRAIN (0)
+
+#define KALMANFILTER (0)
+
+
+#define QUANTER (0)
+
+
+#define FEATURETEST (0)
+
+
+#define IMAGEPROCESSSTICH (0)
+
+#define BUTTERFLY 0
 //#define PANOSRCSHIFT (0)
 
 #endif /* CONFIG_H_ */

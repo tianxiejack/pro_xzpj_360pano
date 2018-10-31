@@ -45,5 +45,15 @@ void stichinit();
 void Matblack(Mat src,int offset);
 double offet2anglerelative2(int  offsetx);
 void histequision(Mat& src);
+void setfilestoreenable(int flag);
+int  getfilestoreenable();
+void setpanoflagenable(int flag);
+int  getpanoflagenable();
 
+int  combition(cv::Mat src,int flag);
+cv::Mat getcombition();
+double offet2anglerelative2inter(int  offsetx);
+int  getfeaturePanoOffset(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset);
+void setmvprocessangle(double angle,int chid);
+double getmvprocessangle(int chid);
 #endif /* STICH_HPP_ */

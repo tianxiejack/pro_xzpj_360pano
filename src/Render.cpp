@@ -15,6 +15,10 @@
 #include "opencv2/highgui/highgui.hpp"
 #include"Homography.hpp"
 #include"Stich.hpp"
+#include "FileRW.hpp"
+
+#include "plantformcontrl.hpp"
+
 using namespace cv;
 using namespace std;
 //#include <GL/glut.h>
@@ -194,6 +198,11 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 	Glosdhandle.setwindow(windowWidth, windowHeight);
 	Glosdhandle.createunicode("/home/ubuntu/default.ttf", 40, 512, 512);
 
+	//#include "FileRW.hpp"
+
+	createfile();
+	writefilehead();
+
 
 }
 
@@ -297,6 +306,22 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 						shotcut=1;
 						shotcutnum++;
 						break;
+					case GLUT_KEY_F7://singprint
+						setfilestoreenable(1);
+						break;
+					case GLUT_KEY_F8://singprint
+						setfilestoreenable(0);
+						destoryfile();
+						break;
+					case GLUT_KEY_F9://singprint
+						setpanoflagenable(1);
+				
+						break;
+					case GLUT_KEY_F10://singprint
+						setpanoflagenable(0);
+					
+						break;
+					
 			
 					default:
 						break;
@@ -347,6 +372,24 @@ void Render::ProcessOitKeys(unsigned char key, int x, int y)
 				break;
 			case 'j':
 //				shotcut=(shotcut+1)%2;
+				break;
+			case 'r':
+				setpanoscan();
+				break;
+			case 't':
+				setpanoscanstop();
+				break;
+			case '2':
+				setpanopanpos(0);
+				break;
+			case '4':
+				setpanopanpos(90);
+				break;
+			case '6':
+				setpanopanpos(180);
+				break;
+			case '8':
+				setpanopanpos(270);
 				break;
 			
 			
@@ -837,7 +880,7 @@ void Render::Pano360init()
 	for(int i=0;i<MAXSEAM;i++)
 	{
 		if(CYLINDER)
-		Seamframe[i]=Mat(PANO360HEIGHT,PANO360WIDTH-PANOSRCSHIFT-100,CV_8UC3,cv::Scalar(0,0,0));
+		Seamframe[i]=Mat(PANO360HEIGHT,PANO360WIDTH-PANOSRCSHIFT-PANOCYLINDCUT,CV_8UC3,cv::Scalar(0,0,0));
 		else
 		Seamframe[i]=Mat(PANO360HEIGHT,PANO360WIDTH-PANOSRCSHIFT,CV_8UC3,cv::Scalar(0,0,0));
 		
@@ -879,6 +922,19 @@ void Render::singleView(int x,int y,int width,int height)
 
 }
 
+void Render::Drawmov()
+{
+	glViewport(0,0,renderwidth,renderheight);
+	Glosdhandle.setwindow(renderwidth,renderheight);
+	Glosdhandle.drawbegin();
+
+
+	Glosdhandle.drawcross(renderwidth/2,renderheight/2,50,50);
+	//Glosdhandle.drawrect(detect_vect360[i].x, detect_vect360[i].y, detect_vect360[i].width, detect_vect360[i].height);
+	
+	Glosdhandle.drawend();
+
+}
 void Render::DrawmovMultidetect()
 {
 	unsigned int pan360w=pano360texturew;
@@ -988,6 +1044,8 @@ void Render::Drawosd()
 		DrawmovMultidetect();
 	else
 		Drawmovdetect();
+
+	Drawmov();
 
 /*
 	wchar_t intext3[] = {
@@ -1665,13 +1723,17 @@ void Render::selectupdate()
 	// printf("**selecty*************************=%d\n",selecty);
 	 	//
 	 h=h/2;
-	// selecty=selecty-yshift;
 
-	//selectx=1920*5*PANO360WIDTH/15000;
+	/************************************/
+	/*
+	 selecty=selecty-yshift;
+
+	selectx=0;
 	
-	//selectw=1920*PANO360WIDTH*2/15000;
-	//selecth=h;
-	
+	selectw=1920*PANO360WIDTH/15000;
+	selecth=h;
+	*/
+	/************************************/
 	vTexselectCoords[0]=1.0*selectx/w;
 	vTexselectCoords[1]=1.0*(selecty-yshift)/h;
 

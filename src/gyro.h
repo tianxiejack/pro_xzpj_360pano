@@ -24,15 +24,21 @@ typedef struct
 	short 	gyro_ax;	
 	short 	gyro_ay;	
 	short 	gyro_az;
-
+#if 0
+	int  	gyro_gx;	
+	int  	gyro_gy;	
+	int  	gyro_gz;
+	
+#else
 	short 	gyro_gx;	
 	short 	gyro_gy;	
 	short 	gyro_gz;
 
+#endif
 	short 	gyro_mx;	
 	short 	gyro_my;	
 	short 	gyro_mz;
-
+	unsigned char preset;
 	unsigned int   gyro_timestamp;
 	unsigned int   gyro_pretimestamp;
 	
@@ -53,6 +59,7 @@ typedef struct _gyro_data_t
 	double  	gyroY;
 	double	gyroZ;
 
+	double oddeven;
 	double quat[4];
 }GYRO_DATA_T;
 

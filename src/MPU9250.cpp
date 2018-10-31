@@ -1,15 +1,26 @@
 #include"MPU9250.hpp"
-
 #include"osa.h"
 #include "math.h"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
-
+#include "opencv2/video/tracking.hpp"
+#include <stdio.h>
+#include"config.h"
+#include"Stich.hpp"
+using namespace cv;
 using namespace cv;
 using namespace std;
 
-#define gryo_scale   	(500.0/65536.0*3.141592653/180.0)			
+
+
+//#ifdef BUTTERFLY
+//#define gryo_scale   	(3.141592653/16384/180.0)	
+//#else
+#define gryo_scale   	(500.0/65536.0*3.141592653/180.0)	
+//#endif
+
+//#define gryo_scale   	(1>>14)	
 //#define gryo_scale   	(500.0/65536.0)
 #define accel_scale 	(4.0/65536.0)												
 #define mag_scale 	  (9600.0/16384.0/100.0)							
@@ -45,8 +56,11 @@ static float k40=0.0f,k41=0.0f,k42=0.0f,k43=0.0f;
 
 
 
-
+#ifdef BUTTERFLY
+int gyro_offsetx=0,gyro_offsety=0,gyro_offsetz=0;
+#else
 short gyro_offsetx=0,gyro_offsety=0,gyro_offsetz=0;
+#endif
 float tmp1,tmp2,tmp3;
 float magoffsetx=1.31454428611172,magoffsety=-1.21753632395713,magoffsetz=1.6567777185719;
 float B[6]={0.980358187761106,-0.0105514731414606,0.00754899338354401,0.950648704823113,-0.0354995317649016,1.07449478456729};
@@ -58,6 +72,13 @@ float accsensx=1.00851297697413,accsensy=0.991366909333871,accsensz=1.0001936444
 short accoldx,accoldy,accoldz;
 short magoldx,magoldy,magoldz;
 short gyrooldx,gyrooldy,gyrooldz;
+
+
+
+KalmanFilter KF;
+Mat Xstate;
+Mat QprocessNoise;
+Mat Zmeasurement;
 
 
 float invSqrt(float number);
@@ -227,9 +248,9 @@ void getQunterandEuler(GYRO_MPU*mpu)
            float vx, vy, vz, wx, wy, wz; 
            float ex, ey, ez;
 	     float tmp0,tmp1,tmp2,tmp3;
-	     float gx=mpu->gyro_gx;
-	     float gy=mpu->gyro_gy;
-	     float gz=mpu->gyro_gz;
+	     double gx=mpu->gyro_gx;
+	     double gy=mpu->gyro_gy;
+	     double gz=mpu->gyro_gz;
 	     float ax=mpu->gyro_ax;
 	     float ay=mpu->gyro_ay;
 	     float az=mpu->gyro_az;
@@ -304,6 +325,7 @@ gyroll+=gx*timeinterval;
 gypitch+=gy*timeinterval;
 gyyaw+=gz*timeinterval;
 
+
 //gyroll+=gyrollbase;
 //gypitch+=gypitchbase;
 //gyyaw+=gyyawbase;
@@ -365,9 +387,9 @@ gyyaw+=gz*timeinterval;
   	
 	#endif
 	#if 1			 
-	 mpu->pitch	= asin(-2 * q1 * q3 + 2 * q0 * q2);	// pitch
-	 mpu->roll 	      = atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2 * q2 + 1);	// roll
-	 mpu->yaw       = atan2(2*(q1*q2 + q0*q3),-2 * q3 * q3 - 2 * q2 * q2 + 1);	//yaw
+	 gypitch	= asin(-2 * q1 * q3 + 2 * q0 * q2);	// pitch
+	 gyroll	= atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2 * q2 + 1);	// roll
+	 gyyaw  = atan2(2*(q1*q2 + q0*q3),-2 * q3 * q3 - 2 * q2 * q2 + 1);	//yaw
 	 #elif 0
 	double q[4];
 	 q[0]=q0;
@@ -396,6 +418,8 @@ gyyaw+=gz*timeinterval;
 
 
 bool norma=true;
+
+
 while(norma)
 {
 	if(gyroll>2*3.141592653)
@@ -427,7 +451,7 @@ while(norma)
 	else
 		norma=false;
 }
-	
+
 mpu->roll=gyroll;
 mpu->pitch=gypitch;
 mpu->yaw=gyyaw;
@@ -600,15 +624,76 @@ unsigned char MPU_Get_Gyroscope( short *gx, short *gy, short *gz)
 	} 	
     return res;
 }
-unsigned char MPU_Get_Gyro( short *igx, short  *igy, short *igz,double *gx,double *gy,double *gz)
+
+unsigned char MPU_Get_Gyroscopeint( int *gx, int *gy, int *gz)
+{
+    unsigned char buf[6],res=0; 
+  
+	//res=MPU_Read_Len(MPU9250_ADDR,MPU_GYRO_XOUTH_REG,6,buf);
+	if(res==0)
+	{
+		*gy=*gy+gyro_offsety;  
+		*gx=*gx+gyro_offsetx;  
+		*gz=*gz+gyro_offsetz;
+		  if(GYRO_NOFILTER)
+		return 0;
+		*gx=-*gx;
+		*gx=(short)(gyrooldx*0.5+*gx*0.5);
+		*gy=(short)(gyrooldy*0.5+*gy*0.5);
+		*gz=(short)(gyrooldz*0.5+*gz*0.5);
+		gyrooldx=*gx;
+		gyrooldy=*gy;
+		gyrooldz=*gz;
+		
+	} 	
+    return res;
+}
+unsigned char MPU_Get_Gyro( void *igx1, void  *igy1, void *igz1,double *gx,double *gy,double *gz)
 {
 	unsigned char res;
+	short *igx=(short *)igx1;
+	short  *igy=(short *)igy1;
+	short *igz=(short *)igz1;
+
 	res=MPU_Get_Gyroscope(igx,igy,igz);
 	if (res==0)
 	{
-	*gx=(float)(*igx)*gryo_scale;
-	*gy=(float)(*igy)*gryo_scale;
-	*gz=(float)(*igz)*gryo_scale;
+
+
+			*gx=(float)(*igx)*gryo_scale;
+			*gy=(float)(*igy)*gryo_scale;
+			*gz=(float)(*igz)*gryo_scale;
+
+
+		
+	}
+	return res;
+}
+
+unsigned char MPU_Get_Gyroint( void *igx1, void   *igy1, void  *igz1,double *gx,double *gy,double *gz)
+{
+	unsigned char res;
+	int *igx=(int *)igx1;
+	int  *igy=(int *)igy1;
+	int *igz=(int *)igz1;
+	res=MPU_Get_Gyroscopeint(igx,igy,igz);
+	if (res==0)
+	{
+
+	if(1)
+		{
+			*gx=(double)(*igx)*gryo_scale;
+			*gy=(double)(*igy)*gryo_scale;
+			*gz=(double)(*igz)*gryo_scale;
+		}
+	else
+		{
+			*gx=(float)(*igx)*gryo_scale;
+			*gy=(float)(*igy)*gryo_scale;
+			*gz=(float)(*igz)*gryo_scale;
+
+
+		}
 	}
 	return res;
 }
@@ -705,16 +790,48 @@ unsigned char MPU_Get_Mag(short *imx,short *imy,short *imz,double *mx,double *my
 
 
 unsigned int  calibreatetimes=0;
-#define CALIBREATIONTIME 100
-unsigned char  calibrate(short *gx, short *gy, short *gz)
+#define CALIBREATIONTIME 1000
+unsigned char  calibrate(void *gx1, void *gy1, void *gz1)
 {
 	unsigned char t;
 	static int sumx=0,sumy=0,sumz=0;
+	short *gx=(short *)gx1;
+	short *gy=(short *)gy1;
+	short *gz=(short *)gz1;
+	
 	if(calibreatetimes>=CALIBREATIONTIME)
 		return 1;
 	//for (t=0;t<100;t++)
 	{
 		MPU_Get_Gyroscope(gx,gy,gz);
+		sumx=sumx+*gx;
+		sumy=sumy+*gy;
+		sumz=sumz+*gz;
+	}
+	if(calibreatetimes==CALIBREATIONTIME-1)
+		{
+			gyro_offsetx=-sumx/CALIBREATIONTIME;
+			gyro_offsety=-sumy/CALIBREATIONTIME;
+			gyro_offsetz=-sumz/CALIBREATIONTIME;
+		}
+	calibreatetimes++;
+	
+	return 0;
+
+}
+
+unsigned char  calibrateint(void *gx1, void *gy1, void *gz1)
+{
+	unsigned char t;
+	static long int sumx=0,sumy=0,sumz=0;
+	int *gx=(int *)gx1;
+	int *gy=(int *)gy1;
+	int *gz=(int *)gz1;
+	if(calibreatetimes>=CALIBREATIONTIME)
+		return 1;
+	//for (t=0;t<100;t++)
+	{
+		MPU_Get_Gyroscopeint(gx,gy,gz);
 		sumx=sumx+*gx;
 		sumy=sumy+*gy;
 		sumz=sumz+*gz;
@@ -745,7 +862,7 @@ void CalibrateToZero(GYRO_MPU*mpu)
 	if(t<=CALIHEAD+CALILEN)
 	//	for (t=0;t<150;t++)
 	{
-		MPU_Get_Gyro(&mpu->gyro_gxi,&mpu->gyro_gyi,&mpu->gyro_gzi,&mpu->gyro_gx,&mpu->gyro_gy,&mpu->gyro_gz);
+		MPU_Get_Gyroint(&mpu->gyro_gxi,&mpu->gyro_gyi,&mpu->gyro_gzi,&mpu->gyro_gx,&mpu->gyro_gy,&mpu->gyro_gz);
 		MPU_Get_Accel(&mpu->gyro_axi,&mpu->gyro_ayi,&mpu->gyro_azi,&mpu->gyro_ax,&mpu->gyro_ay,&mpu->gyro_az);
 		MPU_Get_Mag(&mpu->gyro_mxi,&mpu->gyro_myi,&mpu->gyro_mzi,&mpu->gyro_mx,&mpu->gyro_my,&mpu->gyro_mz);
 		//AHRSupdate(gx,gy,gz,ax,ay,az,mx,my,mz,&roll,&pitch,&yaw);
@@ -780,12 +897,76 @@ void setgyyawbase(double angle)
 	gyyawbase=angle;
 
 }
+
+void gyrokalmanfilterinit()
+{
+	 KF=KalmanFilter(1, 1, 0);
+	 Xstate=Mat(1, 1, CV_32F); /* 状态矩阵：1个状态，角度 *///X
+	 QprocessNoise=Mat(1, 1, CV_32F); //过程噪声矩阵
+	 Zmeasurement= Mat::zeros(1, 1, CV_32F);//观测值，
+	 KF.transitionMatrix = *(Mat_<float>(1, 1) << 1);  //转移矩阵F
+	 setIdentity(KF.measurementMatrix);//H
+	 setIdentity(KF.processNoiseCov, Scalar::all(1e-9));//Q
+	 setIdentity(KF.measurementNoiseCov, Scalar::all(1e-2));//R
+	 setIdentity(KF.errorCovPost, Scalar::all(1));//P
+	 randn(KF.statePost, Scalar::all(0), Scalar::all(0.1));//Z
+
+}
+void kalmanfirst(GYRO_MPU*mpu)
+{
+	static int onece=1;
+	if(onece)
+		{
+			 setIdentity(KF.statePost, Scalar::all(mpu->gyro_gz));
+			 setIdentity(KF.statePre, Scalar::all(mpu->gyro_gz));
+			 
+			 onece=0;
+		}
+	
+
+
+}
+
+void kalmanfilter(GYRO_MPU*mpu)
+{
+	if(KALMANFILTER)
+		{
+			kalmanfirst(mpu);
+			setIdentity(Zmeasurement, Scalar::all(mpu->gyro_gz));//Q
+			
+			KF.correct(Zmeasurement);
+			Mat prediction = KF.predict();
+
+			double predictZ = prediction.at<float>(0);
+
+			mpu->gyro_gz=predictZ;
+			//printf("predictZ=%f Zmeasurement=%f,KF.statePost=%f\n",predictZ,Zmeasurement.at<float>(0),KF.statePost);
+			// randn( Zmeasurement, Scalar::all(0), Scalar::all(KF.measurementNoiseCov.at<float>(0)));
+			// generate measurement
+			// Zmeasurement += KF.measurementMatrix*Xstate;
+
+
+			//randn( QprocessNoise, Scalar(0), Scalar::all(sqrt(KF.processNoiseCov.at<float>(0, 0))));
+			//Xstate = KF.transitionMatrix*Xstate + QprocessNoise;
+
+
+		}
+
+
+}
 void GetMpugyro(GYRO_MPU*mpu)
 {
 	double pi=3.1415926;
-	MPU_Get_Gyro(&mpu->gyro_gxi,&mpu->gyro_gyi,&mpu->gyro_gzi,&mpu->gyro_gx,&mpu->gyro_gy,&mpu->gyro_gz);
+	if(BUTTERFLY)
+		MPU_Get_Gyroint(&mpu->gyro_gxi,&mpu->gyro_gyi,&mpu->gyro_gzi,&mpu->gyro_gx,&mpu->gyro_gy,&mpu->gyro_gz);
+	else
+		MPU_Get_Gyro(&mpu->gyro_gxi,&mpu->gyro_gyi,&mpu->gyro_gzi,&mpu->gyro_gx,&mpu->gyro_gy,&mpu->gyro_gz);
+	
 	MPU_Get_Accel(&mpu->gyro_axi,&mpu->gyro_ayi,&mpu->gyro_azi,&mpu->gyro_ax,&mpu->gyro_ay,&mpu->gyro_az);
 	MPU_Get_Mag(&mpu->gyro_mxi,&mpu->gyro_myi,&mpu->gyro_mzi,&mpu->gyro_mx,&mpu->gyro_my,&mpu->gyro_mz);
+
+	if(getpanoflagenable())
+		kalmanfilter(mpu);
 		//AHRSupdate(gx,gy,gz,ax,ay,az,mx,my,mz,&roll,&pitch,&yaw);
 	//OSA_printf("gx=%f gy=%f gz=%f\n",mpu->gyro_gx,mpu->gyro_gy,mpu->gyro_gz);
 	getQunterandEuler(mpu);

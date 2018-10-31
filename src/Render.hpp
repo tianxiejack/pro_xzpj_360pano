@@ -125,6 +125,7 @@ public:
 	void Drawosd();
 	void Drawmovdetect();
 	void DrawmovMultidetect();
+	void Drawmov();
 	int movviewx;
 	int movviewy;
 	int movvieww;

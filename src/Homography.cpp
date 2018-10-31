@@ -6,7 +6,7 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
 #include "osa.h"
-
+#include "config.h"
 #include "extra.h" 
 using namespace cv;
 using namespace std;
@@ -587,9 +587,12 @@ int  getPano360OffsetT(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset)
              cvtColor(tempdst,tempdst,CV_BGR2GRAY);
              else
              cvtColor(dst,tempdst,CV_BGR2GRAY);
-	
-		
-		Rect temprect=Rect(0,0.5*tempsrc.rows-0.2*tempsrc.rows,0.2*tempsrc.cols, 0.4*tempsrc.rows);
+
+		Rect temprect;
+		if(FEATURETEST==0)
+		temprect=Rect(0,0.5*tempsrc.rows-0.3*tempsrc.rows,0.3*tempsrc.cols, 0.6*tempsrc.rows);
+		else
+		temprect=Rect(0,0.5*tempsrc.rows-0.4*tempsrc.rows,0.3*tempsrc.cols, 0.8*tempsrc.rows);
 		Mat templ(tempsrc, temprect); 
 		Mat result(tempdst.cols - templ.cols + 1, tempdst.rows - templ.rows + 1, CV_8UC1);
 		
@@ -601,8 +604,11 @@ int  getPano360OffsetT(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset)
 		double minVal; double maxVal; Point minLoc; Point maxLoc;
 		Point matchLoc; 
 		minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, Mat()); 
+
+		//if(FEATURETEST==0)
 		if(maxVal<0.90)
 			return -1;
+
 		OSA_printf("the %s  maxVal=%f  minVal=%f\n",__func__,maxVal,minVal);
 
 		normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat()); 

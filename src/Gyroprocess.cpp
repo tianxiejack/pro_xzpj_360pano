@@ -1,6 +1,9 @@
 #include"Gyroprocess.hpp"
 #include"osa.h"
 #include"MPU9250.hpp"
+#include "FileRW.hpp"
+#include"Stich.hpp"
+#include"config.h"
 //GYRO_NINEAXIS Nineaxis[50];
 GYRO_FRAME gyrofram;
 double Roll=0.0;
@@ -14,6 +17,16 @@ double Yawbase=0.0;
 
 double zeroangle=0.0;
 double pretimestamp=0.0;
+int oddeven=0;
+void kalmanfilterinit()
+{
+
+
+	gyrokalmanfilterinit();
+	
+}
+
+
 
 void setyawbase(double base)
 {
@@ -39,19 +52,34 @@ unsigned char checksum(unsigned char *data,unsigned char sum)
 
 void proptotocal(Mat& frame)
 {
+	static int nintcount=0;
+	int gyro=0xe1234567;
+	char *pdata=(char *)&gyro;
 	int numpacket=0;
 	double timeinterval=0;
 	int width=frame.cols;
 	int height=frame.rows;
 	unsigned char buffdata[40];
 	unsigned char *dataptr=frame.data;
-	numpacket=dataptr[width*(height-1)*2]<<8|dataptr[width*(height-1)*2+1];
+	int oddenven=0;
+	numpacket=dataptr[width*(height-1)*2+1];
+	oddenven=dataptr[width*(height-1)*2];
+	//numpacket=dataptr[width*(height-1)*2]<<8|dataptr[width*(height-1)*2+1];
+	if(numpacket==7)
+	{
+
+	OSA_printf("THE num PACKET=%d numpacket%d\n",numpacket,nintcount);
+	nintcount=0;
+	}
+	else
+		nintcount++;
 	
-	//OSA_printf("THE num PACKET=%d width=%d height=%d\n",numpacket,width,height);
 	/////////////////
 	//numpacket=1;
-
-
+	
+	if(numpacket>10)
+		
+		return ;
 	//////////////////
 	gyrofram.packetnum=0;
 	for(int i=0;i<numpacket;i++)
@@ -70,16 +98,63 @@ void proptotocal(Mat& frame)
 			niaxis->gyro_ax=buffdata[3]<<8 | buffdata[4];
 			niaxis->gyro_ay=buffdata[7]<<8 | buffdata[8];
 			niaxis->gyro_az=buffdata[11]<<8 | buffdata[12];
-			
-			niaxis->gyro_gx=buffdata[15]<<8 | buffdata[16];
-			niaxis->gyro_gy=buffdata[19]<<8 | buffdata[20];
-			niaxis->gyro_gz=buffdata[23]<<8 | buffdata[24];
+			if(BUTTERFLY)
+			{
+				gyro=0xe1234567;
+				pdata=(char *)&gyro;
+				pdata[2]=buffdata[17];
+				pdata[1]=buffdata[16];
+				pdata[0]=buffdata[15];
+				pdata[3]=0x00;
+				if((buffdata[17]&0x80)==0x80)
+					{
+						pdata[3]=0xff;
+					}
+				
+				niaxis->gyro_gx=gyro;
+				
+				gyro=0xe1234567;
+				pdata=(char *)&gyro;
+				pdata[2]=buffdata[21];
+				pdata[1]=buffdata[20];
+				pdata[0]=buffdata[19];
+				pdata[3]=0x00;
+				if((buffdata[21]&0x80)==0x80)
+					{
+						pdata[3]=0xff;
+					}
+				niaxis->gyro_gy=gyro;
+				gyro=0xe1234567;
+				pdata=(char *)&gyro;
+				pdata[2]=buffdata[25];
+				pdata[1]=buffdata[24];
+				pdata[0]=buffdata[23];
+				pdata[3]=0x00;
+				if((buffdata[25]&0x80)==0x80)
+					{
+						pdata[3]=0xff;
+					}
+				niaxis->gyro_gz=gyro;
+			}
+		else
+			{
+				niaxis->gyro_gx=buffdata[15]<<8 | buffdata[16];
+				niaxis->gyro_gy=buffdata[19]<<8 | buffdata[20];
+				niaxis->gyro_gz=buffdata[23]<<8 | buffdata[24];
+		
+			}
+
 
 			niaxis->gyro_mx=buffdata[27]<<8 | buffdata[28];
 			niaxis->gyro_my=buffdata[29]<<8 | buffdata[30];
 			niaxis->gyro_mz=buffdata[31]<<8 | buffdata[32];
 
 			niaxis->gyro_pretimestamp=pretimestamp;
+
+
+		
+
+			niaxis->preset=buffdata[34];
 			
 			//buffdata[35]=0xff;
 			niaxis->gyro_timestamp=buffdata[35]<<24 | buffdata[36]<<16 | buffdata[37]<<8 | buffdata[38];
@@ -88,21 +163,23 @@ void proptotocal(Mat& frame)
 			if(abs(timeinterval)>33*1000)
 				{
 					pretimestamp=niaxis->gyro_timestamp;
-					printf("*****timeinterval=%f************error \n",timeinterval);
+					//printf("*****timeinterval=%f************error \n",timeinterval);
 					continue;
 				}
+		
 
+			oddeven=oddenven;
 			pretimestamp=niaxis->gyro_timestamp;
 			gyrofram.packetnum++;
 
 
-			/*
+		/*	
 			OSA_printf("_________________________________________________________________\n");
 			OSA_printf("THE time=%u\n",niaxis->gyro_timestamp);
 			OSA_printf("ax=%d ay=%d az=%d gx=%d gy=%d gz=%d mx=%d my=%d mz=%d \n",niaxis->gyro_ax,niaxis->gyro_ay,niaxis->gyro_az,niaxis->gyro_gx,niaxis->gyro_gy,niaxis->gyro_gz,niaxis->gyro_mx,niaxis->gyro_my,niaxis->gyro_mz);
 			OSA_printf("_________________________________________________________________\n");
-			*/
 			
+		*/	
 		}
 	
 	
@@ -110,7 +187,11 @@ void proptotocal(Mat& frame)
 
 }
 
+int getoddenv()
+{
 
+	return oddeven;
+}
 int  GyroCalibration()
 {
 	int ret=0;
@@ -131,7 +212,13 @@ int  GyroCalibration()
 			mpu.gyro_mzi=gyrofram.gyrof[i].gyro_mz;
 			mpu.gyro_timestamp=gyrofram.gyrof[i].gyro_timestamp;
 			mpu.gyro_pretimestamp=gyrofram.gyrof[i].gyro_pretimestamp;
-			ret=calibrate(&mpu.gyro_gxi,&mpu.gyro_gyi,&mpu.gyro_gzi);
+			
+			mpu.preset=gyrofram.gyrof[i].preset;
+			if(BUTTERFLY)
+				ret=calibrateint(&mpu.gyro_gxi,&mpu.gyro_gyi,&mpu.gyro_gzi);
+			else
+				ret=calibrate(&mpu.gyro_gxi,&mpu.gyro_gyi,&mpu.gyro_gzi);
+
 			//CalibrateToZero(&mpu);
 
 		}
@@ -161,7 +248,25 @@ void GyrogetRPY()
 			mpu.gyro_mzi=gyrofram.gyrof[i].gyro_mz;
 			mpu.gyro_timestamp=gyrofram.gyrof[i].gyro_timestamp;
 			mpu.gyro_pretimestamp=gyrofram.gyrof[i].gyro_pretimestamp;
+
+			mpu.preset=gyrofram.gyrof[i].preset;
+			
 			GetMpugyro(&mpu);
+
+			if(mpu.preset!=0)
+				{
+					//OSA_printf("preset=%d angle=%f\n",mpu.preset,mpu.yaw*180/pi+Yawbase-zeroangle);
+
+				}
+
+				if(getfilestoreenable())
+				{
+
+				//	OSA_printf("gx=%f gy=%f gz=%f\n",mpu.gyro_gx,mpu.gyro_gy,mpu.gyro_gz);
+
+
+					writefiled(mpu.gyro_timestamp,mpu.gyro_gx,mpu.gyro_gy,mpu.gyro_gz);	
+				}
 			#if 0
 			Roll+=mpu.roll*180/pi;
 			Pitch+=mpu.pitch*180/pi;

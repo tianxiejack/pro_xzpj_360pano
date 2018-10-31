@@ -1,5 +1,7 @@
----- setcamerazeroossfet Matches (4 in 2 files) ----
-ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):			//setcamerazeroossfet(angle-(currentgyroA-zeroA));
-ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):						//setcamerazeroossfet(-getcurrentangle());
-ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):						setcamerazeroossfet(-getcurrentangle());
-ImageProcess.hpp (z:\home\wj\cuda-workspace\360pano\src):		void setcamerazeroossfet(double flag){camerazeroossfet=flag;};
+---- DETECTTEST Matches (6 in 3 files) ----
+Config.h (z:\home\wj\cuda-workspace\360pano\src):#define DETECTTEST (1)
+ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(DETECTTEST)
+ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):					if(DETECTTEST==0)
+ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):		if(DETECTTEST)
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	//#define DETECTTEST (1)
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(DETECTTEST)

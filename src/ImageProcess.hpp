@@ -19,6 +19,7 @@
 #include"osa_buf.h"
 #include"config.h"
 #include "mvdectInterface.hpp"
+#include"lkdetect.hpp"
 using namespace cv;
 //#define DS_CHAN_MAX         (4)
 typedef struct
@@ -96,9 +97,19 @@ public:
 		double currentangle;
 		double getcurrentangle(){return currentangle;};
 		void setcurrentangle(double angle){currentangle=angle;};
+
+		double currentcapangle;
+		double getcurrentcapangle(){return currentcapangle;};
+		void setcurrentcapangle(double angle){currentcapangle=angle;};
+		
 		double getpreangle(){return preangle;};
 		void setpreangle(double angle){preangle=angle;};
 		void OptiSeam();
+		Mat ProcessPreimage;
+
+		void setpreprocessimage(Mat src){memcpy(ProcessPreimage.data,src.data,ProcessPreimage.cols*ProcessPreimage.rows*ProcessPreimage.channels());};
+		Mat getpreprocessimage(){return ProcessPreimage;};
+		
 			/******************seaminit***********************/
 		#define MAXSEAM 2
 		Mat Seamframe[MAXSEAM];
@@ -127,26 +138,46 @@ public:
 		unsigned int getSeamPos(){return Seampostion;};
 		void setSeamPos(unsigned int sem){ Seampostion=sem;};
 
+		void setwarndetect(int w,int h,int chid);
+
 
 		/*******************detect******************/
 		CMvDectInterface *m_pMovDetector;
 		Mat panograysrc;
+		Mat detedtgraysrc;
 		Mat panoblock[MOVEBLOCKNUM];
 		Mat panoblockdown;
 		void panomoveprocess();
 		void getnumofpano360image(int startx,int endx,int *texturestart,int *textureend);
 		static void NotifyFunc(void *context, int chId);
+		static void NotifyFunclk(void *context, int chId);
 		void Multicpupanoprocess(Mat& src);
+		void MulticpuLKpanoprocess(Mat& src);
+
+
+		void detectprocess(Mat src,OSA_BufInfo* frameinfo);
+		int JudgeLk(Mat src);
+		int LkAngle[MOVELKBLOCKNUM];
+		double LKprocessangle[MOVELKBLOCKNUM];
 		static ImageProcess *Pthis;
 		std::vector<TRK_RECT_INFO>	detect_vect;
 		int blocknum;
 		int movblocknum;
+		double panoblockangle[MOVELKBLOCKNUM];
+
+		
 		
 		Mat MvtestFRrame[2];
+		Mat MvtestFRramegray;
+		Mat LKRramegray;
+		Mat LKRramegrayblackboard;
+		Rect blackrect;
 		unsigned int pp;
 		VideoWriter videowriter[MULTICPUPANONUM];
 		VideoCapture videocapture;
-		
+
+		LKmove lkmove;
+		std::vector<cv::Rect>	detectlk;
 		/********angle********/
 		double gyroangle;
 		void setgyroangle(double flag){gyroangle=flag;};
@@ -167,6 +198,20 @@ public:
 		int zeroprocessflag;
 		int zerocaliboffset;
 		int zerocalibing;
+
+		double calibrationzeroangle;
+		void setcalibrationzeroangle(double angle){calibrationzeroangle=angle;};
+		double getcalibrationzeroangle(){return calibrationzeroangle;};
+		
+		int zerodropflame;
+		void setzerodropflame(int flag){zerodropflame=flag;};
+		int getzerodropflame(){return zerodropflame;};
+
+		int zerodroreset;
+		void setzerodroreset(int flag){zerodroreset=flag;};
+		int getzzerodroreset(){return zerodroreset;};
+		
+		
 		void setzerocalibing(int flag){zerocalibing=flag;};
 		int getzerocalibing(){return zerocalibing;};
 		
@@ -175,6 +220,8 @@ public:
 
 		void setzerocaliboffset(int offset){zerocaliboffset=offset;};
 		int getzerocaliboffset(){return zerocaliboffset;};
+
+		
 
 		void setzeroflameupdate(int flag){zeroflameupdate=flag;};
 		int getzeroflameupdate(){return zeroflameupdate;};

@@ -1,0 +1,20 @@
+---- m_warnRoiVec Matches (23 in 2 files) ----
+MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):		m_warnRoiVec[i].clear();
+MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):		m_warnRoiVec[i].clear();
+MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):		if(m_warnRoiVec[chId].size() < 3){
+MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):			int num = m_warnRoiVec[chId].size();
+MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):			for(ptmp = m_warnRoiVec[chId].begin();ptmp != m_warnRoiVec[chId].end();ptmp++){
+MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):	if( srcwidth*srcheight*2.0/3.0 < cv::contourArea(m_warnRoiVec[chId]) ){	
+MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):		boundRect = boundingRect(m_warnRoiVec[chId]);
+MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):		m_warnRoiVec[chId].resize(npoint);
+MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):			m_warnRoiVec[chId][k]	= cv::Point2i(warnRoi[k]);
+MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):	m_warnRoiVec[chId].clear();
+MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):		if(m_warnRoiVec[chId].size() == 0)
+MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):						int	npoint	= m_warnRoiVec[chId].size();
+MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):							line(disframe[chId], m_warnRoiVec[chId][i], m_warnRoiVec[chId][(i+1)%npoint], cvScalar(0,0,255,255), 4, 8);
+MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):						int	npoint	= m_warnRoiVec[chId].size();
+MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):							line(disframe[chId], m_warnRoiVec[chId][i], m_warnRoiVec[chId][(i+1)%npoint], cvScalar(0,0,255,255), 4, 8);
+MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):							int	npoint	= m_warnRoiVec[chId].size();
+MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):								line(disframe[chId], m_warnRoiVec[chId][i], m_warnRoiVec[chId][(i+1)%npoint], cvScalar(0,0,255,255), 4, 8);
+MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):		if(m_warnRoiVec[chId].size() == 0)
+MovDetector.hpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):	std::vector<cv::Point2i>		m_warnRoiVec[DETECTOR_NUM];

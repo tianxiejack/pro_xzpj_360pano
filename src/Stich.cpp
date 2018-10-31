@@ -4,6 +4,8 @@
 #include"osa.h"
 #include <osa_mutex.h>
 #include"math.h"
+#include "plantformcontrl.hpp"
+
 unsigned int panowidth=0;
 unsigned int panoheight=0;
 double angle=0.0;
@@ -11,18 +13,92 @@ double angle=0.0;
 
 static unsigned int zeroimagpenum=0;
 bool imgprocessenable =false;
-
+int filestoreflag=0;
+int panoflag=0;
 
 /*******************************************/
 Mat PANO[PANODETECTNUM];
 unsigned int panonum=0;
 OSA_MutexHndl disLock[MULTICPUPANONUM];
 std::vector<cv::Rect> mvtect[MULTICPUPANONUM];
+
+Mat cylinderremapx;
+Mat cylinderremapy;
+
+Mat combitionmat;
+int fullflame=0;
+#define ODD (0)
+#define EVEN (1)
+#define FULL (2)
+
+double mvprocessangle[MULTICPUPANONUM];
+
+
+
+void setmvprocessangle(double angle,int chid)
+{
+	mvprocessangle[chid]=angle;
+
+}
+
+double getmvprocessangle(int chid)
+{
+	return mvprocessangle[chid];
+
+}
+void deinterlanceinit()
+{
+
+	combitionmat=Mat(FIRHEIGHT,FIRWIDTH,CV_8UC2);
+
+}
+
+void cylinderremapinit()
+{
+      cylinderremapx.create(Size(PANO360WIDTH,PANO360HEIGHT), CV_32FC1 );
+      cylinderremapy.create(Size(PANO360WIDTH,PANO360HEIGHT), CV_32FC1 );
+
+
+
+	double R=CAMERAFOCUSLENGTH;
+
+    	int width =PANO360WIDTH, height = PANO360HEIGHT;
+	double x, y;
+	int drcpoint;
+	double fovAngle=2*atan(width/(2.0*R));
+	for (int hnum = 0; hnum < height;hnum++)
+	{
+		for (int wnum = PANOSRCSHIFT; wnum < width;wnum++)
+		{
+			double k = R / sqrt(R*R + (wnum - width / 2)*(wnum - width / 2));
+			//x = (wnum - width / 2) / k + width / 2;
+			#if 1
+			x= width/2.0 + R * tan((wnum-R * fovAngle/2)/R) ;
+			y=hnum;
+			#elif 1
+			x=width/2+R*tan((wnum-width/2)/R);
+			y=hnum;
+			
+			#else
+			//x==  width/2.0 - R  * tan((R  * fovAngle/2 - wnum)/R ) + 0.5;
+			x=width/2+R*tan((wnum-width/2)/R);
+			y = (hnum - height / 2) / k + height / 2;
+			#endif
+			cylinderremapx.at<float>(hnum,wnum-PANOSRCSHIFT)= static_cast<float>(x);
+			cylinderremapy.at<float>(hnum,wnum-PANOSRCSHIFT)= static_cast<float>(y);
+		
+		}
+	}
+
+}
 void stichinit()
 {
 	for(int i=0;i<MULTICPUPANONUM;i++)
 	OSA_mutexCreate(&disLock[i]);
-
+	memset(mvprocessangle,0,sizeof(mvprocessangle));
+	plantformcontrlinit();
+	cylinderremapinit();
+	deinterlanceinit();
 
 }
 void setpanomap(Mat pano[])
@@ -32,6 +108,28 @@ void setpanomap(Mat pano[])
 			PANO[i]=pano[i];
 
 		}
+
+}
+
+void setpanoflagenable(int flag)
+{
+	panoflag=flag;
+
+}
+int  getpanoflagenable()
+{
+	return panoflag;
+
+}
+
+void setfilestoreenable(int flag)
+{
+	filestoreflag=flag;
+
+}
+int  getfilestoreenable()
+{
+	return filestoreflag;
 
 }
 
@@ -95,6 +193,21 @@ double offet2angle(int  offsetx)
 {
 	//int xoffset=PANOSCALE*angle*panowidth/360;
 	angle+=offsetx*360.0/(panowidth*PANOSCALE);
+	if(angle>360)
+		angle-=360;
+	return angle;
+
+}
+
+double offet2anglerelative2inter(int  offsetx)
+{
+	int halgoffset=offsetx/2;
+	//double angle;
+	angle+=2*atan2(1.0*halgoffset,CAMERAFOCUSLENGTH)*180/3.141592653;
+	if(angle>360)
+		angle-=360;
+	//int xoffset=PANOSCALE*angle*panowidth/360;
+	//angle+=offsetx*360.0/(panowidth*PANOSCALE);
 	return angle;
 
 }
@@ -121,6 +234,9 @@ double offet2anglerelative(int  offsetx)
 
 void cylinder(Mat& src,Mat & dst,double R,int shift)
 {
+
+
+#if 0
 	int width = src.cols, height = src.rows;
 	double x, y;
 	//double R = width / 2;
@@ -147,7 +263,10 @@ void cylinder(Mat& src,Mat & dst,double R,int shift)
 			}
 		}
 	}
+#else
+	remap(src, dst, cylinderremapx, cylinderremapy, CV_INTER_LINEAR, BORDER_CONSTANT, Scalar(0,0,0) );
 
+#endif
 
 }
 void histequision(Mat& src)
@@ -176,6 +295,8 @@ void FusionSeam(Mat& src,Mat & dst,int seampostion)
 		{
 			//printf("1FusionSeam w=%f  seampostion=%d\n",processWidth,seampostion);
 			processWidth=seampostion;
+			if(processWidth<100)
+				processWidth=100;
 		}
 	else
 		{
@@ -220,7 +341,14 @@ int  getPanoOffset(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset)
 }
 
 
+int  getfeaturePanoOffset(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset)
+{
 
+
+
+	
+	return 0;
+}
 
 void setmvdetect(std::vector<cv::Rect> &mv,int chid)
 {
@@ -260,9 +388,13 @@ void Multipotionto360(std::vector<cv::Rect> &mv,int chid)
 	int size=mv.size();
 	if(size==0)
 		return;
+	
+	double anglepos=getmvprocessangle(chid);
+	int offset=getpanooffet(anglepos);
 	for(int i=0;i<mv.size();i++)
 		{
-			mv[i].x=chid*MOVDETECTSRCWIDTH+mv[i].x;
+			//mv[i].x=chid*MOVDETECTSRCWIDTH+mv[i].x;
+			mv[i].x=offset+mv[i].x;
 			//mv.push_back();
 
 		}
@@ -354,4 +486,39 @@ void Matblack(Mat src,int offset)
 }
 
 
+
+int  combition(Mat src,int flag)
+{
+	int status =0;
+	int width=src.cols;
+	int height=src.rows;
+
+	unsigned char * srcdata=src.data;
+	unsigned char * dstdata=combitionmat.data;
+	if(flag==ODD)
+		{
+			fullflame=1;
+
+		}
+	else if(flag==EVEN&&fullflame==1)
+		{
+			fullflame=2;
+			status=1;
+
+		}
+	for (int i = 0; i < height;i++)
+	{
+		memcpy(dstdata+(i+fullflame-1)*width*2*2,srcdata+i*width*2,width*2);
+	}
+	
+
+	return status;
+
+}
+
+Mat getcombition()
+{
+	
+	return combitionmat;
+}
 

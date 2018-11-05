@@ -228,6 +228,15 @@ int  GyroCalibration()
 
 }
 
+
+void Gyrorest()
+{
+	mpu9250reset();
+	Roll=0;
+	Pitch=0;
+	Yaw=0;
+}
+
 void GyrogetRPY()
 {
 		GYRO_MPU mpu;
@@ -287,18 +296,18 @@ void GyrogetRPY()
 }
 
 
-void getGyroprocess(Mat& frame,GYRO_DATA_T *gyro)
+int getGyroprocess(Mat& frame,GYRO_DATA_T *gyro)
 {
 
 	//GYRO_NINEAXIS nineaxia;
 	proptotocal(frame);
 	
 	if(GyroCalibration()==0)
-		return;
+		return 0;
 	GyrogetRPY();
 	//CalibrateToZero(&gyrofram);
 
-	
+	return 1;
 
 }
 

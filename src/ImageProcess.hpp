@@ -20,7 +20,9 @@
 #include"config.h"
 #include "mvdectInterface.hpp"
 #include"lkdetect.hpp"
+#include "IBGS.h"
 using namespace cv;
+using namespace ibgs;
 //#define DS_CHAN_MAX         (4)
 typedef struct
 {
@@ -79,6 +81,9 @@ public:
 		unsigned int getImagePrePinpang(){return (FRAMEFIFO+pinpang-1)%FRAMEFIFO;};
 
 		void Panoprocess(Mat src,Mat dst);
+
+
+		int Panorest();
 
 
 		//////////////////ring buffer/////////////////////
@@ -142,11 +147,20 @@ public:
 
 
 		/*******************detect******************/
+		 IBGS *bgs;
 		CMvDectInterface *m_pMovDetector;
 		Mat panograysrc;
 		Mat detedtgraysrc;
 		Mat panoblock[MOVEBLOCKNUM];
 		Mat panoblockdown;
+
+		int newframe;
+		void setnewframe(int flag){newframe=flag;};
+		int getnewframe(){return newframe;};
+
+
+		
+		Mat Modelframe[MOVEBLOCKNUM][MODELINGNUM];
 		void panomoveprocess();
 		void getnumofpano360image(int startx,int endx,int *texturestart,int *textureend);
 		static void NotifyFunc(void *context, int chId);
@@ -157,12 +171,15 @@ public:
 
 		void detectprocess(Mat src,OSA_BufInfo* frameinfo);
 		int JudgeLk(Mat src);
+		int JudgeLkFast(Mat src);
 		int LkAngle[MOVELKBLOCKNUM];
+		double LKangleoffset[MOVELKBLOCKNUM];
 		double LKprocessangle[MOVELKBLOCKNUM];
 		static ImageProcess *Pthis;
 		std::vector<TRK_RECT_INFO>	detect_vect;
 		int blocknum;
 		int movblocknum;
+		int movblocknumpre;
 		double panoblockangle[MOVELKBLOCKNUM];
 
 		
@@ -175,6 +192,9 @@ public:
 		unsigned int pp;
 		VideoWriter videowriter[MULTICPUPANONUM];
 		VideoCapture videocapture;
+
+		double zeroptzangle;
+		double zeroptztiangle;
 
 		LKmove lkmove;
 		std::vector<cv::Rect>	detectlk;
@@ -198,6 +218,11 @@ public:
 		int zeroprocessflag;
 		int zerocaliboffset;
 		int zerocalibing;
+
+		int tailcut;
+
+		void settailcut(int cut){tailcut=cut;};
+		int gettailcut(){return tailcut;};
 
 		double calibrationzeroangle;
 		void setcalibrationzeroangle(double angle){calibrationzeroangle=angle;};

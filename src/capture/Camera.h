@@ -21,9 +21,11 @@ using namespace cv;
 
 #if __cplusplus >= 201103L
 template <typename T>
+
 using auto_ptr = std::unique_ptr<T>;
 #else
 using std::auto_ptr;
+//using std::auto_ptr;
 #endif
 
 #define DEFAULT_THREAD_SLEEP_MS 16

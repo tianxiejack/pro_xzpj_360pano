@@ -4,7 +4,11 @@
 #include"osa.h"
 #include"Stich.hpp"
 #include"Gyroprocess.hpp"
-
+#include "plantformcontrl.hpp"
+#include "FrameDifference.h"
+#include "StaticFrameDifference.h"
+#include "TwoPoints.h"
+#include "LBFuzzyGaussian.h"
 #define IMAGEQUEUESIZE 4
 #define IMAGCAPEQUEUESIZE 2
 #define IMAGEQUEUEWIDTH 1920
@@ -18,13 +22,20 @@ ImageProcess *ImageProcess::Pthis;
 ImageProcess::ImageProcess():pinpang(0),currentcount(0),AngleStich(-ANGLEINTREVAL),seamid(0),SeamEable(0),Seampostion(0),
 			preflag(0),preangle(0),currentangle(0),xoffsetfeat(0),yoffsetfeat(0),camerazeroossfet(0),zeroflag(0),zeroangle(0),zerocalibflag(1),
 			zeroflameupdate(1),gyroangle(0),pp(0),blocknum(0),zeroprocessflag(0),zerocalibing(0),calibrationzeroangle(0),zerodropflame(0),
-			zerodroreset(0),currentcapangle(0)
+			zerodroreset(0),currentcapangle(0),zeroptzangle(0),tailcut(0),movblocknumpre(0),newframe(0)
 {
 	memset(m_bufQue, 0, sizeof(m_bufQue));
 	memset(mcap_bufQue, 0, sizeof(mcap_bufQue));
 	memset(LkAngle,0,sizeof(LkAngle));
 	memset(panoblockangle,0,sizeof(panoblockangle));
 	memset(LKprocessangle,0,sizeof(LKprocessangle));
+
+	for(int i=0;i<MOVELKBLOCKNUM;i++)
+		{
+			LKangleoffset[i]==360;
+
+		}
+	//memset(LKangleoffset,0,sizeof(LKangleoffset));
 	Pthis=this;
 
 }
@@ -82,13 +93,23 @@ void ImageProcess::Init()
 	detedtgraysrc=Mat(PANO360HEIGHT,PANO360WIDTH,CV_8UC1,cv::Scalar(0));
 
 	LKRramegrayblackboard=Mat(PANO360HEIGHT/MOVDETECTDOW,MOVDETECTSRCWIDTH/(MOVDETECTDOW),CV_8UC1,cv::Scalar(0));
+
+	for(int i=0;i<MOVEBLOCKNUM;i++)
+		for(int j=0;j<MODELINGNUM;j++)
+			Modelframe[i][j]=Mat(PANO360HEIGHT/MOVDETECTDOW,MOVDETECTSRCWIDTH/(MOVDETECTDOW),CV_8UC1,cv::Scalar(0));
+	//Modelframe
 	
 	MvtestFRramegray=Mat(PANO360HEIGHT/MOVDETECTDOW,MOVDETECTSRCWIDTH/(MOVDETECTDOW),CV_8UC1,cv::Scalar(0));
 
 	panoblockdown=Mat(PANO360HEIGHT/MOVDETECTDOW,MOVDETECTSRCWIDTH/(MOVDETECTDOW),CV_8UC1,cv::Scalar(0));
 
 	int board=40;
-	blackrect=Rect(board,board,MOVDETECTSRCWIDTH/MOVDETECTDOW-2*board,PANO360HEIGHT/(MOVDETECTDOW)-2*board);
+	int boardh=30;
+	if(MOVDETECTDOW<=2)
+		board=150;
+	
+	
+	blackrect=Rect(board,boardh,MOVDETECTSRCWIDTH/MOVDETECTDOW-2*board,PANO360HEIGHT/(MOVDETECTDOW)-2*boardh);
 	
 	MAIN_threadCreate();
 	MAIN_detectthreadCreate();
@@ -101,7 +122,11 @@ void ImageProcess::Create()
 	m_pMovDetector->init(NotifyFunc,( void *) this);
 
 	lkmove.lkmovdetectcreate(NotifyFunclk,( void *) this);
-	
+
+	//bgs = new FrameDifference;
+	//bgs = new StaticFrameDifference;
+	//bgs = new TwoPoints;
+	//bgs = new LBFuzzyGaussian;
 	double rate = 2.0;
 	#if MULTICPUPANOLK
 	Size videoSize(MOVDETECTSRCWIDTH/MOVDETECTDOW,MOVDETECTSRCHEIGHT/MOVDETECTDOW);
@@ -132,7 +157,7 @@ void ImageProcess::unInit()
 void ImageProcess::CaptureThreadProcess(Mat src,OSA_BufInfo* frameinfo)
 {
 	int queueid=0;
-
+	setplantformcalibration(frameinfo->calibration);
 	
 #if 0
 	int frameid=getImagePinpang();
@@ -166,10 +191,18 @@ void ImageProcess::CaptureThreadProcess(Mat src,OSA_BufInfo* frameinfo)
 	setnextImagePinpang();
 #endif
 	//OSA_semSignal(&mainProcThrObj.procNotifySem);
-
+	
+	if(Panorest())
+		return;
+	if(getscanpanflag()==0)
+		return ;
+	
+	if(frameinfo->calibration==0)
+		return ;
+	
 	detectprocess(src,frameinfo);
-
-
+	
+	
 	if(getzeroflameupdate()==0)
 	if(abs(frameinfo->framegyroyaw*1.0/ANGLESCALE-AngleStich)<ANGLEINTREVAL&&(getzerocalibing()==0)&&(getpanoflagenable()==1))
 		{
@@ -181,6 +214,8 @@ void ImageProcess::CaptureThreadProcess(Mat src,OSA_BufInfo* frameinfo)
 	if(info == NULL){
 			return;
 			}
+
+	
 	memcpy(info->virtAddr,src.data,src.rows*src.cols*src.channels());
 	//OSA_printf("the w=%d h=%d c=%d\n",src.cols,src.rows,src.channels());
 	info->channels = frameinfo->channels;
@@ -202,6 +237,14 @@ void ImageProcess::detectprocess(Mat src,OSA_BufInfo* frameinfo)
 
 	
 	//printf("********8888888888888888888888********\n");
+		if(DETECTTEST)
+		{
+			//src.copyTo(MvtestFRrame[pp]);
+			cvtColor(src,MvtestFRrame[pp],CV_BGR2GRAY);
+			pp^=1;
+			OSA_semSignal(&mainProcThrdetectObj.procNotifySem);
+			printf("***********DETECTTEST*********\n");
+		}
 	double angle=frameinfo->framegyroyaw*1.0/ANGLESCALE+getcamerazeroossfet();
 	if(angle<0)
 		angle+=360;
@@ -322,6 +365,25 @@ int ImageProcess::judgezero()
 	//if
 
 }
+
+int  ImageProcess::Panorest()
+{
+	if(getstichreset()==0)
+		return 0;
+
+	lkmove.lkmovdetectreset();
+
+	m_pMovDetector->mvPause();
+	Gyrorest();
+	setcamerazeroossfet(0);
+	setzeroflameupdate(1);
+	setzeroangle(0);
+	setzeroflag(0);
+	setstichreset(0);
+	for(int i=0;i<MOVELKBLOCKNUM;i++)
+		LKprocessangle[i]=0;
+	return 1;
+}
 void ImageProcess::zeroprocess()
 {
 	double angle=0;
@@ -332,11 +394,15 @@ void ImageProcess::zeroprocess()
 	
 	int zerobool=getzeroflag();
 	int calibool=getzerocalib();
-	if(zerobool==0||calibool==1)
+	if(getorcezeroprocess()==0)
 		{
-			setzerocalibing(0);
-			return ;
+			if(zerobool==0||calibool==1)
+				{
+					setzerocalibing(0);
+					return ;
+				}
 		}
+	setforcezeroprocess(0);
 	setzerocalibing(1);
 	Mat zeroF=getzeroflame();
 	Mat currentF=getcurrentflame();
@@ -353,15 +419,25 @@ void ImageProcess::zeroprocess()
 			
 			//setcamerazeroossfet(angle-(currentgyroA-zeroA));
 			setzerocalibing(0);
-			setcurrentangle(0);
-			setzerocaliboffset(zerooffset);
-			setzeroprocessflag(1);
-			setzerodroreset(1);
+			if(ZEROCALIBRATIONMODE)
+				{
+					/***drop mod***/
+					setzeroprocessflag(1);
+					setzerocaliboffset(zerooffset);
+					setcurrentangle(0);
+						/***drop mod***/
+					setzerodroreset(1);
+					setcalibrationzeroangle(getgyroangle());
+					
+				}
 			
-			setcalibrationzeroangle(getgyroangle());
+			
+			
+			
+		
 			setyawbase(gyroangleoffset-angle);
 			setzerocalib(1);
-			zeroprocessflag=1;
+			
 			printf("********basioffset=%f********zeroA=%f  gyroangleoffset=%f currentgyroA=%f \n",gyroangleoffset-angle,zeroA,gyroangleoffset,currentgyroA);
 			//setzeroflag(0);
 		}
@@ -406,10 +482,12 @@ void ImageProcess::Panoprocess(Mat src,Mat dst)
 	/*******************************/
 	int flag=getzeroprocessflag();
 	int getoffst=getzerocaliboffset();
+	
 	if(flag==1)
 		{
 			Matcpy(src,src,abs(getoffst));
 			Matblack(src,src.cols-abs(getoffst));
+			settailcut(src.cols-abs(getoffst));
 			
 		}
 
@@ -439,9 +517,9 @@ void ImageProcess::Panoprocess(Mat src,Mat dst)
 	if(FEATURESTICH)
 		{
 			if(IMAGEPROCESSSTICH)
-			getfeaturePanoOffset(Imagepre,dst,&xoffsetfeat,&yoffsetfeat);
+				getfeaturePanoOffset(Imagepre,dst,&xoffsetfeat,&yoffsetfeat);
 			else
-			getPanoOffset(dst,pre,&xoffsetfeat,&yoffsetfeat);
+				getPanoOffset(dst,pre,&xoffsetfeat,&yoffsetfeat);
 				
 			//printf();
 			setcurrentangle(offet2anglerelative2inter(-xoffsetfeat));
@@ -465,7 +543,7 @@ void ImageProcess::Panoprocess(Mat src,Mat dst)
 	//	return ;
 	//if(FEATURETEST)
 	//	return ;
-
+	
 	if(1)
 		;
       else if(MULTICPUPANO)
@@ -521,13 +599,26 @@ void ImageProcess::setwarndetect(int w,int h,int chid)
 }
 
 #define MINAREDETECT (400)
+
+
+
 void ImageProcess::panomoveprocess()
 {
 	Mat process;
 	char recoardnum[50];
 	int blocknum=movblocknum;
 	Mat src;
+	static int premodelnum=0;
+	static int prenum=-1;
+	if(prenum!=blocknum)
+		{
+			prenum=blocknum;
+			setnewframe(1);
+		}
+	else
+		setnewframe(0);
 	
+	int newmat=getnewframe();
 	if(DETECTTEST)
 		{
 			src=MvtestFRrame[pp^1];
@@ -543,8 +634,13 @@ void ImageProcess::panomoveprocess()
 			{
 				if(lkmove.backgroundmov[0]==0)
 					setmvprocessangle(LKprocessangle[0],0);
+				#if 1
 				lkmove.lkmovdetectpreprocess(src,LKRramegray,0);
-				m_pMovDetector->setFrame(LKRramegray,LKRramegray.cols,LKRramegray.rows,0,10,MINAREDETECT,200000,40);
+				m_pMovDetector->setFrame(LKRramegray,LKRramegray.cols,LKRramegray.rows,0,10,MINAREDETECT,200000,50);
+				#else
+				lkmove.lkmovdetect(src,0);
+
+				#endif
 				//imshow("LKRramegray",LKRramegray);
 				//waitKey(1);
 				//lkmove.lkmovdetect(src,0);
@@ -594,14 +690,71 @@ void ImageProcess::panomoveprocess()
 								//setwarndetect(process.cols,process.rows,blocknum);
 								setmvprocessangle(LKprocessangle[blocknum],blocknum);
 							}
-						
-						lkmove.lkmovdetectpreprocess(process,LKRramegray,blocknum);
+
+						//if(blocknum==0)
+						if(newmat)
+							{
+							lkmove.lkmovdetectpreprocess(process,LKRramegray,blocknum);
+							//printf("******newmatblocknum=%d prenum=%d\n******",blocknum,prenum);
+							
+							}
+						else
+							{
+								printf("******blocknum=%d prenum=%d\n******",blocknum,prenum);
+							}
+						//lkmove.lkmovdetect(process,blocknum);
 
 						//cout<<"blackrect"<<blackrect<<endl;
-						LKRramegray(blackrect).copyTo(LKRramegrayblackboard(blackrect));
+						if(getmodeling())
+							{
+							
+								int num=getmodelnum(blocknum);
+								if(num<MODELINGNUM&&newmat)
+									{
+										premodelnum=num;
+										//printf(" newmat proceess ****************num=%d\n",premodelnum);
+										LKRramegray(blackrect).copyTo(Modelframe[blocknum][premodelnum](blackrect));
+										//lkmove.lkmovdetectpreprocess(process,Modelframe[blocknum][num],blocknum);
+										setmodelnum(blocknum);
+										
+									}
+							}
+						else	
+							{
+								//printf(" newmat proceess ****************num=%d\n",premodelnum);
+								LKRramegray(blackrect).copyTo(LKRramegrayblackboard(blackrect));
+							}
+
+						//int num=getmodelnum(blocknum);
+						if(getmodeling()==0)
 						videowriter[blocknum]<<LKRramegrayblackboard;
+						else
+							videowriter[blocknum]<<Modelframe[blocknum][premodelnum];
+						/*
+						if(blocknum==1)
+							{
+								    cv::Mat img_mask;
+								    cv::Mat img_bkgmodel;
+								    bgs->process(LKRramegrayblackboard, img_mask, img_bkgmodel); // by default, it shows automatically the foreground mask image
+
+							}
+							waitKey(1);
+						*/
+						
 						//m_pMovDetector->setFrame(LKRramegray,LKRramegray.cols,LKRramegray.rows,0,10,MINAREDETECT,200000,40);
-						m_pMovDetector->setFrame(LKRramegrayblackboard,LKRramegrayblackboard.cols,LKRramegrayblackboard.rows,blocknum,10,MINAREDETECT,200000,30);
+						
+						
+						//printf("modeling=%d newmat=%d num=%d\n",blocknum,newmat,premodelnum);
+
+
+						
+						if(getmodeling())
+							{
+								m_pMovDetector->setFrame(Modelframe[blocknum][premodelnum],Modelframe[blocknum][premodelnum].cols,Modelframe[blocknum][premodelnum].rows,blocknum,10,MINAREDETECT,200000,50);
+							}
+						else
+							m_pMovDetector->setFrame(LKRramegrayblackboard,LKRramegrayblackboard.cols,LKRramegrayblackboard.rows,blocknum,10,MINAREDETECT,2000000,50);
+						
 				}
 				}
 			return;
@@ -683,11 +836,14 @@ int ImageProcess::JudgeLk(Mat src)
 						}
 
 				}
-			else if(abs(angle-anglepos[i])<LKMOVANGLE&&LkAngle[i]==0)
+			else if(abs(angle-anglepos[i])<LKMOVANGLE)
 				{
-					LkAngle[i]=1;
-					LKprocessangle[i]=angle;
-					postionid=i;
+					if(LkAngle[i]==0)
+						{
+							LkAngle[i]=1;
+							LKprocessangle[i]=angle;
+							postionid=i;
+						}
 				}
 			else
 				LkAngle[i]=0;
@@ -701,6 +857,7 @@ int ImageProcess::JudgeLk(Mat src)
 	
 	if(postionid!=-1)
 		{
+			//printf("[postionid=%d]the angle =%f LKprocessangle[i]=%f\n",postionid,angle,LKprocessangle[postionid]);
 			Mat dst=panoblock[postionid];
 			memcpy(dst.data,src.data,dst.cols*dst.rows*dst.channels());
 			ret=postionid;
@@ -708,10 +865,68 @@ int ImageProcess::JudgeLk(Mat src)
 	return ret;
 
 }
+
+int ImageProcess::JudgeLkFast(Mat src)
+{
+	int ret=-1;
+	double anglepos[MOVELKBLOCKNUM];
+	memset(anglepos,0,sizeof(anglepos));
+	double angle=getcurrentcapangle();
+	//printf("the cap angle =%f\n",angle);
+	int postionid=-1;
+
+	double angleoffset=0;
+	static double angleoffsetpre=0;
+	
+	for(int i=0;i<MOVELKBLOCKNUM;i++)
+		{
+			anglepos[i]=360.0/MOVELKBLOCKNUM*i;
+
+			angleoffset=abs(angle-anglepos[i]);
+
+			if(angleoffset<LKMOVANGLE)
+				{
+
+					/*
+					if(LKangleoffset[i]<angleoffset)
+						{	
+							LKangleoffset[i]=angleoffset;
+						}
+					else
+						{
+							continue;
+						}
+					*/
+						LKprocessangle[i]=angle;
+						postionid=i;
+						
+						
+				}
+			else
+				LKangleoffset[i]=360;
+
+		}
+	
+
+	
+	if(postionid!=-1)
+		{
+			//printf("[postionid=%d]the [angle =%f pos=%f]\n",postionid,angle,360.0/MOVELKBLOCKNUM*postionid);
+			Mat dst=panoblock[postionid];
+			memcpy(dst.data,src.data,dst.cols*dst.rows*dst.channels());
+			ret=postionid;
+		}
+
+	
+	return ret;
+
+}
 void ImageProcess::MulticpuLKpanoprocess(Mat& src)
 {
 	if(getpanoflagenable()==0)
 		return ;
+	static int modelingnum=0;
+	static int enablemodel=0;
 	double exec_time = (double)getTickCount();
 	Mat processsrc;
 	int blucknum=-1;
@@ -723,12 +938,43 @@ void ImageProcess::MulticpuLKpanoprocess(Mat& src)
 	else
 		processsrc=src;
 
-	blucknum=JudgeLk(processsrc);
+	if(FASTMODE)
+		blucknum=JudgeLkFast(processsrc);
+	else
+		blucknum=JudgeLk(processsrc);
 	if(blucknum!=-1)
 		{
-			movblocknum=blucknum;
-			OSA_printf("the movblocknum=%d\n",movblocknum);
-			OSA_semSignal(&mainProcThrdetectObj.procNotifySem);
+			
+			
+			if(movblocknumpre!=blucknum)
+				{
+					//OSA_printf("the movblocknumpre=%d\n",movblocknumpre);
+					movblocknum=movblocknumpre;
+					movblocknumpre=blucknum;
+					OSA_semSignal(&mainProcThrdetectObj.procNotifySem);
+					modelingnum++;
+					enablemodel=1;
+					//setnewframe(1);
+				}
+			
+
+		}
+	else
+		{
+			//setnewframe(0);
+			
+			if(getmodeling()&&enablemodel)
+				{
+					//setnewframe(0);
+					OSA_printf("jian mo doing \n");
+					OSA_semSignal(&mainProcThrdetectObj.procNotifySem);
+
+				}
+			if(modelingnum>=100)
+				{
+				setmodeling(0);
+				modelingnum=100;
+				}
 
 		}
 	
@@ -920,6 +1166,8 @@ void ImageProcess::main_proc_func()
 	while(mainProcThrObj.exitProcThread ==  false)
 	{
 	/******************************************/
+		settailcut(0);
+	
 		infocap=image_queue_getFullforever(&mcap_bufQue[queueid]);
 		if(infocap==NULL)
 			continue;
@@ -956,7 +1204,7 @@ void ImageProcess::main_proc_func()
 
 		/********************drop the flame*********************/
 		double dropangle=getcurrentangle();
-		if(dropangle<300&&dropangle>0.2)
+		if(dropangle<300&&dropangle>0.001)
 			setzerodroreset(0);
 		if((getcalibrationzeroangle()>300)&&getzzerodroreset())
 			{
@@ -970,18 +1218,12 @@ void ImageProcess::main_proc_func()
 		if(getzerodropflame())
 			{
 				image_queue_putEmpty(&mcap_bufQue[queueid],infocap);
-				//OSA_printf("************drop fram calib angle=%f crrent angle=%f****************\n",getcalibrationzeroangle(),dropangle);
+				OSA_printf("************drop fram calib angle=%f crrent angle=%f****************\n",getcalibrationzeroangle(),dropangle);
 				continue;
 
 			}
 		/********************drop the flame*********************/
-		if(DETECTTEST)
-		{
-			//src.copyTo(MvtestFRrame[pp]);
-			cvtColor(src,MvtestFRrame[pp],CV_BGR2GRAY);
-			pp^=1;
-			OSA_semSignal(&mainProcThrdetectObj.procNotifySem);
-		}
+	
 		//OSA_semSignal(&mainProcThrdetectObj.procNotifySem);
 		
 		
@@ -1047,6 +1289,11 @@ void ImageProcess::main_proc_func()
 						///////////////zero angle
 						setgyroangle(0);
 						setcurrentangle(0);
+						zeroptzangle=getpanopan();
+						zeroptztiangle=getpanotitle();
+						
+						setptzzeroangle(zeroptzangle);
+						setptzzerotitleangle(zeroptztiangle);
 						
 					}
 				else
@@ -1068,7 +1315,7 @@ void ImageProcess::main_proc_func()
 		info->framegyropitch=infocap->framegyropitch;
 		info->framegyroyaw=getcurrentangle()*ANGLESCALE;
 	
-	
+		info->tailcut=gettailcut();
 
 		//OSA_printf("the framegyroyaw=%d MS\n",info->framegyroyaw);
 		
@@ -1101,7 +1348,7 @@ void ImageProcess::main_detect_func()
 		double exec_time = (double)getTickCount();
 		panomoveprocess();
 		exec_time = ((double)getTickCount() - exec_time)*1000./getTickFrequency();
-	 	OSA_printf("the panomoveprocess=%f MS\n",exec_time);
+	 	//OSA_printf("the panomoveprocess=%f MS\n",exec_time);
 		
 		
 

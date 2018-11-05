@@ -345,13 +345,33 @@ void find_feature_matches ( const Mat& img_1, const Mat& img_2,
 	 
 	} 
 
-     refineMatcheswithHomography(matches,3,keypoints_1,keypoints_2);
+    // refineMatcheswithHomography(matches,3,keypoints_1,keypoints_2);
   
      retinefeature(matches,descriptors_1,descriptors_2);
      retinewithdistance(matches,descriptors_1,descriptors_2);
     
 }
+cv::Mat  FindHomography(Mat& src,Mat & dst)
+{
+	 int status=0;
 
+    vector<KeyPoint> keypoints_1, keypoints_2;
+    vector<DMatch> matches;
+    find_feature_matches ( src, dst, keypoints_1, keypoints_2, matches );
+
+    Mat R,t;
+    vector<Point2f> points1;
+    vector<Point2f> points2;
+    for ( int i = 0; i < ( int ) matches.size(); i++ )
+    {
+        points1.push_back ( keypoints_1[matches[i].queryIdx].pt );
+        points2.push_back ( keypoints_2[matches[i].trainIdx].pt );
+    }
+ cv::Mat H = findHomography(points2, points1, CV_RANSAC);
+
+return H;
+
+}
 void pose_estimation_2d2d ( std:: vector<Point2f> points1,
                             vector<Point2f> points2,
                          
@@ -420,6 +440,9 @@ void pose_estimation_2d2d ( std:: vector<Point2f> points1,
     */
     
 }
+
+
+
 
 int  getPano360Rotation(cv::Mat & src,cv::Mat & dst,double *rotation )
 {
@@ -568,6 +591,7 @@ int  getPano360OffsetT(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset)
 		 int status=0;
              Mat tempsrc;
 		static unsigned int tempcount=0;
+		static unsigned int tempcounterror=0;
 		char bufname[50];
              if(RESIZE)
              resize(src,tempsrc,Size(960,540),0,0,INTER_LINEAR);
@@ -590,9 +614,9 @@ int  getPano360OffsetT(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset)
 
 		Rect temprect;
 		if(FEATURETEST==0)
-		temprect=Rect(0,0.5*tempsrc.rows-0.3*tempsrc.rows,0.3*tempsrc.cols, 0.6*tempsrc.rows);
+		temprect=Rect(0,0.5*tempsrc.rows-0.35*tempsrc.rows,0.2*tempsrc.cols, 0.7*tempsrc.rows);
 		else
-		temprect=Rect(0,0.5*tempsrc.rows-0.4*tempsrc.rows,0.3*tempsrc.cols, 0.8*tempsrc.rows);
+		temprect=Rect(0,0.5*tempsrc.rows-0.4*tempsrc.rows,0.2*tempsrc.cols, 0.8*tempsrc.rows);
 		Mat templ(tempsrc, temprect); 
 		Mat result(tempdst.cols - templ.cols + 1, tempdst.rows - templ.rows + 1, CV_8UC1);
 		
@@ -606,8 +630,16 @@ int  getPano360OffsetT(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset)
 		minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, Mat()); 
 
 		//if(FEATURETEST==0)
+		sprintf(bufname,"/home/ubuntu/calib/%d.bmp",tempcount);
+		tempcounterror++;
 		if(maxVal<0.90)
+			{
+				sprintf(bufname,"/home/ubuntu/calib/error%d.bmp",tempcount);
+				imwrite(bufname,tempdst);
 			return -1;
+			}
+	
+			
 
 		OSA_printf("the %s  maxVal=%f  minVal=%f\n",__func__,maxVal,minVal);
 
@@ -626,7 +658,7 @@ int  getPano360OffsetT(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset)
 		*yoffset=-dy;
 
 		rectangle(tempdst, Rect(matchLoc.x,matchLoc.y,temprect.width,temprect.height), Scalar(255,0,0),1,  8);
-		sprintf(bufname,"/home/ubuntu/calib/%d.bmp",tempcount);
+		
 		imwrite(bufname,tempdst);
 		tempcount++;
 		 exec_time = ((double)getTickCount() - exec_time)*1000./getTickFrequency();

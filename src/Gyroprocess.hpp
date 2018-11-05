@@ -14,7 +14,7 @@
 
 #include "gyro.h"
 using namespace cv;
-void getGyroprocess(Mat& frame,GYRO_DATA_T *gyro);
+int getGyroprocess(Mat& frame,GYRO_DATA_T *gyro);
 	enum PROTOCOL_HEAD {
 		HEAD1_FF_NEED = 0xFF,
 		HEAD1_00_NEED = 0x00,
@@ -25,4 +25,5 @@ void setyawbase(double base);
 void setgyrozero(double zero);
 void kalmanfilterinit();
 int getoddenv();
+void Gyrorest();
 #endif /* GYROPROCESS_HPP_ */

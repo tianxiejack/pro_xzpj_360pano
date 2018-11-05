@@ -32,6 +32,8 @@ class OpticalFlowCalculator
         void writeFlow(const cv::Mat &flow_vectors, const std::string &filename, int pixel_step);
         void writeTrajectories(const std::vector<std::vector<cv::Point2f> > &trajectories, const std::string &filename);
 	  int calculateOpticalFlowprocess(const cv::Mat &gray_image1, const cv::Mat &gray_image2, cv::Mat &dst, int pixel_step,  double min_vector_size);
+	  int calculatefeature( cv::Mat &gray_image1,   cv::Mat &gray_image2);
+	  int  getOffsetT(const cv::Mat & src,const cv::Mat & dst,int *xoffset ,int* yoffset) ;
 
 public:
 	std::vector<cv::Point2f> points_image1;

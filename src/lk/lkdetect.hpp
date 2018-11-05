@@ -27,6 +27,7 @@ class LKmove{
 public:
 	LKmove();
 	~LKmove();
+	void lkmovdetectreset();
 	void lkmovdetectcreate(LPNOTIFYFUNClk fun, void *context);
 	void lkmovdetect(Mat src,int chid);
 	void lkmovdetectddestory();
@@ -35,7 +36,8 @@ public:
 	void getMoveTarget(vector<Rect> &objects,int chId);
 
 	void lkmovdetectpreprocess(Mat &src,Mat &dst,int chid);
-	void OpticalFlowprocess(const cv::Mat &image1, const cv::Mat &image2, cv::Mat &dst);
+	int OpticalFlowprocess(const cv::Mat &image1, const cv::Mat &image2, cv::Mat &dst);
+	void runOpticalFlowtest( cv::Mat &image1,  cv::Mat &image2);
 	cv::Rect findRectangle(cv::Mat Sub,cv::Point2f &r1, cv::Point2f &r2);
 	LPNOTIFYFUNClk callback;
 	void * lkcontext;

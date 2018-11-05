@@ -29,6 +29,8 @@ typedef struct {
   int rotationvalid;
   int currentbufid;
   int       flags;
+  int calibration;
+  int tailcut;
   
   void 		*physAddr;
   void 		*virtAddr;

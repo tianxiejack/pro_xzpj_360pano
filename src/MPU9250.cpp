@@ -241,6 +241,13 @@ static void toEulerAngle(const Quaterniond& q, double& roll, double& pitch, doub
 	yaw = atan2(siny_cosp, cosy_cosp);
 }
 
+
+void mpu9250reset()
+{
+	gyroll=0;
+	gypitch=0;
+	gyyaw=0;
+}
 void getQunterandEuler(GYRO_MPU*mpu)
 {
 	     float norm;								
@@ -790,7 +797,7 @@ unsigned char MPU_Get_Mag(short *imx,short *imy,short *imz,double *mx,double *my
 
 
 unsigned int  calibreatetimes=0;
-#define CALIBREATIONTIME 1000
+#define CALIBREATIONTIME 2000
 unsigned char  calibrate(void *gx1, void *gy1, void *gz1)
 {
 	unsigned char t;
@@ -804,15 +811,18 @@ unsigned char  calibrate(void *gx1, void *gy1, void *gz1)
 	//for (t=0;t<100;t++)
 	{
 		MPU_Get_Gyroscope(gx,gy,gz);
-		sumx=sumx+*gx;
-		sumy=sumy+*gy;
-		sumz=sumz+*gz;
+		if(calibreatetimes>CALIBREATIONTIME/2)
+			{
+				sumx=sumx+*gx;
+				sumy=sumy+*gy;
+				sumz=sumz+*gz;
+			}
 	}
 	if(calibreatetimes==CALIBREATIONTIME-1)
 		{
-			gyro_offsetx=-sumx/CALIBREATIONTIME;
-			gyro_offsety=-sumy/CALIBREATIONTIME;
-			gyro_offsetz=-sumz/CALIBREATIONTIME;
+			gyro_offsetx=-sumx*2/CALIBREATIONTIME;
+			gyro_offsety=-sumy*2/CALIBREATIONTIME;
+			gyro_offsetz=-sumz*2/CALIBREATIONTIME;
 		}
 	calibreatetimes++;
 	

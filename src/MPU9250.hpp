@@ -61,5 +61,6 @@ unsigned char MPU_Get_Gyroscopeint( int *gx, int *gy, int *gz);
 unsigned char MPU_Get_Gyro( void *igx1, void  *igy1, void *igz1,double *gx1,double *gy1,double *gz1);
 unsigned char MPU_Get_Gyroint( void *igx1, void   *igy1, void  *igz1,double *gx,double *gy,double *gz);
 unsigned char  calibrateint(void *gx1, void *gy1, void *gz1);
+void mpu9250reset();
 #define GYRO_NOFILTER 1
 #endif /* MPU9250_HPP_ */

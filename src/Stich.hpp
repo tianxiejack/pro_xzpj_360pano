@@ -56,4 +56,20 @@ double offet2anglerelative2inter(int  offsetx);
 int  getfeaturePanoOffset(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset);
 void setmvprocessangle(double angle,int chid);
 double getmvprocessangle(int chid);
+double offet2anglepano(int  offsetx);
+void setptzzeroangle(double angle);
+double getptzzeroangle();
+void setscanpanflag(int flag);
+int    getscanpanflag();
+void setforcezeroprocess(int flag);
+int getorcezeroprocess();
+void setptzzerotitleangle(double angle);
+double getptzzerotitleangle();
+void setstichreset(int flag);
+int getstichreset();
+void setmodeling(int mod);
+int getmodeling();
+void setmodelnum(int chid);
+int getmodelnum(int chid);
+
 #endif /* STICH_HPP_ */

@@ -134,18 +134,24 @@ void LKmove::lkmovdetectgetrect(Mat &src,vector<Rect> &objects)
 
 }
 
-void LKmove::OpticalFlowprocess(const cv::Mat &image1, const cv::Mat &image2, cv::Mat &dst)
+int  LKmove::OpticalFlowprocess(const cv::Mat &image1, const cv::Mat &image2, cv::Mat &dst)
 {
 	
 	  int num_vectors = ofc_.calculateOpticalFlowprocess(image1, image2, dst, pixel_step_, min_vector_size_);
 	
-	
+	return num_vectors;
   	 // printf("the num vec=%d\n",num_vectors);
 
 }
+void LKmove::runOpticalFlowtest( cv::Mat &image1,  cv::Mat &image2)
+{
 
+ofc_.calculatefeature(image1, image2);
+}
 void LKmove::runOpticalFlow(const cv::Mat &image1, const cv::Mat &image2, cv::Mat &optical_flow_vectors)
 {
+
+#if 1
     cv::Mat debug_image;
     cv::Mat optical_flow_image;
 
@@ -166,7 +172,11 @@ void LKmove::runOpticalFlow(const cv::Mat &image1, const cv::Mat &image2, cv::Ma
    	}
     imshow("optical_flow_image",optical_flow_image);
     waitKey(1);
+#else
 
+
+
+#endif
 
 }
 
@@ -183,6 +193,13 @@ void LKmove::getMoveTarget(vector<Rect> &objects,int chId)
 
 }
 
+void LKmove::lkmovdetectreset()
+{
+	for(int i=0;i<MOVELKBLOCKNUM;i++)
+		backgroundmov[i]=0;
+
+}
+
 void LKmove::lkmovdetectpreprocess(Mat &src,Mat &dst,int chid)
 {
 		double exec_time = (double)getTickCount();
@@ -193,12 +210,13 @@ void LKmove::lkmovdetectpreprocess(Mat &src,Mat &dst,int chid)
 				if(dst.data!=NULL)
 				memcpy(dst.data,src.data,src.cols*src.rows*src.channels());
 				backgroundmov[chid]=1;
+				printf("the backgroundmov chid =%d \n",chid);
 				return ;
 			}
 		OpticalFlowprocess(backgroundmovmat[chid], src, dst);
 
 		exec_time = ((double)getTickCount() - exec_time)*1000./getTickFrequency();
-	 	//OSA_printf("the panomoveprocess=%f MS\n",exec_time);
+	 	OSA_printf("the lkmovdetectpreprocess=%f MS\n",exec_time);
 		
 
 }
@@ -213,6 +231,7 @@ void LKmove::lkmovdetect(Mat src,int chid)
 		}
 	 cv::Mat optical_flow_vectors;
 	runOpticalFlow(background, src, optical_flow_vectors);
+	//runOpticalFlowtest(background, src);
 
 	if(callback!=NULL)
 		callback(lkcontext,chid);

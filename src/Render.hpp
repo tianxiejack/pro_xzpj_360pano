@@ -26,6 +26,7 @@
 #include "config.h"
 #include <iostream>
 #include "Glosd.hpp"
+#include "osd.hpp"
 //#include "mvdectInterface.hpp"
 //static const int ALPHA_MASK_HEIGHT= DEFAULT_IMAGE_HEIGHT;
 //static const int ALPHA_MASK_WIDTH = (DEFAULT_IMAGE_WIDTH/16);
@@ -81,6 +82,8 @@ public:
 	inline void setMousestatue(int statue){MOUSEST=statue;};
 
 	void Mouse2Select();
+	void MouseSelectpos();
+	void Mousezeropos();
 
 	int MOUSEx , MOUSEy , BUTTON ,MOUSEST;
 	int mousex,mousey,mouseflag;
@@ -116,8 +119,10 @@ public:
 	
 	void Pano360init();
 
-
-
+	/******************modeselect ***********************/
+	void selectmod();
+	void panomod();
+	void zeromod();
 
 	void pano(int num);
 
@@ -126,6 +131,8 @@ public:
 	void Drawmovdetect();
 	void DrawmovMultidetect();
 	void Drawmov();
+
+	void Drawmenu();
 	int movviewx;
 	int movviewy;
 	int movvieww;
@@ -141,12 +148,22 @@ public:
 	int mov360vieww;
 	int mov360viewh;
 
+
+	int menumode;
+	void setmenumode(int mod){menumode=mod;};
+	int getmenumode(){return menumode;};
+
 	//std::vector<TRK_RECT_INFO>	detect_vect;
 
+
+	void ptzinit();
 	GLOSD Glosdhandle;
+
+	OSD osdcontex;
 	/******************select function mod ***********************/
 
 	void selectupdate();
+	void Drawmenuupdate();
 	int selecttexture;
 	void setselecttexture(int mod){selecttexture=mod;};
 	int  getselecttexture(){return selecttexture;};
@@ -222,6 +239,10 @@ public:
 	void Angle2pos();
 	int getPanoAngle(){return panoAngle; };
 	void setPanoAngle( int angle){panoAngle=angle;};
+
+	int tailcut=0;
+	void settailcut(int cut){tailcut=cut;};
+	int gettailcut(){return tailcut;};
 	
 
 	

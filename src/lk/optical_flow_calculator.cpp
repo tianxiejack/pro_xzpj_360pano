@@ -20,7 +20,8 @@
 #include "opencv2/features2d/features2d.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
- 
+ #include"Homography.hpp"
+ #include"config.h"
 using namespace cv;
 OpticalFlowCalculator::OpticalFlowCalculator()
 {
@@ -31,6 +32,51 @@ OpticalFlowCalculator::~OpticalFlowCalculator()
 {
 
 }
+
+int  OpticalFlowCalculator::getOffsetT(const cv::Mat & src, const cv::Mat & dst,int *xoffset ,int* yoffset) 
+	{
+		double exec_time = (double)getTickCount();
+		 int status=0;
+             Mat tempsrc=src;
+		static unsigned int tempcount=0;
+		static unsigned int tempcounterror=0;
+		char bufname[50];   
+             // resize(src,tempsrc,Size(1920,1080),0,0,INTER_LINEAR);
+             Mat tempdst=dst;
+		Rect temprect;
+		temprect=Rect(tempsrc.cols*0.5-0.25*tempsrc.cols,0.5*tempsrc.rows-0.35*tempsrc.rows,0.5*tempsrc.cols, 0.7*tempsrc.rows);
+		Mat templ(tempsrc, temprect); 
+		Mat result(tempdst.cols - templ.cols + 1, tempdst.rows - templ.rows + 1, CV_8UC1);
+		matchTemplate(tempdst, templ, result, CV_TM_CCOEFF_NORMED); 
+		double minVal; double maxVal; Point minLoc; Point maxLoc;
+		Point matchLoc; 
+		minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, Mat()); 
+		//if(FEATURETEST==0)
+		sprintf(bufname,"/home/ubuntu/calib/lk%d.bmp",tempcount);
+		tempcounterror++;
+		if(maxVal<0.90)
+			{
+				//sprintf(bufname,"/home/ubuntu/calib/error%d.bmp",tempcount);
+				//imwrite(bufname,tempdst);
+			return -1;
+			}
+		//printf("the %s  maxVal=%f  minVal=%f\n",__func__,maxVal,minVal);
+		normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat()); 
+		minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, Mat()); 
+		matchLoc = maxLoc;
+		int dx = matchLoc.x-temprect.x; 
+		int dy = matchLoc.y - temprect.y;
+	
+		*xoffset=dx;
+		*yoffset=dy;
+		//rectangle(tempdst, Rect(matchLoc.x,matchLoc.y,temprect.width,temprect.height), Scalar(255,0,0),1,  8);
+		//imwrite(bufname,tempdst);
+		tempcount++;
+		 exec_time = ((double)getTickCount() - exec_time)*1000./getTickFrequency();
+		// printf("the %s exec_time=%f  maxVal=%f  minVal=%f\n",__func__,exec_time,maxVal,minVal);
+	//Point2i a(dx, dy); 
+	return status; 
+	}
 
 
 int OpticalFlowCalculator::calculateOpticalFlowprocess(const cv::Mat &gray_image1, const cv::Mat &gray_image2, cv::Mat &dst, int pixel_step, double min_vector_size)
@@ -49,8 +95,8 @@ int OpticalFlowCalculator::calculateOpticalFlowprocess(const cv::Mat &gray_image
     std::vector<float> err;
     cv::TermCriteria termcrit(CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 10, 0.03);
 
-    
-
+    static int pointnum=0;
+    int tempnum=0;
 
 
     const int MAX_COUNT = 500;
@@ -58,7 +104,18 @@ int OpticalFlowCalculator::calculateOpticalFlowprocess(const cv::Mat &gray_image
     
     std::vector<cv::Point2f> points_image2;
 
-
+   int xoffset=0;
+   int yoffset=0;
+   double percent=0.8;
+   int fixoffset=1;
+   int featureok=getOffsetT(gray_image1,gray_image2,&xoffset,&yoffset);
+   double upx=xoffset+fixoffset*percent;
+   double downx=xoffset-fixoffset*percent;
+   double upy=yoffset+fixoffset*percent;
+   double downy=yoffset-fixoffset*percent;
+   
+	
+  // printf("the xoffset=%d yoffset=%d [%d~%d] [%d~%d]\n",xoffset,yoffset,downx,upx,downy,upy);
 
     static int index=0;
     if(index==0)
@@ -71,66 +128,169 @@ int OpticalFlowCalculator::calculateOpticalFlowprocess(const cv::Mat &gray_image
 		            cv::Point2f point(i, j);
 		            //std::cout << "adding point " << i << ", " << j << std::endl;
 		            points_image1.push_back(point);
+			      pointnum++;
 		        }
 		    }
 	}
 
 
     std::vector<cv::Mat> pyramids;
-    cv::buildOpticalFlowPyramid(gray_image1, pyramids, winSize, MAX_LEVEL, true);
-
-    //cv::calcOpticalFlowPyrLK(gray_image1, gray_image2, points_image1, points_image2, status, err, winSize, MAX_LEVEL, termcrit, 0, 0.001);
-
-    cv::calcOpticalFlowPyrLK(pyramids, gray_image2, points_image1, points_image2, status, err, winSize, MAX_LEVEL, termcrit, 0, 0.001);
-
     int num_vectors = 0;
+     if (MVDETECTALG)
+     {
+		cv::buildOpticalFlowPyramid(gray_image1, pyramids, winSize, MAX_LEVEL, true);
 
-    std::vector<cv::Point2f> src_points;
-    std::vector<cv::Point2f> dst_points;
+		//cv::calcOpticalFlowPyrLK(gray_image1, gray_image2, points_image1, points_image2, status, err, winSize, MAX_LEVEL, termcrit, 0, 0.001);
 
-
- //   printf("points_image2.size()=%d\n",points_image2.size());
-    for (int i = 0; i < points_image2.size(); i++)
-    {
-        if (status[i])
-        {
-
-		//printf("the opt ok\n");
-            cv::Point2f start_point = points_image1.at(i);
-            cv::Point2f end_point = points_image2.at(i);
-            float x_diff = end_point.x - start_point.x;
-            float y_diff = end_point.y - start_point.y;
-            if (std::abs(x_diff) > min_vector_size || std::abs(y_diff) > min_vector_size) // THIS USED TO BE 1.0
-            {
-          
-                src_points.push_back(start_point);
-                dst_points.push_back(end_point);
-                num_vectors++;
-            }
-    
-        }
- 
-    }
-    if (num_vectors > 4)
-    {
-
-        cv::Mat H = findHomography(dst_points, src_points, CV_RANSAC);
-        cv::Mat compensated;
-     	  warpPerspective(gray_image2, dst, H, cv::Size(gray_image2.cols, gray_image2.rows));
-       // cv::absdiff(compensated, gray_image1, comp);
-   	//cv::imshow("compensated",compensated);
-   	//cv::imshow("gray_image2",gray_image1);
-   	//cv::waitKey(1);;
-   //	cv::threshold(comp, comp, 50, 255, CV_THRESH_BINARY);
-	  
-    }
+		cv::calcOpticalFlowPyrLK(pyramids, gray_image2, points_image1, points_image2, status, err, winSize, MAX_LEVEL, termcrit, 0, 0.001);
 
 
-   
+
+		std::vector<cv::Point2f> src_points;
+		std::vector<cv::Point2f> dst_points;
+
+
+	 //   printf("points_image2.size()=%d\n",points_image2.size());
+
+	
+		for (int i = 0; i < points_image2.size(); i++)
+		{
+			if (status[i])
+			{
+
+			//printf("the opt ok\n");
+				cv::Point2f start_point = points_image1.at(i);
+				cv::Point2f end_point = points_image2.at(i);
+				float x_diff = end_point.x - start_point.x;
+				float y_diff = end_point.y - start_point.y;
+			//printf("the opt x_diff=%f y_diff=%f\n",x_diff,y_diff);
+			 double backward_angle = atan2(start_point.y - end_point.y, start_point.x - end_point.x)*180/3.141592653;
+			if(featureok==0)
+				{
+					if((x_diff<upx)&&(x_diff>downx)&&(y_diff<upy)&&(y_diff>downy))
+						tempnum++;
+					else
+						continue;
+
+				}
+			else
+				break;
+				if (((std::abs(x_diff) > min_vector_size || std::abs(y_diff) > min_vector_size))&&(abs(backward_angle)<20)) // THIS USED TO BE 1.0
+		   //  if (((std::abs(x_diff) > min_vector_size || std::abs(y_diff) > min_vector_size))) // THIS USED TO BE 1.0
+				{
+
+					src_points.push_back(start_point);
+					dst_points.push_back(end_point);
+					num_vectors++;
+				}
+
+			}
+
+
+		}
+		if (num_vectors > 10)
+		{
+
+			cv::Mat H = findHomography(dst_points, src_points, CV_RANSAC);
+			cv::Mat compensated;
+			  warpPerspective(gray_image2, dst, H, cv::Size(gray_image2.cols, gray_image2.rows));
+		   // cv::absdiff(compensated, gray_image1, comp);
+		//cv::imshow("compensated",compensated);
+		//cv::imshow("gray_image2",gray_image1);
+		//cv::waitKey(1);;
+	   //	cv::threshold(comp, comp, 50, 255, CV_THRESH_BINARY);
+
+		}
+	else
+		{
+			printf("no feature\n");
+			memcpy(dst.data,gray_image1.data,dst.cols*dst.rows*dst.channels());
+
+		}
+
+		printf("********************tempnum=%d *****************\n",tempnum);
+     }
+   else
+   {
+	   Rect rectsrc;
+	   Rect rectdst;
+	   if(xoffset>=0)
+		{
+			rectsrc.x=xoffset;
+			rectsrc.width=gray_image1.cols-xoffset;
+
+			rectdst.x=0;
+			rectdst.width=gray_image1.cols-xoffset;
+
+
+
+		}
+	   else
+		{
+			rectsrc.x=0;
+			rectsrc.width=gray_image1.cols+xoffset;
+
+			rectdst.x=-xoffset;
+			rectdst.width=gray_image1.cols+xoffset;
+
+
+
+		}
+
+
+		 if(yoffset>=0)
+		{
+			rectsrc.y=yoffset;
+			rectsrc.height=gray_image1.rows-yoffset;
+
+			rectdst.y=0;
+			rectdst.height=gray_image1.rows-yoffset;
+
+
+
+		}
+	   else
+		{
+			rectsrc.y=0;
+			rectsrc.height=gray_image1.rows+yoffset;
+
+			rectdst.y=-yoffset;
+			rectdst.height=gray_image1.rows+yoffset;
+
+		}
+
+/*
+	   cout<<"********rectsrc*************"<<endl;
+	   cout<<rectsrc<<endl;
+	   cout<<"********rectdst*************"<<endl;
+	   cout<<rectdst<<endl;
+*/
+	   if(featureok==0)
+		  gray_image2(rectsrc).copyTo(dst(rectdst));
+	   else
+		gray_image1.copyTo(dst);
+	
+
+
+
+ }
     
     return num_vectors;
 }
 
+
+int OpticalFlowCalculator::calculatefeature( cv::Mat &gray_image1,  cv::Mat &gray_image2)
+{
+
+	Mat H=FindHomography(gray_image1,gray_image2);
+	Mat compensated;
+	warpPerspective(gray_image2, compensated, H, cv::Size(gray_image2.cols, gray_image2.rows));
+	//warpAffine(gray_image2, compensated, H, cv::Size(gray_image1.cols, gray_image1.rows));
+	imshow("compensated",compensated);
+	imshow("feature",gray_image1);
+	waitKey(1);
+
+}
 int OpticalFlowCalculator::calculateOpticalFlowgray(const cv::Mat &gray_image1, const cv::Mat &gray_image2, cv::Mat &optical_flow_vectors, int pixel_step,  cv::Mat &comp, double min_vector_size)
 {
     /*
@@ -218,7 +378,11 @@ if(index==0)
             cv::Point2f end_point = points_image2.at(i);
             float x_diff = end_point.x - start_point.x;
             float y_diff = end_point.y - start_point.y;
-            if (std::abs(x_diff) > min_vector_size || std::abs(y_diff) > min_vector_size) // THIS USED TO BE 1.0
+
+		 double backward_angle = atan2(start_point.y - end_point.y, start_point.x - end_point.x)*180/3.141592653;
+		 printf("the angle =%f \n",backward_angle);
+		 //&&(abs(backward_angle)<20)
+            if ((std::abs(x_diff) > min_vector_size || std::abs(y_diff) > min_vector_size)) // THIS USED TO BE 1.0
             {
                 cv::Vec4d &elem = optical_flow_vectors.at<cv::Vec4d> ((int)start_point.y, (int)start_point.x);
                 elem[0] = start_point.x;
@@ -250,7 +414,7 @@ if(index==0)
             elem[3] = 0.0;
         }
     }
-    if (num_vectors > 0)
+    if (num_vectors > 100)
     {
 
 
@@ -338,7 +502,7 @@ int OpticalFlowCalculator::calculateOpticalFlow(const cv::Mat &image1, const cv:
             cv::Point2f end_point = points_image2.at(i);
             float x_diff = end_point.x - start_point.x;
             float y_diff = end_point.y - start_point.y;
-            if (std::abs(x_diff) > min_vector_size || std::abs(y_diff) > min_vector_size) // THIS USED TO BE 1.0
+            if ((std::abs(x_diff) > min_vector_size || std::abs(y_diff) > min_vector_size)) // THIS USED TO BE 1.0
             {
                 cv::Vec4d &elem = optical_flow_vectors.at<cv::Vec4d> ((int)start_point.y, (int)start_point.x);
                 elem[0] = start_point.x;

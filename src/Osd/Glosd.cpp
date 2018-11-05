@@ -77,6 +77,15 @@ void GLOSD::windowtoglcenter(float point[],int num)
 
 }
 
+void GLOSD::windowtoglcenterunicode(int x,int y,int *cx,int *cy)
+{
+	int xu=x*512/windowW;
+	int yu=y*512/windowH;
+	*cx=xu*2-512;
+	*cy=yu*2-512;
+
+}
+
 void GLOSD::drawrect(int x,int y,int w,int h)
 {
 	GLfloat point[3];
@@ -151,8 +160,15 @@ void GLOSD::drawstring(char *string)
 
 void GLOSD::drawcross(int x,int y,int w,int h)
 {
-	drawline(x-w,y,x+w,y);
-	drawline(x,y-h,x,y+h);
+	drawline(x-w,y,x-8,y);
+	drawline(x+8,y,x+w,y);
+
+	drawline(x,y-h,x,y-8);
+	drawline(x,y+8,x,y+h);
+
+	drawline(x-2,y,x+2,y);
+	drawline(x,y-2,x,y+2);
+
 
 }
 void GLOSD::ChangeSize(int w,int h )
@@ -197,17 +213,28 @@ bool GLOSD::desteryunicode()
 		delete freetype;
 	return 1;
 }
+#define MAXCOLOUR (7)
+GLfloat osdcolour[MAXCOLOUR][4]={
+{ 1.0f, 0.0f, 0.0f, 0.5f },
+ { 0.0f, 1.0f, 0.0f, 1.0f },
+ { 0.0f, 0.0f, 1.0f, 1.0f },
+ { 0.0f, 0.0f, 0.0f, 1.0f }
+};
+
+
 
 bool GLOSD::setcolorunicode(int color)
 {
-	Unicodecolor[0]=1.0f;
-	Unicodecolor[1]=0.0f;
-	Unicodecolor[2]=1.0f;
-	Unicodecolor[3]=0.0f;
+	if(color>=MAXCOLOUR)
+		return 0;
+	memcpy(Unicodecolor,osdcolour[color],sizeof(Unicodecolor));
+
 	//GLfloat vFloor[] = { 1.0f, 0.0f, 1.0f, 0.6f };
 	return 1;
 
 }
+
+
 
 bool GLOSD::drawunicodebegin()
 {
@@ -244,3 +271,24 @@ void GLOSD::drawunicode(int x,int y,wchar_t* text)
 	 modelViewMatrix.PopMatrix();
 
 }
+
+void GLOSD::drawunicode(int x,int y,Rgba colour,wchar_t* text)
+{
+
+	//modelViewMatrix.PushMatrix();
+       //modelViewMatrix.Translate(0.0f, 0.0f, viewZ);
+       //int a=300;
+       int cx=300;
+	int cy=300;
+       windowtoglcenterunicode(x,y,&cx,&cy);
+	M3DMatrix44f mtest;
+	m3dLoadIdentity44(mtest);
+	drawshaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACEWJ, mtest, 0,Unicodecolor);
+	//freetype->drawText(-a, a, 0, Rgba(0,255,0,255), intext3, 0, 0, 0);
+	freetype->drawText(cx, cy, 0, colour, text, 0, 0, 0);
+	
+
+	 modelViewMatrix.PopMatrix();
+
+}
+

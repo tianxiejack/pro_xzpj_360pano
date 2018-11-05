@@ -48,7 +48,7 @@
 
 #define PANOSHIFT (0)
 
-#define ANGLEINTREVAL (0)
+#define ANGLEINTREVAL (10)
 
 #define ANGLESHIFT (0)
 
@@ -56,13 +56,17 @@
 
 #define FEATURESTICH (0)
 
-#define CYLINDER (0)
+#define CYLINDER (1)
 
 #define PANODETECTNUM (2)
 
 #define PANOEXTRAH 20
 
-#define PANOSRCSHIFT (0)
+#define PANOSRCSHIFT (30)
+
+
+
+#define PANODSTTAILSHIFT (100)
 
 #define PANOCYLINDCUT (100)
 
@@ -70,13 +74,15 @@
 
 #define MOVEBLOCKNUM (20)
 
+#define MODELINGNUM (5)
+
 #define MOVEBLOCKENABLE (1)
 
 #define MOVELKBLOCKNUM (20)
 
-#define LKMOVANGLE (0.5)
+#define LKMOVANGLE (1.5)
 
-#define MOVDETECTDOW (4)
+#define MOVDETECTDOW (2)
 
 #define MOVDETECTDOWENABLE (1)
 
@@ -110,6 +116,18 @@
 #define IMAGEPROCESSSTICH (0)
 
 #define BUTTERFLY 0
+
+#define TVFOV (18)
+
+#define PTZOK (1)
+
+
+#define FASTMODE (1)
+
+
+#define ZEROCALIBRATIONMODE (0)
+
+#define MVDETECTALG (1)
 //#define PANOSRCSHIFT (0)
 
 #endif /* CONFIG_H_ */

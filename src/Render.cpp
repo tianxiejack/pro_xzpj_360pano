@@ -91,7 +91,7 @@ int window; /* The number of our GLUT window */
 Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),pano360textureh(0),MOUSEx(0),MOUSEy(0),BUTTON(0),
 	MOUSEST(0),mousex(0),mousey(0),mouseflag(0),pano360renderw(0),pano360renderH(0),pano360renderLux(0),pano360renderLuy(0),
 	CameraFov(0),maxtexture(0),pano360texturenum(0),pano360texturewidth(0),pano360textureheight(0),selecttexture(0),shotcutnum(0),
-	movviewx(0),movviewy(0),movvieww(0),movviewh(0)
+	movviewx(0),movviewy(0),movvieww(0),movviewh(0),menumode(0),tailcut(0)
 	{
 		displayMode=SINGLE_VIDEO_VIEW_MODE;
 		panosrcwidth=0;
@@ -173,6 +173,27 @@ bool Render::LoadTGATexture(const char *szFileName, GLenum minFilter, GLenum mag
     
 	return true;
 }
+
+void Render::ptzinit()
+{
+	initptzpos(0,360-7.3);
+	double zeroangle=360-7.3;
+	
+	while(PTZOK)
+		{
+			double angle=0;
+			angle=getpanotitle();
+			double angleoffet=angle-zeroangle;
+			if(angleoffet>300)
+				angleoffet=angleoffet-360;
+			if(angleoffet<-300)
+				angleoffet=angleoffet+360;
+			if(abs(angleoffet)<0.2)
+				break;
+			OSA_waitMsecs(1000);		
+		}
+
+}
 void Render::SetupRC(int windowWidth, int windowHeight)
 {
 		// Blue background
@@ -189,7 +210,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 	singleViewInit();
 	panotestViewInit();
 	Pano360init();
-	
+	ptzinit();
 	//printf("*******************\n");
 	cameraFrame.MoveForward(-7.0f);
 
@@ -235,7 +256,12 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 	setMousestatue(state);
 	if(y>renderheight*4/7)
 		return;
-	Mouse2Select();
+	if(getmenumode()==SELECTMODE)
+		MouseSelectpos();
+	if(getmenumode()==SELECTZEROMODE)
+		Mousezeropos();
+	//else if(getmenumode()==PANOMODE)
+		Mouse2Select();
 }
  void Render::specialkeyPressed (int key, int x, int y)
 {
@@ -341,6 +367,7 @@ void Render::ProcessOitKeys(unsigned char key, int x, int y)
 			case 's':
 				//DISPLAYMODE_SWITCH_TO(SINGLE_VIDEO_VIEW_MODE);
 				displayMode=SINGLE_VIDEO_VIEW_MODE;
+				setmenumode(SINGLEMODE);
 				break;
 			case 'm':
 				//DISPLAYMODE_SWITCH_TO(MY_TEST_PANO_MODE);
@@ -348,7 +375,16 @@ void Render::ProcessOitKeys(unsigned char key, int x, int y)
 				break;
 			case 'p':
 				//DISPLAYMODE_SWITCH_TO(MY_TEST_PANO_MODE);
-				displayMode=PANO_360_MODE;
+				
+				panomod();
+				break;
+			case 'o':
+				//DISPLAYMODE_SWITCH_TO(MY_TEST_PANO_MODE);
+				
+				selectmod();
+				break;
+			case 'z':
+				zeromod();
 				break;
 			case 'F':
 
@@ -375,6 +411,9 @@ void Render::ProcessOitKeys(unsigned char key, int x, int y)
 				break;
 			case 'r':
 				setpanoscan();
+				break;
+			case 'e':
+				setpanoantiscan();
 				break;
 			case 't':
 				setpanoscanstop();
@@ -428,7 +467,87 @@ void Render::RenderScene(void)
 	// Perform the buffer swap to display back buffer
 	glutSwapBuffers();
 	}
+void Render::selectmod()
+{
+	
+	displayMode=PANO_360_MODE;
+	setmenumode(SELECTMODE);
+	setpanoscanstop();
+	setscanpanflag(0);
+}
 
+void Render::zeromod()
+{
+	
+	displayMode=PANO_360_MODE;
+	setmenumode(SELECTZEROMODE);
+	setpanoscanstop();
+	setscanpanflag(0);
+}
+
+void Render::panomod()
+{
+	double angle=0;
+	if(getmenumode()==SELECTMODE)
+		{
+			double zeroangle=getptzzeroangle()-1;
+			if(zeroangle<0)
+				zeroangle+=360;
+			setpanopanpos(zeroangle);
+			while(1)
+				{
+					angle=getpanopan();
+					double angleoffet=angle-zeroangle;
+					if(angleoffet>300)
+						angleoffet=angleoffet-360;
+					if(angleoffet<-300)
+						angleoffet=angleoffet+360;
+					if(abs(angleoffet)<0.2)
+						break;
+					OSA_waitMsecs(1000);
+					
+				}
+			zeroangle=getptzzerotitleangle();
+			if(zeroangle<0)
+				zeroangle+=360;
+			setpanotitlepos(zeroangle);
+			while(1)
+				{
+					angle=getpanotitle();
+					double angleoffet=angle-zeroangle;
+					if(angleoffet>300)
+						angleoffet=angleoffet-360;
+					if(angleoffet<-300)
+						angleoffet=angleoffet+360;
+					if(abs(angleoffet)<0.2)
+						break;
+					OSA_waitMsecs(1000);
+					
+				}
+			
+				setforcezeroprocess(1);
+
+			
+			
+		}
+
+	if(getmenumode()==SELECTZEROMODE)
+		{
+			setstichreset(1);
+
+		}
+
+	
+
+	
+	setpanoflagenable(1);
+	setfusionenalge(1);
+	displayMode=PANO_360_MODE;
+	setmenumode(PANOMODE);
+	setscanpanflag(1);
+	setpanoscan();
+
+}
 void Render::singleViewInit(void)
 {
 	// Load up a triangle
@@ -669,16 +788,29 @@ void Render::Pano360fun()
 	Mat combin2;
 	
 	//Angle2pos();
-	
+	int tailcut=gettailcut();
+
+	if(CYLINDER)
+	if(tailcut>PANODSTTAILSHIFT)
+		tailcut=tailcut-PANODSTTAILSHIFT;
 	getPanoSubPos(&xoffset,&yoffset,&width,&height);
 	
 	panoformat=GL_BGR_EXT;
 	pBits=(GLbyte *)currentdis.data;
-
+	
 	getnumofpano360texture(xoffset,xoffset+width,&textureFnum,&textureSnum);
 	
 	if(textureFnum==textureSnum)
 		{
+
+			if(tailcut!=0&&textureFnum==0&&xoffset==0)
+				{
+					currentdis(Rect(0,0,tailcut,currentdis.rows)).copyTo(combin1);
+					pBits=(GLbyte *)combin1.data;
+					width=tailcut;
+					//printf("the cuttail render ok width=%d tailcut=%d\n",width,tailcut);
+					
+				}
 			glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE+textureFnum]);	
 			glTexSubImage2D(GL_TEXTURE_2D, 0, xoffset-textureFnum*pano360texturewidth, yoffset, width,height, panoformat, GL_UNSIGNED_BYTE, pBits);
 			glBindTexture(GL_TEXTURE_2D, 0);
@@ -929,12 +1061,62 @@ void Render::Drawmov()
 	Glosdhandle.drawbegin();
 
 
-	Glosdhandle.drawcross(renderwidth/2,renderheight/2,50,50);
+	Glosdhandle.drawcross(renderwidth/2,renderheight/2,40,40);
 	//Glosdhandle.drawrect(detect_vect360[i].x, detect_vect360[i].y, detect_vect360[i].width, detect_vect360[i].height);
 	
 	Glosdhandle.drawend();
 
 }
+wchar_t str[50]=L"wnagjie";
+
+void Render::Drawmenuupdate()
+{
+	Osdcontext *contxt=osdcontex.getOSDcontex();
+	for(int i=SINGLEMODE;i<MAXMODE;i++)
+		{
+			if(getmenumode()==i)
+				contxt[i].display=DISMODE;
+			else
+				contxt[i].display=HIDEMODE;
+
+		}
+     if(getplantformcalibration())
+	 	contxt[CALIBRATION].display=HIDEMODE;
+	 else
+	 	contxt[CALIBRATION].display=DISMODE;
+ if(getplantformcalibration()&&getmenumode()==PANOMODE)
+ 	{
+    if(getmodeling())
+		contxt[MODELING].display=DISMODE;
+	else
+		contxt[MODELING].display=HIDEMODE;
+ 	}
+	
+
+}
+void Render::Drawmenu()
+{
+	glViewport(0,0,renderwidth,renderheight);
+	Glosdhandle.setwindow(renderwidth,renderheight);
+	Glosdhandle.drawunicodebegin();
+	Rgba colour=Rgba(255,255,255,255);
+	Osdcontext *contxt=osdcontex.getOSDcontex();
+	Drawmenuupdate();
+	for(int i=0;i<MAXCONTXT;i++)
+		{
+			if(contxt[i].display==DISMODE)
+				{
+					
+					Glosdhandle.setcolorunicode(contxt[i].colour);
+					Glosdhandle.drawunicode(contxt[i].x,contxt[i].y,colour,contxt[i].context);
+				}
+		}
+	Glosdhandle.drawunicodeend();
+	//glUseProgram(0);
+
+}
+
+
 void Render::DrawmovMultidetect()
 {
 	unsigned int pan360w=pano360texturew;
@@ -1040,12 +1222,17 @@ void Render::Drawmovdetect()
 void Render::Drawosd()
 {
 
-	if(MULTICPUPANO)
-		DrawmovMultidetect();
-	else
-		Drawmovdetect();
 
-	Drawmov();
+	if(getmenumode()==PANOMODE)
+		{
+			if(MULTICPUPANO)
+				DrawmovMultidetect();
+			else
+				Drawmovdetect();
+		}
+	if(getmenumode()==SINGLEMODE)
+		Drawmov();
+	Drawmenu();
 
 /*
 	wchar_t intext3[] = {
@@ -1128,7 +1315,7 @@ void Render::pano360View(int x,int y,int width,int height)
 
 	if(getselecttexture()==0)
 		{
-		GLfloat vRed[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+		GLfloat vRed[] = { 0.0f, 1.0f, 1.0f, 1.0f };
 		shaderManager.UseStockShader(GLT_SHADER_IDENTITY, vRed);
 		panselectrectBatch.Draw();
 		}
@@ -1167,7 +1354,7 @@ void Render::pano360View(int x,int y,int width,int height)
 
 	if(getselecttexture()==1)
 			{
-		GLfloat vRed[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+		GLfloat vRed[] = { 0.0f, 1.0f, 1.0f, 1.0f };
 		shaderManager.UseStockShader(GLT_SHADER_IDENTITY, vRed);
 		panselectrectBatch.Draw();
 		}
@@ -1808,5 +1995,169 @@ void Render::Mouse2Select()
 	
 
 }
+void Render::MouseSelectpos()
+{
+	/**/
+	int x=0;
+	int y=0;
+	double mouseangle=0;
+	double mousetitleangle=0;
+	int panposx=0;
+	int cent180y=0;
+	int cent360y=0;
+	int cent180h=0;
+	int cent360h=0;
+	cent180y=(renderheight-mov180viewy)/2;
+	cent180h=renderheight-mov180viewy;
+	cent360y=(renderheight-mov180viewy)*3/2;
+	cent360h=renderheight-mov180viewy;
+	static int mousexpre=0;
+	static int mouseypre=0;
+	static int mousewpre=0;
+	static int mousehpre=0;
+	if(MOUSEST==MOUSEPRESS&&BUTTON==MOUSELEFT)
+		{
+			mousexpre=MOUSEx;
+			mouseypre=MOUSEy;
+		}
+	if(MOUSEST==MOUSEUP&&BUTTON==MOUSELEFT)
+		{
+			mousewpre=abs(MOUSEx-mousexpre);
+			mousehpre=abs(MOUSEy-mouseypre);
+			selectx=min(MOUSEx,mousexpre);
+			selecty=min(MOUSEy,mouseypre);
+		}
+	
+	if(MOUSEST==MOUSEUP&&BUTTON==MOUSELEFT)
+		{
+			x=selectx+mousewpre/2;
+			y=selecty+mousehpre/2;
 
+			if(renderheight-mov360viewy<MOUSEy)
+				return ;
+			if(renderheight-mov180viewy>MOUSEy)
+				{
+					panposx=x*pano360texturew/(2*renderwidth)-PANO360WIDTH/2;
+					mouseangle=offet2anglepano(panposx);
+
+					mousetitleangle=1.0*(cent180y-y)*TVFOV/(cent180h)+getptzzerotitleangle();
+					
+					
+					//pano360texturew;
+					//mouseangle
+				}
+			else
+				{
+					panposx=(x+renderwidth)*pano360texturew/(renderwidth*2)-PANO360WIDTH/2;
+					mouseangle=offet2anglepano(panposx);
+
+					mousetitleangle=1.0*(cent360y-y)*TVFOV/(cent360h)+getptzzerotitleangle();
+
+				}
+			mouseangle+=getptzzeroangle();
+			if(mouseangle>360)
+				mouseangle=mouseangle-360;
+			else if(mouseangle<0)
+				mouseangle=mouseangle+360;
+
+				if(mousetitleangle>360)
+				mousetitleangle=mousetitleangle-360;
+			else if(mousetitleangle<0)
+				mousetitleangle=mousetitleangle+360;
+			//printf("the angle =%f \n",mouseangle);
+			setscanpanflag(0);
+			setpanopanpos(mouseangle);
+			setpanotitlepos(mousetitleangle);
+				;
+			
+
+		}
+	else
+		return ;
+
+
+}
+
+void Render::Mousezeropos()
+{
+
+	int x=0;
+	int y=0;
+	double mouseangle=0;
+	double mousetitleangle=0;
+	int panposx=0;
+	int cent180y=0;
+	int cent360y=0;
+	int cent180h=0;
+	int cent360h=0;
+	cent180y=(renderheight-mov180viewy)/2;
+	cent180h=renderheight-mov180viewy;
+	cent360y=(renderheight-mov180viewy)*3/2;
+	cent360h=renderheight-mov180viewy;
+	static int mousexpre=0;
+	static int mouseypre=0;
+	static int mousewpre=0;
+	static int mousehpre=0;
+	if(MOUSEST==MOUSEPRESS&&BUTTON==MOUSELEFT)
+		{
+			mousexpre=MOUSEx;
+			mouseypre=MOUSEy;
+		}
+	if(MOUSEST==MOUSEUP&&BUTTON==MOUSELEFT)
+		{
+			mousewpre=abs(MOUSEx-mousexpre);
+			mousehpre=abs(MOUSEy-mouseypre);
+			selectx=min(MOUSEx,mousexpre);
+			selecty=min(MOUSEy,mouseypre);
+		}
+	
+	if(MOUSEST==MOUSEUP&&BUTTON==MOUSELEFT)
+		{
+			x=mousexpre;
+			y=mouseypre;
+
+			if(renderheight-mov360viewy<MOUSEy)
+				return ;
+			if(renderheight-mov180viewy>MOUSEy)
+				{
+					panposx=x*pano360texturew/(2*renderwidth);
+					mouseangle=offet2anglepano(panposx);
+
+					mousetitleangle=1.0*(cent180y-y)*TVFOV/(cent180h)+getptzzerotitleangle();
+					
+					
+					//pano360texturew;
+					//mouseangle
+				}
+			else
+				{
+					panposx=(x+renderwidth)*pano360texturew/(renderwidth*2);
+					mouseangle=offet2anglepano(panposx);
+
+					mousetitleangle=1.0*(cent360y-y)*TVFOV/(cent360h)+getptzzerotitleangle();
+
+				}
+			mouseangle+=getptzzeroangle();
+			if(mouseangle>360)
+				mouseangle=mouseangle-360;
+			else if(mouseangle<0)
+				mouseangle=mouseangle+360;
+
+				if(mousetitleangle>360)
+				mousetitleangle=mousetitleangle-360;
+			else if(mousetitleangle<0)
+				mousetitleangle=mousetitleangle+360;
+			//printf("the angle =%f \n",mouseangle);
+			setscanpanflag(0);
+			setpanopanpos(mouseangle);
+			
+				;
+			
+
+		}
+	else
+		return ;
+
+
+}
 

@@ -50,7 +50,8 @@ public:
        GLFrustum			viewFrustum;
 	GLGeometryTransform	transformPipeline;		// Geometry Transform Pipeline
 	
-	
+	void drawunicode(int x,int y,Rgba colour,wchar_t* text);
+	void windowtoglcenterunicode(int x,int y,int *cx,int *cy);
 
 };
 

@@ -36,6 +36,7 @@ void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capIn
 	Mat img;
 	int queueid=0;
 	OSA_BufInfo* info=NULL;
+	int calibration=0;
 	
 	Mat cap;// = Mat(TV_HEIGHT,TV_WIDTH,CV_8UC2,src);
 
@@ -71,7 +72,7 @@ void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capIn
 	//OSA_printf("%d %s. 1 chid=%d", OSA_getCurTimeInMsec(), __func__,cap_chid);
 	//if(cap_chid==TV_DEV_ID)
 	{
-		getGyroprocess(cap,&gyro);
+		calibration=getGyroprocess(cap,&gyro);
 		if(cap_chid==HOT_DEV_ID)
 			{
 				oddevenflag=getoddenv();
@@ -145,6 +146,7 @@ void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capIn
 	info->height = img.rows;
 	info->timestamp = (uint64)capInfo.timestamp.tv_sec*1000*1000*1000
 			+ (uint64)capInfo.timestamp.tv_usec*1000;
+	info->calibration=calibration;
     	 Imageprocesspt->CaptureThreadProcess(img,info);
 	//cv::imshow(WindowName, img);
 	//waitKey(1);
@@ -158,7 +160,7 @@ void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capIn
 
 int main_pano(int argc, char **argv)
 {
-	
+
 	GLMain_InitPrm dsInit;
 	kalmanfilterinit();
 	videocapture=VideoCapture(AVINAME);

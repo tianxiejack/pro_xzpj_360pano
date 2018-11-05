@@ -15,6 +15,8 @@ static unsigned int zeroimagpenum=0;
 bool imgprocessenable =false;
 int filestoreflag=0;
 int panoflag=0;
+int scanpanflag=0;
+int modeling=1;
 
 /*******************************************/
 Mat PANO[PANODETECTNUM];
@@ -31,9 +33,62 @@ int fullflame=0;
 #define EVEN (1)
 #define FULL (2)
 
+int orcezeroprocess=0;
+double ptzzeroangle=0.0;
+double ptzzerotitleangle=0.0;
+
 double mvprocessangle[MULTICPUPANONUM];
+int stichreset=0;
+
+int modelnum[MULTICPUPANONUM];
+void setmodelnum(int chid)
+{
+	modelnum[chid]++;
+
+}
+int getmodelnum(int chid)
+{
+	return modelnum[chid];
+}
+
+void setmodeling(int mod){modeling=mod;};
+int getmodeling(){return modeling;};
+void setstichreset(int flag)
+{
+	stichreset=flag;
+
+}
+
+int getstichreset()
+{
+
+	return stichreset;
+}
+
+void setptzzeroangle(double angle)
+{
+	ptzzeroangle=angle;
+
+}
+
+double getptzzeroangle()
+{
+
+	return ptzzeroangle;
+}
 
 
+void setptzzerotitleangle(double angle)
+{
+	ptzzerotitleangle=angle;
+
+}
+
+double getptzzerotitleangle()
+{
+
+	return ptzzerotitleangle;
+}
 
 void setmvprocessangle(double angle,int chid)
 {
@@ -72,10 +127,10 @@ void cylinderremapinit()
 		{
 			double k = R / sqrt(R*R + (wnum - width / 2)*(wnum - width / 2));
 			//x = (wnum - width / 2) / k + width / 2;
-			#if 1
+			#if 0
 			x= width/2.0 + R * tan((wnum-R * fovAngle/2)/R) ;
 			y=hnum;
-			#elif 1
+			#elif 0
 			x=width/2+R*tan((wnum-width/2)/R);
 			y=hnum;
 			
@@ -96,6 +151,7 @@ void stichinit()
 	for(int i=0;i<MULTICPUPANONUM;i++)
 	OSA_mutexCreate(&disLock[i]);
 	memset(mvprocessangle,0,sizeof(mvprocessangle));
+	memset(modelnum,0,sizeof(modelnum));
 	plantformcontrlinit();
 	cylinderremapinit();
 	deinterlanceinit();
@@ -110,6 +166,29 @@ void setpanomap(Mat pano[])
 		}
 
 }
+
+
+void setscanpanflag(int flag)
+{
+	scanpanflag=flag;
+
+}
+
+void setforcezeroprocess(int flag)
+{
+	orcezeroprocess=flag;
+}
+int getorcezeroprocess()
+{
+	return orcezeroprocess;
+
+}
+int  getscanpanflag()
+{
+	return scanpanflag;
+
+}
+
 
 void setpanoflagenable(int flag)
 {
@@ -198,7 +277,16 @@ double offet2angle(int  offsetx)
 	return angle;
 
 }
+double offet2anglepano(int  offsetx)
+{
+	//int xoffset=PANOSCALE*angle*panowidth/360;
+	double angle=0;
+	angle =offsetx*360.0/(panowidth*PANOSCALE);
+	if(angle>360)
+		angle-=360;
+	return angle;
 
+}
 double offet2anglerelative2inter(int  offsetx)
 {
 	int halgoffset=offsetx/2;
@@ -300,8 +388,16 @@ void FusionSeam(Mat& src,Mat & dst,int seampostion)
 		}
 	else
 		{
-			if(processWidth>300)
-			processWidth=300;
+		if(ANGLEINTREVAL>10)
+			{
+				if(processWidth>350)
+				processWidth=350;
+			}
+		else
+			{
+				if(processWidth>50)
+				processWidth=50;
+			}
 
 		}
 	

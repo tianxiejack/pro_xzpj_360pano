@@ -1,20 +1,67 @@
----- m_warnRoiVec Matches (23 in 2 files) ----
-MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):		m_warnRoiVec[i].clear();
-MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):		m_warnRoiVec[i].clear();
-MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):		if(m_warnRoiVec[chId].size() < 3){
-MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):			int num = m_warnRoiVec[chId].size();
-MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):			for(ptmp = m_warnRoiVec[chId].begin();ptmp != m_warnRoiVec[chId].end();ptmp++){
-MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):	if( srcwidth*srcheight*2.0/3.0 < cv::contourArea(m_warnRoiVec[chId]) ){	
-MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):		boundRect = boundingRect(m_warnRoiVec[chId]);
-MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):		m_warnRoiVec[chId].resize(npoint);
-MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):			m_warnRoiVec[chId][k]	= cv::Point2i(warnRoi[k]);
-MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):	m_warnRoiVec[chId].clear();
-MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):		if(m_warnRoiVec[chId].size() == 0)
-MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):						int	npoint	= m_warnRoiVec[chId].size();
-MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):							line(disframe[chId], m_warnRoiVec[chId][i], m_warnRoiVec[chId][(i+1)%npoint], cvScalar(0,0,255,255), 4, 8);
-MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):						int	npoint	= m_warnRoiVec[chId].size();
-MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):							line(disframe[chId], m_warnRoiVec[chId][i], m_warnRoiVec[chId][(i+1)%npoint], cvScalar(0,0,255,255), 4, 8);
-MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):							int	npoint	= m_warnRoiVec[chId].size();
-MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):								line(disframe[chId], m_warnRoiVec[chId][i], m_warnRoiVec[chId][(i+1)%npoint], cvScalar(0,0,255,255), 4, 8);
-MovDetector.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):		if(m_warnRoiVec[chId].size() == 0)
-MovDetector.hpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):	std::vector<cv::Point2i>		m_warnRoiVec[DETECTOR_NUM];
+---- copy Matches (66 in 43 files) ----
+BGModel.cpp (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModel.cpp (z:\home\wj\cuda-workspace\360pano\src\mv\lb):    You should have received a copy of the GNU General Public License
+BGModel.h (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModel.h (z:\home\wj\cuda-workspace\360pano\src\mv\lb):    You should have received a copy of the GNU General Public License
+BGModelFuzzyGauss.cpp (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModelFuzzyGauss.cpp (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModelFuzzyGauss.h (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModelFuzzyGauss.h (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModelFuzzySom.cpp (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModelFuzzySom.cpp (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModelFuzzySom.h (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModelFuzzySom.h (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModelGauss.cpp (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModelGauss.cpp (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModelGauss.h (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModelGauss.h (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModelMog.cpp (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModelMog.cpp (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModelMog.h (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModelMog.h (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModelSom.cpp (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModelSom.cpp (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModelSom.h (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+BGModelSom.h (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+CELLMath.hpp (z:\home\wj\cuda-workspace\360pano\src\osd):        @remarks as this implementation uses a static member, make sure to use your own copy !
+Cv.h (z:\usr\include\opencv)://  copy or use the software.
+Cv.hpp (z:\usr\include\opencv)://  copy or use the software.
+Cvaux.h (z:\usr\include\opencv)://  copy or use the software.
+Cvaux.hpp (z:\usr\include\opencv)://  copy or use the software.
+Cvwimage.h (z:\usr\include\opencv)://  install, copy or use the software.
+Cxcore.h (z:\usr\include\opencv)://  copy or use the software.
+Cxcore.hpp (z:\usr\include\opencv)://  copy or use the software.
+Cxeigen.hpp (z:\usr\include\opencv)://  copy or use the software.
+FrameDifference.cpp (z:\home\wj\cuda-workspace\360pano\src\mv):You should have received a copy of the GNU General Public License
+FrameDifference.h (z:\home\wj\cuda-workspace\360pano\src\mv):You should have received a copy of the GNU General Public License
+GLBatch.cpp (z:\home\wj\cuda-workspace\360pano\src\gltools\src):// Block copy in normal data
+Glew.h (z:\home\wj\cuda-workspace\360pano\include): * copy of this software and associated documentation files (the "Software"),
+Glew.h (z:\home\wj\cuda-workspace\360pano\include): * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+Glew.h (z:\home\wj\cuda-workspace\360pano\include):** copy of this software and/or associated documentation files (the
+Glew.h (z:\home\wj\cuda-workspace\360pano\include):** without limitation the rights to use, copy, modify, merge, publish,
+Glew.h (z:\home\wj\cuda-workspace\360pano\src\gltools\include\gl): * copy of this software and associated documentation files (the "Software"),
+Glew.h (z:\home\wj\cuda-workspace\360pano\src\gltools\include\gl): * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+Glew.h (z:\home\wj\cuda-workspace\360pano\src\gltools\include\gl):** copy of this software and/or associated documentation files (the
+Glew.h (z:\home\wj\cuda-workspace\360pano\src\gltools\include\gl):** without limitation the rights to use, copy, modify, merge, publish,
+Glxew.h (z:\home\wj\cuda-workspace\360pano\src\gltools\include\gl): * copy of this software and associated documentation files (the "Software"),
+Glxew.h (z:\home\wj\cuda-workspace\360pano\src\gltools\include\gl): * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+Glxew.h (z:\home\wj\cuda-workspace\360pano\src\gltools\include\gl):** copy of this software and/or associated documentation files (the
+Glxew.h (z:\home\wj\cuda-workspace\360pano\src\gltools\include\gl):** without limitation the rights to use, copy, modify, merge, publish,
+Highgui.h (z:\usr\include\opencv)://  copy or use the software.
+IBGS.h (z:\home\wj\cuda-workspace\360pano\src\mv):You should have received a copy of the GNU General Public License
+LBFuzzyGaussian.cpp (z:\home\wj\cuda-workspace\360pano\src\mv):You should have received a copy of the GNU General Public License
+LBFuzzyGaussian.h (z:\home\wj\cuda-workspace\360pano\src\mv):You should have received a copy of the GNU General Public License
+Ml.h (z:\usr\include\opencv)://  copy or use the software.
+Optical_flow_calculator.cpp (z:\home\wj\cuda-workspace\360pano\src\lk):   gray_image1(rectsrc).copy();
+Osa_dma.h (z:\home\wj\cuda-workspace\360pano\src\osa_cap\inc):  int skipH; // Horizontal Skip, 0: No skip, >= 1 copy 'skipH' bytes, skip 'skipH' bytes. Eg to skip alternate bytes set skipH to 1  
+StaticFrameDifference.cpp (z:\home\wj\cuda-workspace\360pano\src\mv):You should have received a copy of the GNU General Public License
+StaticFrameDifference.h (z:\home\wj\cuda-workspace\360pano\src\mv):You should have received a copy of the GNU General Public License
+TwoPoints.cpp (z:\home\wj\cuda-workspace\360pano\src\mv):You should have received a copy of the GNU General Public License
+TwoPoints.h (z:\home\wj\cuda-workspace\360pano\src\mv):You should have received a copy of the GNU General Public License
+Two_points.cpp (z:\home\wj\cuda-workspace\360pano\src\mv):You should have received a copy of the GNU General Public License
+Two_points.h (z:\home\wj\cuda-workspace\360pano\src\mv):You should have received a copy of the GNU General Public License
+Types.h (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+Types.h (z:\home\wj\cuda-workspace\360pano\src\mv\lb):You should have received a copy of the GNU General Public License
+Vmath.h (z:\home\wj\cuda-workspace\360pano\src):    // Assignment function - called from assignment operator and copy constructor.
+Wglew.h (z:\home\wj\cuda-workspace\360pano\src\gltools\include\gl):** copy of this software and/or associated documentation files (the
+Wglew.h (z:\home\wj\cuda-workspace\360pano\src\gltools\include\gl):** without limitation the rights to use, copy, modify, merge, publish,

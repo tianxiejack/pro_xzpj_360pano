@@ -634,6 +634,8 @@ void CMoveDetector_mv::maskDetectProcess(OSA_MsgHndl *pMsg)
 		}
 		pMVObj[0] = &m_postDetect[chId];
 		pMVObj[1] = &m_postDetect2[chId];
+
+		
 			
 #pragma omp parallel for
 			for(k=0; k<2; k++){

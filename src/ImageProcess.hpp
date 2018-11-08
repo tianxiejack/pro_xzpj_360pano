@@ -170,6 +170,8 @@ public:
 
 
 		void detectprocess(Mat src,OSA_BufInfo* frameinfo);
+
+		void detectprocesstest(Mat src,OSA_BufInfo* frameinfo);
 		int JudgeLk(Mat src);
 		int JudgeLkFast(Mat src);
 		int LkAngle[MOVELKBLOCKNUM];

@@ -16,6 +16,7 @@
 #include"Gyroprocess.hpp"
 #include "ImageProcess.hpp"
 #include"Stich.hpp"
+#include "config.hpp"
 static GLMain render;
 
 ImageProcess *Imageprocesspt;
@@ -24,10 +25,11 @@ static OSA_BufHndl *imgQ[QUE_CHID_COUNT];
 VideoCapture videocapture;
 Mat fileframe;
 
-#define AVINAME "/home/ubuntu/calib1/mov2.avi"
+#define AVINAME "/home/ubuntu/calib1/mov11.avi"
 
 static int fullframe=0;
 int oddevenflag=-1;
+static Config *config;
 //static OSA_BufHndl *procossQ[QUE_CHID_COUNT];
 void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capInfo, int format)
 {
@@ -44,13 +46,13 @@ void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capIn
 		{
 			fullframe=1;
 			queueid=0;
-			cap= Mat(TV_HEIGHT,TV_WIDTH,CV_8UC2,src);
+			cap= Mat(config->getcamheight(),config->getcamwidth(),CV_8UC2,src);
 			
 		}
 	else if(cap_chid==HOT_DEV_ID)
 		{
 			queueid=1;
-			cap= Mat(HOT_HEIGHT,HOT_WIDTH,CV_8UC2,src);
+			cap= Mat(config->getcamheight(),config->getcamwidth(),CV_8UC2,src);
 			
 		}
 	
@@ -94,12 +96,12 @@ void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capIn
 
 	if(cap_chid==TV_DEV_ID)
 		{
-			img = Mat(TV_HEIGHT,TV_WIDTH,CV_8UC3, info->virtAddr);
+			img = Mat(config->getcamheight(),config->getcamwidth(),CV_8UC3, info->virtAddr);
 		}
 	else if(cap_chid==HOT_DEV_ID)
 		{
 
-			img = Mat(HOT_HEIGHT*2,HOT_WIDTH,CV_8UC3, info->virtAddr);
+			img = Mat(config->getcamheight()*2,config->getcamwidth(),CV_8UC3, info->virtAddr);
 		}
 	
 	
@@ -109,9 +111,11 @@ void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capIn
 			if(!fileframe.empty())
 				{
 					//printf("********1*file cap ok******\n");
-					resize(fileframe,fileframe,Size(PANO360WIDTH,PANO360HEIGHT),0,0,INTER_LINEAR);
+					resize(fileframe,fileframe,Size(config->getpanoprocesswidth(),config->getpanoprocessheight()),0,0,INTER_LINEAR);
 					//printf("********2*file cap ok******\n");
 					fileframe.copyTo(img);
+
+					
 					//cvtColor(fileframe,img,CV_GRAY2BGR);
 					//printf("********3*file cap ok******\n");
 				}
@@ -152,7 +156,8 @@ void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capIn
 	//waitKey(1);
 	  image_queue_putFull(imgQ[queueid], info);
 
-
+	if(DETECTTEST)
+		OSA_waitMsecs(500);
 	
 	//OSA_printf("%d %s. 1w=%d h=%d\n", OSA_getCurTimeInMsec(), __func__,info->width,info->height);
 
@@ -160,7 +165,12 @@ void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capIn
 
 int main_pano(int argc, char **argv)
 {
-
+	#if 0
+	Config::getinstance()->saveconfig();
+	return 0;
+	#endif
+	config=Config::getinstance();
+	config->loadconfig();
 	GLMain_InitPrm dsInit;
 	kalmanfilterinit();
 	videocapture=VideoCapture(AVINAME);
@@ -176,9 +186,9 @@ int main_pano(int argc, char **argv)
 	dsInit.nChannels = 1;
 	dsInit.nQueueSize = 3;
 	dsInit.memType = memtype_malloc;
-	dsInit.channelsSize[0].w = TV_WIDTH;
-	dsInit.channelsSize[0].h = TV_HEIGHT;
-	dsInit.channelsSize[0].c = 3;
+	dsInit.channelsSize[0].w = config->getcamwidth();
+	dsInit.channelsSize[0].h = config->getcamheight();
+	dsInit.channelsSize[0].c = config->getcamchannel();
 	render.start(argc,  argv,(void *)&dsInit);
 	imgQ[0] = &render.m_bufQue[0];
 	imgQ[1] = &render.m_bufQue[1];

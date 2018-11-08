@@ -9,6 +9,7 @@
 #include "StaticFrameDifference.h"
 #include "TwoPoints.h"
 #include "LBFuzzyGaussian.h"
+#include "config.hpp"
 #define IMAGEQUEUESIZE 4
 #define IMAGCAPEQUEUESIZE 2
 #define IMAGEQUEUEWIDTH 1920
@@ -51,65 +52,66 @@ void ImageProcess::Init()
 	stichinit();
 	for(int i=0;i<FRAMEFIFO;i++)
 		{
-			processgray[i]=Mat(CAPTURETVHEIGHT,CAPTURETVWIDTH,CV_8UC1,cv::Scalar(0));
-			processtest=Mat(CAPTURETVHEIGHT,CAPTURETVWIDTH,CV_8UC1,cv::Scalar(0));
+			processgray[i]=Mat(Config::getinstance()->getcamheight(),Config::getinstance()->getcamwidth(),CV_8UC1,cv::Scalar(0));
+			processtest=Mat(Config::getinstance()->getcamheight(),Config::getinstance()->getcamwidth(),CV_8UC1,cv::Scalar(0));
 			processgraytemp[i]=Mat(405,720,CV_8UC1);
 			//OSA_printf("the  DATA=%p\n",processgray[i].data);		
 		}
 	for(int chId=0; chId<IMAGEQUEUE; chId++)
 		image_queue_create(&m_bufQue[chId], IMAGEQUEUESIZE,
-				IMAGEQUEUEWIDTH*IMAGEQUEUEHEIGHT*IMAGEQUEUECHANNEL,
+				Config::getinstance()->getcamwidth()*Config::getinstance()->getcamheight()*IMAGEQUEUECHANNEL,
 				memtype_normal);
 	for(int chId=0; chId<IMAGEQUEUE; chId++)
 		image_queue_create(&mcap_bufQue[chId], IMAGCAPEQUEUESIZE,
-				IMAGEQUEUEWIDTH*IMAGEQUEUEHEIGHT*IMAGEQUEUECHANNEL,
+				Config::getinstance()->getcamwidth()*Config::getinstance()->getcamheight()*IMAGEQUEUECHANNEL,
 				memtype_normal);
-	processtemp=Mat(PANO360HEIGHT,PANO360WIDTH,CV_8UC3,cv::Scalar(0));
-	processtempgray=Mat(PANO360HEIGHT,PANO360WIDTH,CV_8UC1,cv::Scalar(0));
+	processtemp=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth(),CV_8UC3,cv::Scalar(0));
+	processtempgray=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth(),CV_8UC1,cv::Scalar(0));
 	
 	for(int i=0;i<MAXSEAM;i++)
 		{
-			Seamframe[i]=Mat(PANO360HEIGHT,PANO360WIDTH,CV_8UC3,cv::Scalar(0));
+			Seamframe[i]=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth(),CV_8UC3,cv::Scalar(0));
 		}
-	zeroflame=Mat(PANO360SRCHEIGHT,PANO360SRCWIDTH,CV_8UC3,cv::Scalar(0));
+	zeroflame=Mat(Config::getinstance()->getcamheight(),Config::getinstance()->getcamwidth(),CV_8UC3,cv::Scalar(0));
 
 	for(int i=0;i<MOVEBLOCKNUM;i++)
 		{
 			if(PANOGRAYDETECT)
-			panoblock[i]=Mat(MOVDETECTSRCHEIGHT,MOVDETECTSRCWIDTH,CV_8UC1,cv::Scalar(0));
+			panoblock[i]=Mat(Config::getinstance()->getmvprocessheight(),Config::getinstance()->getmvprocesswidth(),CV_8UC1,cv::Scalar(0));
 			else
-			panoblock[i]=Mat(MOVDETECTSRCHEIGHT,MOVDETECTSRCWIDTH,CV_8UC3,cv::Scalar(0));	
+			panoblock[i]=Mat(Config::getinstance()->getmvprocessheight(),Config::getinstance()->getmvprocesswidth(),CV_8UC3,cv::Scalar(0));	
 		}
-	ProcessPreimage=Mat(PANO360HEIGHT,PANO360WIDTH,CV_8UC3,cv::Scalar(0));
+	ProcessPreimage=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth(),CV_8UC3,cv::Scalar(0));
 	
 	for(int i=0;i<2;i++)
-	MvtestFRrame[i]=Mat(PANO360HEIGHT,PANO360WIDTH,CV_8UC1,cv::Scalar(0));
+	MvtestFRrame[i]=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth(),CV_8UC1,cv::Scalar(0));
 
 	
-	panograysrc=Mat(PANO360HEIGHT,PANO360WIDTH,CV_8UC1,cv::Scalar(0));
+	panograysrc=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth(),CV_8UC1,cv::Scalar(0));
 
-	LKRramegray=Mat(PANO360HEIGHT/MOVDETECTDOW,MOVDETECTSRCWIDTH/(MOVDETECTDOW),CV_8UC1,cv::Scalar(0));
+	LKRramegray=Mat(Config::getinstance()->getmvprocessheight()/Config::getinstance()->getmvdownup(),Config::getinstance()->getmvprocesswidth()/(Config::getinstance()->getmvdownup()),CV_8UC1,cv::Scalar(0));
+	
+	detedtgraysrc=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth(),CV_8UC1,cv::Scalar(0));
 
-	detedtgraysrc=Mat(PANO360HEIGHT,PANO360WIDTH,CV_8UC1,cv::Scalar(0));
-
-	LKRramegrayblackboard=Mat(PANO360HEIGHT/MOVDETECTDOW,MOVDETECTSRCWIDTH/(MOVDETECTDOW),CV_8UC1,cv::Scalar(0));
+	LKRramegrayblackboard=Mat(Config::getinstance()->getmvprocessheight()/Config::getinstance()->getmvdownup(),Config::getinstance()->getmvprocesswidth()/(Config::getinstance()->getmvdownup()),CV_8UC1,cv::Scalar(0));
 
 	for(int i=0;i<MOVEBLOCKNUM;i++)
 		for(int j=0;j<MODELINGNUM;j++)
-			Modelframe[i][j]=Mat(PANO360HEIGHT/MOVDETECTDOW,MOVDETECTSRCWIDTH/(MOVDETECTDOW),CV_8UC1,cv::Scalar(0));
+			Modelframe[i][j]=Mat(Config::getinstance()->getmvprocessheight()/Config::getinstance()->getmvdownup(),Config::getinstance()->getmvprocesswidth()/(Config::getinstance()->getmvdownup()),CV_8UC1,cv::Scalar(0));
 	//Modelframe
 	
-	MvtestFRramegray=Mat(PANO360HEIGHT/MOVDETECTDOW,MOVDETECTSRCWIDTH/(MOVDETECTDOW),CV_8UC1,cv::Scalar(0));
+	MvtestFRramegray=Mat(Config::getinstance()->getmvprocessheight()/Config::getinstance()->getmvdownup(),Config::getinstance()->getmvprocesswidth()/(Config::getinstance()->getmvdownup()),CV_8UC1,cv::Scalar(0));
 
-	panoblockdown=Mat(PANO360HEIGHT/MOVDETECTDOW,MOVDETECTSRCWIDTH/(MOVDETECTDOW),CV_8UC1,cv::Scalar(0));
+	panoblockdown=Mat(Config::getinstance()->getmvprocessheight()/Config::getinstance()->getmvdownup(),Config::getinstance()->getmvprocesswidth()/(Config::getinstance()->getmvdownup()),CV_8UC1,cv::Scalar(0));
 
+	printf("panoblockdown w=%d h=%d \n",Config::getinstance()->getmvprocessheight()/Config::getinstance()->getmvdownup(),Config::getinstance()->getmvprocesswidth()/(Config::getinstance()->getmvdownup()));
 	int board=40;
 	int boardh=30;
-	if(MOVDETECTDOW<=2)
+	if(Config::getinstance()->getmvdownup()<=2)
 		board=150;
 	
 	
-	blackrect=Rect(board,boardh,MOVDETECTSRCWIDTH/MOVDETECTDOW-2*board,PANO360HEIGHT/(MOVDETECTDOW)-2*boardh);
+	blackrect=Rect(board,boardh,Config::getinstance()->getmvprocesswidth()/Config::getinstance()->getmvdownup()-2*board,Config::getinstance()->getmvprocessheight()/(Config::getinstance()->getmvdownup())-2*boardh);
 	
 	MAIN_threadCreate();
 	MAIN_detectthreadCreate();
@@ -129,9 +131,9 @@ void ImageProcess::Create()
 	//bgs = new LBFuzzyGaussian;
 	double rate = 2.0;
 	#if MULTICPUPANOLK
-	Size videoSize(MOVDETECTSRCWIDTH/MOVDETECTDOW,MOVDETECTSRCHEIGHT/MOVDETECTDOW);
+	Size videoSize(Config::getinstance()->getmvprocesswidth()/Config::getinstance()->getmvdownup(),Config::getinstance()->getmvprocessheight()/Config::getinstance()->getmvdownup());
 	#else
-	Size videoSize(MOVDETECTSRCWIDTH/MOVDETECTDOW,MOVDETECTSRCHEIGHT/MOVDETECTDOW);
+	Size videoSize(Config::getinstance()->getmvprocesswidth()/Config::getinstance()->getmvdownup(),Config::getinstance()->getmvprocessheight()/Config::getinstance()->getmvdownup());
 	#endif
 	//videowriter=VideoWriter("mov.avi", CV_FOURCC('M', 'J', 'P', 'G'), rate, videoSize);
 	//bool status=videowriter.open("mov.avi", CV_FOURCC('X', 'V', 'I', 'D'),rate, videoSize, false);
@@ -191,6 +193,8 @@ void ImageProcess::CaptureThreadProcess(Mat src,OSA_BufInfo* frameinfo)
 	setnextImagePinpang();
 #endif
 	//OSA_semSignal(&mainProcThrObj.procNotifySem);
+
+	detectprocesstest(src,frameinfo);
 	
 	if(Panorest())
 		return;
@@ -232,11 +236,11 @@ void ImageProcess::CaptureThreadProcess(Mat src,OSA_BufInfo* frameinfo)
 
 }
 
-void ImageProcess::detectprocess(Mat src,OSA_BufInfo* frameinfo)
+
+
+void ImageProcess::detectprocesstest(Mat src,OSA_BufInfo* frameinfo)
 {	
 
-	
-	//printf("********8888888888888888888888********\n");
 		if(DETECTTEST)
 		{
 			//src.copyTo(MvtestFRrame[pp]);
@@ -245,6 +249,16 @@ void ImageProcess::detectprocess(Mat src,OSA_BufInfo* frameinfo)
 			OSA_semSignal(&mainProcThrdetectObj.procNotifySem);
 			printf("***********DETECTTEST*********\n");
 		}
+
+
+}
+
+void ImageProcess::detectprocess(Mat src,OSA_BufInfo* frameinfo)
+{	
+
+	
+	//printf("********8888888888888888888888********\n");
+	
 	double angle=frameinfo->framegyroyaw*1.0/ANGLESCALE+getcamerazeroossfet();
 	if(angle<0)
 		angle+=360;
@@ -495,8 +509,8 @@ void ImageProcess::Panoprocess(Mat src,Mat dst)
 	/******************************/
 	
 	//Mat dst
-	if(src.cols!=PANO360WIDTH||src.rows!=PANO360HEIGHT)
-			resize(src,temp,Size(PANO360WIDTH,PANO360HEIGHT),0,0,INTER_LINEAR);
+	if(src.cols!=Config::getinstance()->getpanoprocesswidth()||src.rows!=Config::getinstance()->getpanoprocessheight())
+			resize(src,temp,Size(Config::getinstance()->getpanoprocesswidth(),Config::getinstance()->getpanoprocessheight()),0,0,INTER_LINEAR);
 	else
 		{
 		//memcpy(temp.data,src.data,PANO360WIDTH*PANO360HEIGHT*3);
@@ -506,7 +520,7 @@ void ImageProcess::Panoprocess(Mat src,Mat dst)
 	//return ;
 	double exec_time = (double)getTickCount();
 	if(CYLINDER)
-		cylinder(temp,dst,1.0*(CAMERAFOCUSLENGTH)*PANO360WIDTH/PANO360SRCWIDTH,PANOSRCSHIFT);
+		cylinder(temp,dst,1.0*(Config::getinstance()->getcamfx())*Config::getinstance()->getpanoprocesswidth()/Config::getinstance()->getcamwidth(),PANOSRCSHIFT);
 
 		
 	exec_time = ((double)getTickCount() - exec_time)*1000./getTickFrequency();
@@ -598,7 +612,7 @@ void ImageProcess::setwarndetect(int w,int h,int chid)
 
 }
 
-#define MINAREDETECT (400)
+#define MINAREDETECT (100)
 
 
 
@@ -625,7 +639,7 @@ void ImageProcess::panomoveprocess()
 			if(MOVDETECTDOWENABLE)
 				{
 				
-					resize(src,MvtestFRramegray,Size(PANO360WIDTH/MOVDETECTDOW,PANO360HEIGHT/MOVDETECTDOW),0,0,INTER_LINEAR);
+					resize(src,MvtestFRramegray,Size(Config::getinstance()->getmvprocesswidth()/Config::getinstance()->getmvdownup(),Config::getinstance()->getmvprocessheight()/Config::getinstance()->getmvdownup()),0,0,INTER_LINEAR);
 					src=MvtestFRramegray;
 				}
 
@@ -636,7 +650,7 @@ void ImageProcess::panomoveprocess()
 					setmvprocessangle(LKprocessangle[0],0);
 				#if 1
 				lkmove.lkmovdetectpreprocess(src,LKRramegray,0);
-				m_pMovDetector->setFrame(LKRramegray,LKRramegray.cols,LKRramegray.rows,0,10,MINAREDETECT,200000,50);
+				m_pMovDetector->setFrame(LKRramegray,LKRramegray.cols,LKRramegray.rows,0,10,MINAREDETECT,200000,30);
 				#else
 				lkmove.lkmovdetect(src,0);
 
@@ -644,6 +658,7 @@ void ImageProcess::panomoveprocess()
 				//imshow("LKRramegray",LKRramegray);
 				//waitKey(1);
 				//lkmove.lkmovdetect(src,0);
+				printf("the  ");
 			}
 			else
 				m_pMovDetector->setFrame(src,src.cols,src.rows,0,10,MINAREDETECT,200000,40);
@@ -671,7 +686,7 @@ void ImageProcess::panomoveprocess()
 					blocknum=(blocknum+MULTICPUPANONUM-i)%MULTICPUPANONUM;
 					if(MOVDETECTDOWENABLE)
 						{
-							resize(panoblock[blocknum],panoblockdown,Size(MOVDETECTSRCWIDTH/MOVDETECTDOW,MOVDETECTSRCHEIGHT/MOVDETECTDOW),0,0,INTER_LINEAR);
+							resize(panoblock[blocknum],panoblockdown,Size(Config::getinstance()->getmvprocesswidth()/Config::getinstance()->getmvdownup(),Config::getinstance()->getmvprocessheight()/Config::getinstance()->getmvdownup()),0,0,INTER_LINEAR);
 							process=panoblockdown;
 						}
 					else
@@ -804,12 +819,12 @@ void ImageProcess::getnumofpano360image(int startx,int endx,int *texturestart,in
 
 	getpanoparam(&pan360w,&pan360h);
 
-	int num=ceil(1.0*pan360w/MOVDETECTSRCWIDTH);
-	*texturestart=(startx/MOVDETECTSRCWIDTH)%num;
-	if(endx%MOVDETECTSRCWIDTH==0)
+	int num=ceil(1.0*pan360w/Config::getinstance()->getmvprocesswidth());
+	*texturestart=(startx/Config::getinstance()->getmvprocesswidth())%num;
+	if(endx%Config::getinstance()->getmvprocesswidth()==0)
 	  *textureend=*texturestart;
 	else
-	*textureend=(endx/MOVDETECTSRCWIDTH)%num;
+	*textureend=(endx/Config::getinstance()->getmvprocesswidth())%num;
 	//if(*texturestart>=num)
 
 }
@@ -1027,7 +1042,7 @@ void ImageProcess::Multicpupanoprocess(Mat& src)
 		}
 	else if(startnum==endnum)
 	{
-		multipanx=panx-startnum*MOVDETECTSRCWIDTH;
+		multipanx=panx-startnum*Config::getinstance()->getmvprocesswidth();
 		multipany=pany;
 		multipanw=panw;
 		multipanh=panh;
@@ -1037,9 +1052,9 @@ void ImageProcess::Multicpupanoprocess(Mat& src)
 	}
 	else
 	{
-		multipanx=panx-startnum*MOVDETECTSRCWIDTH;
+		multipanx=panx-startnum*Config::getinstance()->getmvprocesswidth();
 		multipany=pany;
-		multipanw=MOVDETECTSRCWIDTH-multipanx;
+		multipanw=Config::getinstance()->getmvprocesswidth()-multipanx;
 		multipanh=panh;
 		//Rect srcrio(0,0,multipanw,processsrc.rows);
 		srcrio=Rect(0,0,multipanw,processsrc.rows);
@@ -1237,7 +1252,7 @@ void ImageProcess::main_proc_func()
 			continue;
 			
 			}
-		Mat dst=Mat(PANO360HEIGHT,PANO360WIDTH,CV_8UC3,info->virtAddr);
+		Mat dst=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth(),CV_8UC3,info->virtAddr);
 
 		/********************pre flame  pre angle*********************/
 		int count=image_queue_fullCount(&m_bufQue[SIGNALEQUEUEID]);
@@ -1308,8 +1323,8 @@ void ImageProcess::main_proc_func()
 	 	//OSA_printf("the %s exec_time=%f MS\n",__func__,exec_time);
 		
 		info->channels = infocap->channels;
-		info->width =PANO360WIDTH;
-		info->height =PANO360HEIGHT;
+		info->width =Config::getinstance()->getpanoprocesswidth();
+		info->height =Config::getinstance()->getpanoprocessheight();
 		info->timestamp =infocap->timestamp;
 		info->framegyroroll=infocap->framegyroroll;
 		info->framegyropitch=infocap->framegyropitch;

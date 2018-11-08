@@ -12,6 +12,15 @@
 
 #define POINTNUMMAX 5
 
+enum
+{
+	GLRED,
+	GLGREEN,
+	GLBLUE,
+
+
+};
+
 class GLOSD{
 
 public:
@@ -28,6 +37,8 @@ public:
 	void drawstring(char *string);
 	void drawstrings(int x,int y,char *string);
 	void ChangeSize(int w,int h );
+	GLfloat Linecolor[4];
+	bool setcolorline(int color);
 	GLShaderManager	drawshaderManager;
 	int windowW;
 	int windowH;

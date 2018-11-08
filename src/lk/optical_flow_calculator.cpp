@@ -138,14 +138,10 @@ int OpticalFlowCalculator::calculateOpticalFlowprocess(const cv::Mat &gray_image
     int num_vectors = 0;
      if (MVDETECTALG)
      {
+
 		cv::buildOpticalFlowPyramid(gray_image1, pyramids, winSize, MAX_LEVEL, true);
-
 		//cv::calcOpticalFlowPyrLK(gray_image1, gray_image2, points_image1, points_image2, status, err, winSize, MAX_LEVEL, termcrit, 0, 0.001);
-
 		cv::calcOpticalFlowPyrLK(pyramids, gray_image2, points_image1, points_image2, status, err, winSize, MAX_LEVEL, termcrit, 0, 0.001);
-
-
-
 		std::vector<cv::Point2f> src_points;
 		std::vector<cv::Point2f> dst_points;
 

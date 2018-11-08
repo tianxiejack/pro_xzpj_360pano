@@ -203,7 +203,7 @@ void LKmove::lkmovdetectreset()
 void LKmove::lkmovdetectpreprocess(Mat &src,Mat &dst,int chid)
 {
 		double exec_time = (double)getTickCount();
-	
+		
 		if(backgroundmov[chid]==0)
 			{
 				memcpy(backgroundmovmat[chid].data,src.data,src.cols*src.rows*src.channels());

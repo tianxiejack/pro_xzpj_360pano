@@ -35,6 +35,24 @@
 /*set up render scene*/
 //static const M3DVector3f DEFAULT_ORIGIN = {0.0f, 0.0f, 50.0f};
 using namespace cv;
+
+typedef struct{
+
+	Rect leftdownrect;
+
+	Rect updownselcectrect;
+	int active;
+	int panotextureindex;
+
+
+}ViewCamera;
+
+
+
+
+
+
+
 class Render{
 #define BRIDGENUM 40
 #define CARSNUM 24
@@ -48,6 +66,22 @@ class Render{
 public:
 	Render();
 	~Render();
+
+
+	enum {
+	RENDER180,
+	RENDER360,
+	RENDERCAMERA1,
+	RENDERCAMERA2,
+	RENDERCAMERA3,
+	RENDERCAMERA4,
+	RENDERCAMERMAX,
+	RENDERRADER,
+	MAXCAMER,
+
+
+
+	};
 	 enum TEXTUREID {
 		TESTTEXTURE,
 		PANOTEXTURE,
@@ -84,6 +118,7 @@ public:
 	void Mouse2Select();
 	void MouseSelectpos();
 	void Mousezeropos();
+	
 
 	int MOUSEx , MOUSEy , BUTTON ,MOUSEST;
 	int mousex,mousey,mouseflag;
@@ -119,6 +154,11 @@ public:
 	
 	void Pano360init();
 
+	/***ViewCamera**/
+	ViewCamera viewcamera[MAXCAMER];
+	void viewcameraprocess();
+	void leftdown2leftup(Rect& down,Rect& up);
+	void leftup2leftdown(Rect& down,Rect& up);
 	/******************modeselect ***********************/
 	void selectmod();
 	void panomod();
@@ -131,6 +171,7 @@ public:
 	void Drawmovdetect();
 	void DrawmovMultidetect();
 	void Drawmov();
+	void Drawlines();
 
 	void Drawmenu();
 	int movviewx;
@@ -317,7 +358,7 @@ public:
 	
 
 
-
+	
 public:
 	GLShaderManager		shaderManager;
 	GLMatrixStack		modelViewMatrix;
@@ -336,7 +377,11 @@ public:
 
 	GLBatch	pan360triangleBatch;
 	GLBatch	pansrctriangleBatch;
-	GLBatch	panselecttriangleBatch;
+	#define SELECTMAX (10)
+	GLBatch	panselecttriangleBatch[SELECTMAX];
+	void gltMakeradar(GLTriangleBatch& diskBatch, GLfloat innerRadius, GLfloat outerRadius, GLint nSlices, GLint nStack,double anglestart,double angleend);
+	GLTriangleBatch     radar180;
+	GLTriangleBatch     radar360;
 	
 	GLBatch	panselectrectBatch;
 	GLfloat vrectBatch[8][3];

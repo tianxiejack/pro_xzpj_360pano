@@ -24,7 +24,7 @@ typedef enum
 	MAXMODE,
 	CALIBRATION,
 	MODELING,
-	
+	SELECTING,
 
 	MAXCONTXT
 }contexid;

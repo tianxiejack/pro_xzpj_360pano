@@ -48,13 +48,17 @@ void GLOSD::create()
 	drawshaderManager.InitializeStockShaders();
 	
 }
+
+
+
+
 void GLOSD::drawbegin()
 {
     GLfloat vRed[] = { 1.0f, 0.0f, 0.0f, 0.5f };
     GLfloat vGreen[] = { 0.0f, 1.0f, 0.0f, 1.0f };
     GLfloat vBlue[] = { 0.0f, 0.0f, 1.0f, 1.0f };
     GLfloat vBlack[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-    drawshaderManager.UseStockShader(GLT_SHADER_IDENTITY, vRed);
+    drawshaderManager.UseStockShader(GLT_SHADER_IDENTITY, Linecolor);
     glLineWidth(2.0f);
 }
 
@@ -221,7 +225,16 @@ GLfloat osdcolour[MAXCOLOUR][4]={
  { 0.0f, 0.0f, 0.0f, 1.0f }
 };
 
+bool GLOSD::setcolorline(int color)
+{
+	if(color>=MAXCOLOUR)
+		return 0;
+	memcpy(Linecolor,osdcolour[color],sizeof(Unicodecolor));
 
+	//GLfloat vFloor[] = { 1.0f, 0.0f, 1.0f, 0.6f };
+	return 1;
+
+}
 
 bool GLOSD::setcolorunicode(int color)
 {

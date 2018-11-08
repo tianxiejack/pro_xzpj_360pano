@@ -10,6 +10,7 @@ Osdcontext context[OSDCONTEXLEN]={
 		{MAXMODE,1700,10,REDColour,HIDEMODE,L"    "},
 		{CALIBRATION,1650,40,REDColour,DISMODE,L"校零中请等待"},
 		{MODELING,1700,40,REDColour,HIDEMODE,L"检测建模中"},
+		{SELECTING,1700,80,REDColour,DISMODE,L"激活中"},
 
 
 };

@@ -5,6 +5,7 @@
 #include <osa_mutex.h>
 #include"math.h"
 #include "plantformcontrl.hpp"
+#include "config.hpp"
 
 unsigned int panowidth=0;
 unsigned int panoheight=0;
@@ -16,7 +17,7 @@ bool imgprocessenable =false;
 int filestoreflag=0;
 int panoflag=0;
 int scanpanflag=0;
-int modeling=1;
+int modeling=0;
 
 /*******************************************/
 Mat PANO[PANODETECTNUM];
@@ -110,14 +111,14 @@ void deinterlanceinit()
 
 void cylinderremapinit()
 {
-      cylinderremapx.create(Size(PANO360WIDTH,PANO360HEIGHT), CV_32FC1 );
-      cylinderremapy.create(Size(PANO360WIDTH,PANO360HEIGHT), CV_32FC1 );
+      cylinderremapx.create(Size(Config::getinstance()->getpanoprocesswidth(),Config::getinstance()->getpanoprocessheight()), CV_32FC1 );
+      cylinderremapy.create(Size(Config::getinstance()->getpanoprocesswidth(),Config::getinstance()->getpanoprocessheight()), CV_32FC1 );
 
 
 
-	double R=CAMERAFOCUSLENGTH;
+	double R=Config::getinstance()->getcamfx();
 
-    	int width =PANO360WIDTH, height = PANO360HEIGHT;
+    	int width =Config::getinstance()->getpanoprocesswidth(), height = Config::getinstance()->getpanoprocessheight();
 	double x, y;
 	int drcpoint;
 	double fovAngle=2*atan(width/(2.0*R));
@@ -291,7 +292,7 @@ double offet2anglerelative2inter(int  offsetx)
 {
 	int halgoffset=offsetx/2;
 	//double angle;
-	angle+=2*atan2(1.0*halgoffset,CAMERAFOCUSLENGTH)*180/3.141592653;
+	angle+=2*atan2(1.0*halgoffset,Config::getinstance()->getcamfx())*180/3.141592653;
 	if(angle>360)
 		angle-=360;
 	//int xoffset=PANOSCALE*angle*panowidth/360;
@@ -304,7 +305,7 @@ double offet2anglerelative2(int  offsetx)
 {
 	int halgoffset=offsetx/2;
 	double angle;
-	angle=2*atan2(1.0*halgoffset,CAMERAFOCUSLENGTH)*180/3.141592653;
+	angle=2*atan2(1.0*halgoffset,Config::getinstance()->getcamfx())*180/3.141592653;
 	//int xoffset=PANOSCALE*angle*panowidth/360;
 	//angle+=offsetx*360.0/(panowidth*PANOSCALE);
 	return angle;
@@ -469,10 +470,10 @@ void mvdetectup(std::vector<cv::Rect> &mv)
 		{
 			for(int i=0;i<mv.size();i++)
 				{
-					mv[i].x=mv[i].x*MOVDETECTDOW;
-					mv[i].y=mv[i].y*MOVDETECTDOW;
-					mv[i].width=mv[i].width*MOVDETECTDOW;
-					mv[i].height=mv[i].height*MOVDETECTDOW;
+					mv[i].x=mv[i].x*Config::getinstance()->getmvdownup();
+					mv[i].y=mv[i].y*Config::getinstance()->getmvdownup();
+					mv[i].width=mv[i].width*Config::getinstance()->getmvdownup();
+					mv[i].height=mv[i].height*Config::getinstance()->getmvdownup();
 
 				}
 		}

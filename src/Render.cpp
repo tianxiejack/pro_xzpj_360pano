@@ -19,6 +19,9 @@
 #include "config.hpp"
 #include "plantformcontrl.hpp"
 
+
+
+
 using namespace cv;
 using namespace std;
 //#include <GL/glut.h>
@@ -74,6 +77,8 @@ using namespace std;
 
 
 #define MOUSELEFT 0x0
+
+#define MOUSERIGHT 0x02
 #define MOUSEPRESS 0X00
 #define MOUSEUP 0X01
 
@@ -81,7 +86,7 @@ using namespace std;
 
 //#define BRIDGE
 #define PANO360
-
+Render *Render::pthis=NULL;
 //#define CARS
 
 //#define NULLPIC
@@ -91,9 +96,11 @@ int window; /* The number of our GLUT window */
 Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),pano360textureh(0),MOUSEx(0),MOUSEy(0),BUTTON(0),
 	MOUSEST(0),mousex(0),mousey(0),mouseflag(0),pano360renderw(0),pano360renderH(0),pano360renderLux(0),pano360renderLuy(0),
 	CameraFov(0),maxtexture(0),pano360texturenum(0),pano360texturewidth(0),pano360textureheight(0),selecttexture(0),shotcutnum(0),
-	movviewx(0),movviewy(0),movvieww(0),movviewh(0),menumode(0),tailcut(0)
+	movviewx(0),movviewy(0),movvieww(0),movviewh(0),menumode(0),tailcut(0),radarinner(3.0),radaroutter(10),viewfov(90),viewfocus(10),
+	osdmenushow(0),osdmenushowpre(0)
 	{
 		displayMode=SINGLE_VIDEO_VIEW_MODE;
+		
 		panosrcwidth=0;
 		panosrcheight=0;
 		panowidth=0;
@@ -137,6 +144,7 @@ Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),
 
 		memset(viewcamera,0,sizeof(viewcamera));
 		viewcamera[RENDERCAMERA1].active=1;
+		pthis=this;
 		//viewcamera[RENDERCAMERA1].updownselcectrect=
 
 		
@@ -199,6 +207,20 @@ void Render::ptzinit()
 		}
 
 }
+
+
+
+void Render::Menuinti()
+{
+	//Menu.submenu[SINGLESHOW].renderfun
+	if(Menu==NULL)
+		return;
+	Menu->setcallback(SINGLESHOW, Menucall);
+	Menu->setcallback(PANOSHOW, Menucall);
+	Menu->setcallback(SELECTSHOW, Menucall);
+	Menu->setcallback(ZEROSHOW, Menucall);
+
+}
 void Render::SetupRC(int windowWidth, int windowHeight)
 {
 		// Blue background
@@ -206,7 +228,9 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max);
 	maxtexture=max;
 	CameraFov=2*atan2(Config::getinstance()->getpanoprocesswidth(),2*Config::getinstance()->getcamfx())*180/3.141592653;
-	printf("*******************************the biggest texture is %d *******************************\n",maxtexture);
+
+	viewprojectlen=tan(viewfov*3.141592653/2/180)*viewfocus;
+	printf("*******************************the biggest texture is %d ***viewprojectlen=%f****viewfov=%f****viewfocus=%f********************\n",maxtexture,viewprojectlen,viewfov,viewfocus);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f );
     
 	shaderManager.InitializeStockShaders();
@@ -217,8 +241,11 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 	panotestViewInit();
 	Pano360init();
 	ptzinit();
+	
 	//printf("*******************\n");
 	cameraFrame.MoveForward(-7.0f);
+	Menu=MENU::getinstance();
+	Menuinti();
 
 	/********osd**********/
 	Glosdhandle.create();
@@ -250,7 +277,7 @@ void Render::ShutdownRC()
 
 
     // Produce the perspective projection
-	viewFrustum.SetPerspective(80.0f,fAspect,1.0,120.0);
+	viewFrustum.SetPerspective(viewfov,fAspect,1.0,120.0);
    	 projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
     	transformPipeline.SetMatrixStacks(modelViewMatrix, projectionMatrix);
 }
@@ -276,6 +303,8 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 		Mouse2Select();
 
 	viewcameraprocess();
+
+	Mousemenu();
 }
  void Render::specialkeyPressed (int key, int x, int y)
 {
@@ -453,6 +482,33 @@ void Render::ProcessOitKeys(unsigned char key, int x, int y)
 
 		}
 }
+
+
+void Render::Menucall(void * contex)
+{
+	int mod=*(int *)contex;
+	switch(mod)
+		{
+			case SINGLESHOW:
+				pthis->displayMode=SINGLE_VIDEO_VIEW_MODE;
+				pthis->setmenumode(SINGLEMODE);
+				break;
+			case PANOSHOW:
+				pthis->panomod();
+			
+				break;
+			case SELECTSHOW:
+				pthis->selectmod();
+				break;
+			case ZEROSHOW:
+				pthis->zeromod();
+				break;
+
+
+
+		}
+	
+}
 void Render::RenderScene(void)
 	{
 
@@ -474,7 +530,8 @@ void Render::RenderScene(void)
 			default:
 				break;
 		}
-
+	movMultidetectrect();
+	Drawfusion();
 	Drawosd();
 
 
@@ -1034,6 +1091,21 @@ void Render::Pano360init()
 	fusionframe=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth(),CV_8UC3,cv::Scalar(0,0,0));
 	Pano360tempframe=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth(),CV_8UC3,cv::Scalar(0,0,0));
 
+	viewWarningdata[0]=(unsigned char *)malloc(Config::getinstance()->getdisheight()*Config::getinstance()->getdiswidth()*4);
+	for(int i=0;i<Config::getinstance()->getdisheight();i++)
+		for(int j=0;j<Config::getinstance()->getdiswidth()*4;j=j+4)
+			{
+				viewWarningdata[0][0]=0;
+				viewWarningdata[0][1]=255;
+				viewWarningdata[0][2]=0;
+				viewWarningdata[0][3]=30;
+
+
+			}
+	viewWarningarea[0]=Mat(Config::getinstance()->getdisheight(),Config::getinstance()->getdiswidth(),CV_8UC4,viewWarningdata[0]);
+
+	
+
 }
 void Render::singleView(int x,int y,int width,int height)
 {
@@ -1134,6 +1206,59 @@ void Render::Drawmenuupdate()
 	
 
 }
+
+
+void Render::Drawosdmenu()
+{
+
+	glViewport(0,0,renderwidth,renderheight);
+	Glosdhandle.setwindow(renderwidth,renderheight);
+	Glosdhandle.drawunicodebegin();
+	/***********OSD DRAW*******************/
+	Rgba colour=Rgba(255,255,255,255);
+
+
+	for(int i=0;i<MENUMAX;i++)
+		{
+			if(Menu->submenu[i].displayvalid==DISMODE)
+				{
+					if(Menu->submenu[i].active==ACTIVE)
+						Glosdhandle.setcolorunicode(REDColour);
+					else
+					Glosdhandle.setcolorunicode(Menu->submenu[i].colour);
+					Glosdhandle.drawunicode(Menu->submenu[i].x,Menu->submenu[i].y,colour,Menu->submenu[i].context);
+				}
+		}
+	Glosdhandle.drawunicodeend();
+
+
+
+
+
+
+
+	/***********PANEL DRAW*******************/
+	glEnable(GL_BLEND);
+   	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	Glosdhandle.setwindow(renderwidth,renderheight);
+	Glosdhandle.setcolorline(GREY);
+	Glosdhandle.setcolorlinealpha(0.2);
+	Glosdhandle.drawbegin();
+
+	for(int i=FIRSTLEVEL;i<LEVELMAX;i++)
+		{
+			if(Menu->panelmenu[i].displayvalid==DISMODE)
+				{
+					Glosdhandle.drawrectfill(Menu->panelmenu[i].x,Menu->panelmenu[i].y,Menu->panelmenu[i].w,Menu->panelmenu[i].h);
+				}
+		}
+
+	Glosdhandle.drawend();
+	
+	glDisable(GL_BLEND);
+
+
+}
 void Render::Drawmenu()
 {
 	glViewport(0,0,renderwidth,renderheight);
@@ -1162,7 +1287,7 @@ void Render::Drawlines()
 	Glosdhandle.setwindow(renderwidth,renderheight);
 	Glosdhandle.setcolorline(GLBLUE);
 	Glosdhandle.drawbegin();
-	
+	/*
 	if(getmenumode()==PANOMODE)
 	for(int i=RENDERCAMERA1;i<RENDERCAMERMAX;i++)
 		{
@@ -1170,22 +1295,18 @@ void Render::Drawlines()
 			Glosdhandle.drawrect(rect.x,rect.y,rect.width,rect.height);
 		}
 	//Glosdhandle.drawrect(detect_vect360[i].x, detect_vect360[i].y, detect_vect360[i].width, detect_vect360[i].height);
-	
+	*/
+	//Glosdhandle.drawloops(detect_vectradarpoints);
 	Glosdhandle.drawend();
 	//glUseProgram(0);
 
 }
-
-
-void Render::DrawmovMultidetect()
+void Render::movMultidetectrect()
 {
-	unsigned int pan360w=pano360texturew;
-	unsigned int pan360whalf=pano360texturew/2;
-	std::vector<cv::Rect>	detect_vect180;
-	std::vector<cv::Rect>	detect_temp;
-	std::vector<cv::Rect>	detect_vect360;
+	std::vector<cv::Rect>	detect_temp;	
 	std::vector<cv::Rect>	detect_vectcombination;
-	Glosdhandle.setcolorline(GLRED);
+	detect_vect180.clear();
+	detect_vect360.clear();
 	for(int i=0;i<MULTICPUPANONUM;i++)
 		{
 			getmvdetect(detect_temp,i);
@@ -1194,6 +1315,17 @@ void Render::DrawmovMultidetect()
 			mvclassification(detect_temp,detect_vect180,detect_vect360);
 			//detect_vect360.insert(detect_vect360.end(),detect_temp.begin(),detect_temp.end());
 		}
+
+}
+
+void Render::DrawmovMultidetect()
+{
+	unsigned int pan360w=pano360texturew;
+	unsigned int pan360whalf=pano360texturew/2;
+	
+	
+	Glosdhandle.setcolorline(GLRED);
+	
 	//cout<<"***************DrawmovMultidetect***********************"<<detect_vect180.size()<<endl;
 	int size=detect_vect180.size();
 	if(size!=0)
@@ -1279,6 +1411,227 @@ void Render::Drawmovdetect()
 	Glosdhandle.drawend();
 
 }
+
+void Render::Drawfusion()
+{
+	unsigned int lx,ly,w,h;
+	double inradar=0;
+	double outradar=0;
+	double baseangle=0;
+	double angle180=3.141592653;
+	double angle360=3.141592653*2;
+	double leftangle=0;
+	double rightangle=0;
+	Rect mvradar;
+	Rect recttartget;
+	Rect rectleftdownbase;
+
+	vector<OSDPoint> osdpoints;
+	double aspect=0;
+	
+	
+	
+	glViewport(0,0,renderwidth,renderheight);
+	modelViewMatrix.PushMatrix();
+       modelViewMatrix.Translate(0.0f, 0.0f, -viewfocus);
+	glEnable(GL_BLEND);
+   	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	Glosdhandle.setwindow(renderwidth,renderheight);
+	Glosdhandle.setcolorline(GLRED);
+	Glosdhandle.setcolorlinealpha(0.2);
+	Glosdhandle.drawbegin();
+	
+	if(getmenumode()==PANOMODE)
+	for(int i=RENDERCAMERA1;i<=RENDERCAMERA3;i++)
+		{
+			Rect rect=viewcamera[i].updownselcectrect;
+			Glosdhandle.drawrectfill(rect.x,rect.y,rect.width,rect.height);
+		}
+	//Glosdhandle.drawrect(detect_vect360[i].x, detect_vect360[i].y, detect_vect360[i].width, detect_vect360[i].height);
+	
+	Glosdhandle.drawend();
+	
+
+	if(getmenumode()==PANOMODE)
+	{
+		lx=viewcamera[RENDERRADER].leftdownrect.x;
+		ly=viewcamera[RENDERRADER].leftdownrect.y;
+		w=viewcamera[RENDERRADER].leftdownrect.width;
+		h=viewcamera[RENDERRADER].leftdownrect.height;
+		glViewport(lx,ly,w,h);
+
+
+
+		static GLfloat red[] = { 1.0f, 0.0f, 0.0f, 0.2f };
+		shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), red);
+
+		for(int i=RENDERCAMERA1;i<=RENDERCAMERA3;i++)
+		{
+			recttartget=viewcamera[i].updownselcectrect;
+
+			if(viewcamera[i].panotextureindex==0)
+				{
+					rectleftdownbase=viewcamera[RENDER180].leftdownrect;
+					baseangle=angle180;
+				}
+			else
+				{
+					rectleftdownbase=viewcamera[RENDER360].leftdownrect;
+					baseangle=angle360;
+				}
+			
+			h=rectleftdownbase.height;
+			if(h==0)
+				h=1;
+			w=rectleftdownbase.width;
+			if(w==0)
+				w=1;
+			inradar=radarinner+(renderheight-(recttartget.y+recttartget.height)-rectleftdownbase.y)*(radaroutter-radarinner)/h;
+			outradar=radarinner+(renderheight-(recttartget.y)-rectleftdownbase.y)*(radaroutter-radarinner)/h;
+
+
+			
+
+			leftangle=baseangle-recttartget.x*angle180/w;
+			rightangle=baseangle-(recttartget.x+recttartget.width)*angle180/w;
+			
+			gltMakeradar(radarcamera[i], inradar, outradar, 30, 3,leftangle,rightangle);
+			
+			
+			
+		}
+		
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			for(int i=RENDERCAMERA1;i<=RENDERCAMERA3;i++)
+			{
+				radarcamera[i].Draw();
+			}
+		int pre180num=0;
+
+		for(int i=0;i<detect_vect180.size();i++)
+			{
+				recttartget=detect_vect180[i];
+				recttartget.x=recttartget.x*viewcamera[RENDER180].leftdownrect.width*2/panowidth;
+				recttartget.y=recttartget.y*viewcamera[RENDER180].leftdownrect.height/panoheight;
+				recttartget.width=recttartget.width*viewcamera[RENDER180].leftdownrect.width*2/panowidth;
+				recttartget.height=recttartget.height*viewcamera[RENDER180].leftdownrect.height/panoheight;
+
+				//cout<<recttartget<<endl;
+				rectleftdownbase=viewcamera[RENDER180].leftdownrect;
+				baseangle=angle180;
+			
+				h=rectleftdownbase.height;
+				if(h==0)
+					h=1;
+				w=rectleftdownbase.width;
+				if(w==0)
+					w=1;
+				inradar=radarinner+1.0*(h-(recttartget.y+recttartget.height))*(radaroutter-radarinner)/h;
+				
+
+				//printf("(h-(recttartget.y+recttartget.height))=%frecttartget.y+recttartget.height=%d  h=%d",1.0*(h-(recttartget.y+recttartget.height)),recttartget.y+recttartget.height,h);
+				
+				outradar=radarinner+(h-(recttartget.y))*(radaroutter-radarinner)/h;
+
+				leftangle=baseangle-recttartget.x*angle180/w;
+				rightangle=baseangle-(recttartget.x+recttartget.width)*angle180/w;
+				gltMakeradarpoints(detect_vectradarpoints[i], inradar, outradar, 2,leftangle,rightangle);
+				pre180num=i;
+				//mvradar.x=
+				//printf("iner =%f outer=%f langle=%f rightalgle=%f radaroutter=%f   radarinner=%f  %d   %d\n",inradar,outradar,leftangle,rightangle,radaroutter,radarinner,w,h);
+
+			}
+		for(int i=0;i<detect_vect360.size();i++)
+			{
+				recttartget=detect_vect360[i];
+				recttartget.x=recttartget.x*viewcamera[RENDER360].leftdownrect.width*2/panowidth;
+				recttartget.y=recttartget.y*viewcamera[RENDER360].leftdownrect.height/panoheight;
+				recttartget.width=recttartget.width*viewcamera[RENDER360].leftdownrect.width*2/panowidth;
+				recttartget.height=recttartget.height*viewcamera[RENDER360].leftdownrect.height/panoheight;
+
+				//cout<<recttartget<<endl;
+				rectleftdownbase=viewcamera[RENDER360].leftdownrect;
+				baseangle=angle360;
+			
+				h=rectleftdownbase.height;
+				if(h==0)
+					h=1;
+				w=rectleftdownbase.width;
+				if(w==0)
+					w=1;
+				inradar=radarinner+1.0*(h-(recttartget.y+recttartget.height))*(radaroutter-radarinner)/h;
+
+				//printf("(h-(recttartget.y+recttartget.height))=%frecttartget.y+recttartget.height=%d  h=%d",1.0*(h-(recttartget.y+recttartget.height)),recttartget.y+recttartget.height,h);
+				
+				outradar=radarinner+(h-(recttartget.y))*(radaroutter-radarinner)/h;
+
+				leftangle=baseangle-recttartget.x*angle180/w;
+				rightangle=baseangle-(recttartget.x+recttartget.width)*angle180/w;
+				gltMakeradarpoints(detect_vectradarpoints[pre180num+i], inradar, outradar, 2,leftangle,rightangle);
+				//pre180num=i;
+				//mvradar.x=
+				//printf("iner =%f outer=%f langle=%f rightalgle=%f radaroutter=%f   radarinner=%f  %d   %d\n",inradar,outradar,leftangle,rightangle,radaroutter,radarinner,w,h);
+
+			}
+
+
+		
+
+
+		
+
+		
+	}
+	glDisable(GL_BLEND);
+	/*
+	OSDPoint testpoint;
+	detect_vectradarpoints.clear();
+	testpoint.x=5;
+	testpoint.y=0;
+	detect_vectradarpoints.push_back(testpoint);
+	testpoint.x=6;
+	testpoint.y=0;
+	detect_vectradarpoints.push_back(testpoint);
+	testpoint.x=6;
+	testpoint.y=1;
+	detect_vectradarpoints.push_back(testpoint);
+	testpoint.x=5;
+	testpoint.y=1;
+	detect_vectradarpoints.push_back(testpoint);
+	*/
+	if(getmenumode()==PANOMODE)
+	{
+		lx=viewcamera[RENDERRADER].leftdownrect.x;
+		ly=viewcamera[RENDERRADER].leftdownrect.y;
+		w=viewcamera[RENDERRADER].leftdownrect.width;
+		h=viewcamera[RENDERRADER].leftdownrect.height;
+		glViewport(lx,ly,w,h);
+		Glosdhandle.setwindow(w,h);
+		Glosdhandle.setcolorline(GLRED);
+		Glosdhandle.drawbegin();
+		Glosdhandle.setlinewidth(1);
+		for(int j=0;j<detect_vect180.size()+detect_vect360.size();j++)
+			{
+				for(int i=0;i<detect_vectradarpoints[j].size();i++)
+					{
+						detect_vectradarpoints[j][i].x=((detect_vectradarpoints[j][i].x)/viewprojectlen)*h*1.0/w;
+						
+						detect_vectradarpoints[j][i].y=(detect_vectradarpoints[j][i].y)*1.0/viewprojectlen;
+
+					}
+					Glosdhandle.drawloops(detect_vectradarpoints[j]);
+			}
+	//	printf("viewprojectlen=%f\n",viewprojectlen);
+		
+			
+		
+		Glosdhandle.drawend();
+	}
+	modelViewMatrix.PopMatrix();
+
+
+
+}
 void Render::Drawosd()
 {
 
@@ -1298,6 +1651,7 @@ void Render::Drawosd()
 	Drawmenu();
 
 	Drawlines();
+	Drawosdmenu();
 
 	
 	
@@ -1336,7 +1690,7 @@ void Render::pano360View(int x,int y,int width,int height)
 
 	
 	modelViewMatrix.PushMatrix();
-       modelViewMatrix.Translate(0.0f, 0.0f, -10);
+       modelViewMatrix.Translate(0.0f, 0.0f, -viewfocus);
 	Angle2pos();
 	OptiSeamfun();
 	Pano360fun();
@@ -1446,12 +1800,12 @@ void Render::pano360View(int x,int y,int width,int height)
 		
 	
 	/**************************radar display***********************************************/
-
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	lx=width-width/3;
 	ly=0;
 	w=width/3;
 	h=height*2/6;
-
+	
 	viewcamera[RENDERRADER].leftdownrect.x=lx;
 	viewcamera[RENDERRADER].leftdownrect.y=ly;
 	viewcamera[RENDERRADER].leftdownrect.width=w;
@@ -1463,7 +1817,7 @@ void Render::pano360View(int x,int y,int width,int height)
 	m3dLoadIdentity44(identy);
 	//shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, transformPipeline.GetModelViewProjectionMatrix(), 0);
 	//shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, identy, 0);
-	static GLfloat vGreen[] = { 0.0f, 1.0f, 0.0f, 1.0f };
+	static GLfloat vGreen[] = { 1.0f, 0.0f, 0.0f, 0.3f };
 	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, transformPipeline.GetModelViewProjectionMatrix(), vGreen);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	radar180.Draw();
@@ -1479,18 +1833,28 @@ void Render::pano360View(int x,int y,int width,int height)
 	radar360.Draw();
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+/*
+
+	glBindTexture(GL_TEXTURE_2D,0);
+	
+	//static GLfloat vGreen[] = { 0.0f, 1.0f, 0.0f, 1.0f };
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vGreen);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	radar180.Draw();
+*/
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	/**************************select display***********************************************/
 	
 	movviewx=width/2+extrablackw;
 	movviewy=0;
-	movvieww=width/2;
-	movviewh=ly;
+	movvieww=width/2-extrablackw;
+	movviewh=ly-extrablackw;
 
 	lx=0;
 	ly=0;
 	w=width-width/3;
-	h=height*2/6;
+	h=height*2/6-extrablackw;
 
 	viewcamera[RENDERCAMERA1].leftdownrect.x=lx;
 	viewcamera[RENDERCAMERA1].leftdownrect.y=ly;
@@ -1509,9 +1873,9 @@ void Render::pano360View(int x,int y,int width,int height)
 
 
 	
-	lx=width/2+extrablackw;
+	lx=width/2+extrablackw/2;
 	ly=height*2/6;
-	w=width/2-2*extrablackw;
+	w=width/2-extrablackw/2;
 	h=height*2/6-extrablackw;
 
 	viewcamera[RENDERCAMERA3].leftdownrect.x=lx;
@@ -1535,7 +1899,7 @@ void Render::pano360View(int x,int y,int width,int height)
 
 	lx=0;
 	ly=height*2/6;
-	w=width/2-2*extrablackw;
+	w=width/2-extrablackw/2;
 	h=height*2/6-extrablackw;
 
 	viewcamera[RENDERCAMERA2].leftdownrect.x=lx;
@@ -1686,10 +2050,10 @@ void Render::panotestViewInit(void)
 
 	double angle180=3.141592653;
 	double angle360=3.141592653*2;
-	gltMakeradar(radar180, 3.0f, 8.0f, 360, 10,angle180,0);
-	gltMakeradar(radar360, 3.0f, 8.0f, 360, 10,angle360,angle180);
+	gltMakeradar(radar180, radarinner, radaroutter, 360, 10,angle180,0);
+	gltMakeradar(radar360, radarinner,radaroutter, 360, 10,angle360,angle180);
 	
-
+	//radaroutter
 	
 
 
@@ -2214,7 +2578,50 @@ void Render::leftup2leftdown(Rect& up,Rect& down)
 	down.height=up.height;
 
 }
+void Render::Mousemenu()
+{
+	int mousex=0;
+	int mousey=0;
+	if(MOUSEST==MOUSEUP&&BUTTON==MOUSERIGHT)
+		osdmenushow=osdmenushow^1;
 
+	if(osdmenushow==0)
+		{
+			Menu->menureset();
+		}
+	else if(osdmenushowpre==0)
+		{
+			Menu->menushow();
+		}
+	osdmenushowpre=osdmenushow;
+	
+
+	if(MOUSEST==MOUSEPRESS&&BUTTON==MOUSELEFT)
+	{
+		mousex=MOUSEx;
+		mousey=MOUSEy;
+
+		for(int i=WORKMOD;i<MENUMAX;i++)
+			{
+				if(Menu->submenu[i].displayvalid==HIDEMODE)
+					continue;
+				//printf("mousex=%d mousey=%d x=%d y=%d w=%d h=%d\n",mousex,mousey,Menu->submenu[i].x,Menu->submenu[i].y,Menu->submenu[i].w,Menu->submenu[i].h);
+				if((mousex>=Menu->submenu[i].x)&&(mousex<=Menu->submenu[i].x+Menu->submenu[i].w)&&\
+					(mousey>=Menu->submenu[i].y)&&(mousey<=Menu->submenu[i].y+Menu->submenu[i].h))
+					{
+						Menu->menuselect(i,Menu->submenu[i].active^1);
+
+					}
+
+
+			}
+		
+	}
+	
+		
+
+
+}
 void Render::viewcameraprocess()
 {
 	Rect leftuprect;
@@ -2529,8 +2936,8 @@ void Render::gltMakeradar(GLTriangleBatch& diskBatch, GLfloat innerRadius, GLflo
 		float theytaNext;
 		for(GLint j = 0; j < nSlices; j++)     // Slices
 			{
-			float inner = innerRadius + (float(i)) * fStepSizeRadial;
-			float outer = innerRadius + (float(i+1)) * fStepSizeRadial;
+			float inner = outerRadius - (float(i)) * fStepSizeRadial;
+			float outer = outerRadius - (float(i+1)) * fStepSizeRadial;
 			
 			float iny=(float(i))*ystep;
 			float ouy= (float(i+1)) *ystep;
@@ -2610,5 +3017,85 @@ void Render::gltMakeradar(GLTriangleBatch& diskBatch, GLfloat innerRadius, GLflo
 	
 	diskBatch.End();
 	}
+
+
+void Render::gltMakeradarpoints(vector<OSDPoint>& osdpoints, GLfloat innerRadius, GLfloat outerRadius, GLint nSlices,double anglestart,double angleend)
+	{
+	// How much to step out each stack
+	GLfloat fStepSizeRadial = outerRadius - innerRadius;
+	GLfloat ystep=1;
+	GLfloat xstep=1;
+	if(fStepSizeRadial < 0.0f)			// Dum dum...
+		fStepSizeRadial *= -1.0f;
+
+	GLint nStacks=1;
+	fStepSizeRadial /= float(nStacks);
+	ystep/=float(nStacks);
+	xstep/=float(nSlices);
+	GLfloat fStepSizeSlice = (angleend-anglestart) / float(nSlices);
+
+	osdpoints.clear();
+	OSDPoint pointtemp;
+
+	
+	float fRadialScale = 1.0f / outerRadius;
+	
+	for(GLint i = 0; i < nStacks; i++)			// Stacks
+		{
+		float theyta;
+		float theytaNext;
+		for(GLint j = 0; j < nSlices; j++)     // Slices
+			{
+			float inner = innerRadius + (float(i)) * fStepSizeRadial;
+			float outer = innerRadius + (float(i+1)) * fStepSizeRadial;
+			
+		
+			theyta = fStepSizeSlice * float(j)+anglestart;
+			
+				
+			// Inner First
+			pointtemp.x = cos(theyta) * inner;	// X	
+			pointtemp.y = sin(theyta) * inner;	// Y
+							// Z
+			osdpoints.push_back(pointtemp);
+
+			/*
+			// Outer First
+			pointtemp.x = cos(theyta) * outer;	// X	
+			pointtemp.y = sin(theyta) * outer;	// Y
+			osdpoints.push_back(pointtemp);				// Z
+	
+			*/
+
+			
+		
+			}
+
+
+
+		for(GLint j = 0; j < nSlices; j++)     // Slices
+			{
+			
+				float inner = innerRadius + (float(i)) * fStepSizeRadial;
+				float outer = innerRadius + (float(i+1)) * fStepSizeRadial;
+				
+			
+				theyta = fStepSizeSlice * float(nSlices-1-j)+anglestart;
+				
+					
+					pointtemp.x = cos(theyta) * outer;	// X	
+					pointtemp.y = sin(theyta) * outer;	// Y
+					osdpoints.push_back(pointtemp);		
+			
+
+			
+		
+			}
+		}
+	
+
+	}
+
+
 
 

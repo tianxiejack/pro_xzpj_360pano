@@ -36,6 +36,10 @@ OSA_BufInfo* image_queue_peekFull(OSA_BufHndl *hndl);
 
 OSA_BufInfo* image_queue_peekEmpty(OSA_BufHndl *hndl);
 
+OSA_BufInfo* image_queue_getFulltime(OSA_BufHndl *hndl,int time);
+
+OSA_BufInfo* image_queue_getEmptytime(OSA_BufHndl *hndl,int time);
+
 int image_queue_switchEmpty(OSA_BufHndl *hndl, OSA_BufInfo* info);
 
 int image_queue_switchFull(OSA_BufHndl *hndl, OSA_BufInfo* info);
@@ -43,6 +47,7 @@ int image_queue_switchFull(OSA_BufHndl *hndl, OSA_BufInfo* info);
 int image_queue_emptyCount(OSA_BufHndl *hndl);
 
 int image_queue_fullCount(OSA_BufHndl *hndl);
+
 
 int cuMap(OSA_BufInfo* info);
 

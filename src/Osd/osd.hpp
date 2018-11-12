@@ -40,6 +40,7 @@ typedef enum
 typedef enum 
 {
 	REDColour,
+	GREENColour,
 	BLUEColour,
 
 

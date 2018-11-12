@@ -10,16 +10,27 @@
 
 
 
-#define POINTNUMMAX 5
+#define POINTNUMMAX 500
 
 enum
 {
 	GLRED,
 	GLGREEN,
 	GLBLUE,
+	BLACK,
+	WIRTE,
+	GREY,
+	
+	
 
 
 };
+typedef struct 
+{
+	double x;
+	double y;
+
+}OSDPoint;
 
 class GLOSD{
 
@@ -37,8 +48,13 @@ public:
 	void drawstring(char *string);
 	void drawstrings(int x,int y,char *string);
 	void ChangeSize(int w,int h );
+	void drawrectfill(int x,int y,int w,int h);
+	bool setcolorlinealpha(double alpha);
+	void drawloops(std::vector<OSDPoint> points);
 	GLfloat Linecolor[4];
+	void glcenter(float point[],int num);
 	bool setcolorline(int color);
+	void setlinewidth(double w);
 	GLShaderManager	drawshaderManager;
 	int windowW;
 	int windowH;

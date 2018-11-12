@@ -62,6 +62,13 @@ void GLOSD::drawbegin()
     glLineWidth(2.0f);
 }
 
+
+void GLOSD::setlinewidth(double w)
+{
+
+	glLineWidth(w);
+
+}
 void GLOSD::setwindow(int w,int h)
 {	
 	windowW=w;
@@ -71,6 +78,7 @@ void GLOSD::setwindow(int w,int h)
 }
 void GLOSD::drawend()
 {
+	setcolorlinealpha(1.0);
 	glLineWidth(1.0f);
 }
 void GLOSD::windowtoglcenter(float point[],int num)
@@ -80,7 +88,13 @@ void GLOSD::windowtoglcenter(float point[],int num)
 	Vpoints[num][2]=0;
 
 }
+void GLOSD::glcenter(float point[],int num)
+{
+	Vpoints[num][0]=point[0];
+	Vpoints[num][1]=point[1];
+	Vpoints[num][2]=0;
 
+}
 void GLOSD::windowtoglcenterunicode(int x,int y,int *cx,int *cy)
 {
 	int xu=x*512/windowW;
@@ -117,6 +131,66 @@ void GLOSD::drawrect(int x,int y,int w,int h)
 
 	
 }
+
+
+
+void GLOSD::drawloops(std::vector<OSDPoint> points)
+{
+	GLfloat point[3];
+	
+	if(points.size()==0)
+		return;
+	
+	 GLBatch			         rectBatch;
+	 
+	 for(int i=0;i<points.size();i++)
+		{
+			point[0]=points[i].x;
+			point[1]=points[i].y;
+			point[3]=0;
+			glcenter(point,i);
+			
+		}
+	 rectBatch.Begin(GL_LINE_LOOP, points.size());
+        rectBatch.CopyVertexData3f(Vpoints);
+        rectBatch.End();
+        rectBatch.Draw();
+
+	
+}
+
+
+void GLOSD::drawrectfill(int x,int y,int w,int h)
+{
+	GLfloat point[3];
+	point[0]=x;
+	point[1]=y;
+	windowtoglcenter(point,0);
+
+	point[0]=x+w;
+	point[1]=y;
+	windowtoglcenter(point,1);
+
+	point[0]=x+w;
+	point[1]=y+h;
+	windowtoglcenter(point,2);
+
+	point[0]=x;
+	point[1]=y+h;
+	windowtoglcenter(point,3);
+	
+	 GLBatch			         rectBatch;
+	 rectBatch.Begin(GL_TRIANGLE_FAN, 4);
+        rectBatch.CopyVertexData3f(Vpoints);
+        rectBatch.End();
+        rectBatch.Draw();
+
+	
+}
+
+
+
+
 
 void GLOSD::drawline(int xs,int ys,int xe,int ye)
 {
@@ -219,12 +293,19 @@ bool GLOSD::desteryunicode()
 }
 #define MAXCOLOUR (7)
 GLfloat osdcolour[MAXCOLOUR][4]={
-{ 1.0f, 0.0f, 0.0f, 0.5f },
+{ 1.0f, 0.0f, 0.0f, 1.0f },
  { 0.0f, 1.0f, 0.0f, 1.0f },
  { 0.0f, 0.0f, 1.0f, 1.0f },
- { 0.0f, 0.0f, 0.0f, 1.0f }
+ { 0.0f, 0.0f, 0.0f, 1.0f },
+ { 1.0f, 1.0f, 1.0f, 1.0f },
+ { 0.5f, 0.5f, 0.5f, 1.0f },
 };
+bool GLOSD::setcolorlinealpha(double alpha)
+{
 
+	Linecolor[3]=alpha;
+
+}
 bool GLOSD::setcolorline(int color)
 {
 	if(color>=MAXCOLOUR)

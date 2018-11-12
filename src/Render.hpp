@@ -27,6 +27,7 @@
 #include <iostream>
 #include "Glosd.hpp"
 #include "osd.hpp"
+#include"menu.hpp"
 //#include "mvdectInterface.hpp"
 //static const int ALPHA_MASK_HEIGHT= DEFAULT_IMAGE_HEIGHT;
 //static const int ALPHA_MASK_WIDTH = (DEFAULT_IMAGE_WIDTH/16);
@@ -154,26 +155,43 @@ public:
 	
 	void Pano360init();
 
+	static Render *pthis;
+
 	/***ViewCamera**/
 	ViewCamera viewcamera[MAXCAMER];
+	Mat viewWarningarea[MAXCAMER];
+	unsigned char *viewWarningdata[MAXCAMER];
 	void viewcameraprocess();
 	void leftdown2leftup(Rect& down,Rect& up);
 	void leftup2leftdown(Rect& down,Rect& up);
 	/******************modeselect ***********************/
+	
 	void selectmod();
 	void panomod();
 	void zeromod();
 
 	void pano(int num);
 
+	/******************osd menu ***********************/
+	void Menuinti();
+	void Mousemenu();
+	static void  Menucall(void *context);
+	
+	int osdmenushow;
+	int osdmenushowpre;
 	/******************osd ***********************/
+	
 	void Drawosd();
 	void Drawmovdetect();
 	void DrawmovMultidetect();
 	void Drawmov();
 	void Drawlines();
-
+	void Drawfusion();
 	void Drawmenu();
+	void Drawosdmenu();
+	
+
+	MENU *Menu;
 	int movviewx;
 	int movviewy;
 	int movvieww;
@@ -191,6 +209,12 @@ public:
 
 
 	int menumode;
+	std::vector<cv::Rect>	detect_vect180;
+	std::vector<cv::Rect>	detect_vect360;
+
+	//std::vector<OSDPoint>	detect_vectradarpoints;
+	std::vector<OSDPoint>  detect_vectradarpoints[500];
+	void movMultidetectrect();
 	void setmenumode(int mod){menumode=mod;};
 	int getmenumode(){return menumode;};
 
@@ -366,6 +390,9 @@ public:
 	GLFrame				cameraFrame;
 	GLFrame             objectFrame;
 	GLFrustum	     viewFrustum;
+	double   viewfov;
+	double   viewfocus;
+	double viewprojectlen;
 
 	
 
@@ -380,8 +407,13 @@ public:
 	#define SELECTMAX (10)
 	GLBatch	panselecttriangleBatch[SELECTMAX];
 	void gltMakeradar(GLTriangleBatch& diskBatch, GLfloat innerRadius, GLfloat outerRadius, GLint nSlices, GLint nStack,double anglestart,double angleend);
+	void gltMakeradarpoints(vector<OSDPoint>& osdpoints, GLfloat innerRadius, GLfloat outerRadius, GLint nSlices,double anglestart,double angleend);
 	GLTriangleBatch     radar180;
 	GLTriangleBatch     radar360;
+	GLTriangleBatch     radarcamera[MAXCAMER];
+	GLTriangleBatch     radarMultidetect;
+	double radarinner;
+	double radaroutter;
 	
 	GLBatch	panselectrectBatch;
 	GLfloat vrectBatch[8][3];

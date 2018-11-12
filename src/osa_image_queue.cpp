@@ -175,6 +175,10 @@ int image_queue_putFull(OSA_BufHndl *hndl, OSA_BufInfo* info)
 
 	return OSA_bufPutFull(hndl, info->bufferId);
 }
+
+
+
+
 OSA_BufInfo* image_queue_getFull(OSA_BufHndl *hndl)
 {
 	OSA_BufInfo* info = NULL;
@@ -189,6 +193,33 @@ OSA_BufInfo* image_queue_getFull(OSA_BufHndl *hndl)
 	return info;
 }
 
+OSA_BufInfo* image_queue_getEmptytime(OSA_BufHndl *hndl,int time)
+{
+	OSA_BufInfo* info = NULL;
+	int bufId = -1;
+
+	int ret = OSA_bufGetEmpty(hndl, &bufId, time);
+
+	if(ret == OSA_SOK && bufId != -1){
+		info = OSA_bufGetBufInfo(hndl, bufId);
+		info->currentbufid=bufId;
+	}
+	//prebufid
+	return info;
+}
+OSA_BufInfo* image_queue_getFulltime(OSA_BufHndl *hndl,int time)
+{
+	OSA_BufInfo* info = NULL;
+	int bufId = -1;
+
+	int ret = OSA_bufGetFull(hndl, &bufId, time);
+
+	if(ret == OSA_SOK && bufId != -1){
+		info = OSA_bufGetBufInfo(hndl, bufId);
+	}
+
+	return info;
+}
 
 OSA_BufInfo* image_queue_getFullforever(OSA_BufHndl *hndl)
 {

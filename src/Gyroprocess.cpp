@@ -73,6 +73,8 @@ void proptotocal(Mat& frame)
 	}
 	else
 		nintcount++;
+
+	
 	
 	/////////////////
 	//numpacket=1;

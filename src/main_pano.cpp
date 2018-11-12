@@ -17,6 +17,7 @@
 #include "ImageProcess.hpp"
 #include"Stich.hpp"
 #include "config.hpp"
+#include"StichAlg.hpp"
 static GLMain render;
 
 ImageProcess *Imageprocesspt;
@@ -171,6 +172,7 @@ int main_pano(int argc, char **argv)
 	#endif
 	config=Config::getinstance();
 	config->loadconfig();
+	StichAlg::getinstance()->create();
 	GLMain_InitPrm dsInit;
 	kalmanfilterinit();
 	videocapture=VideoCapture(AVINAME);

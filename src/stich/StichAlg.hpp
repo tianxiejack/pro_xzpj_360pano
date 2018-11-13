@@ -48,6 +48,16 @@ class StichAlg
 	public :
 		void create();
 
+		int zeroflameupdate;
+		void setzeroflameupdate(int flag){zeroflameupdate=flag;};
+		int getzeroflameupdate(){return zeroflameupdate;};
+
+
+		/********camrea********/
+			double camerazeroossfet;
+			void setcamerazeroossfet(double flag){camerazeroossfet=flag;};
+			double getcamerazeroossfet(){return camerazeroossfet;};
+
 		
 		static StichAlg *getinstance();
 	private:
@@ -56,15 +66,18 @@ class StichAlg
 		double getcurrentangle(){return currentangle;};
 		void setcurrentangle(double angle){currentangle=angle;};
 
-			/********camrea********/
-		double camerazeroossfet;
-		void setcamerazeroossfet(double flag){camerazeroossfet=flag;};
-		double getcamerazeroossfet(){return camerazeroossfet;};
+
 
 
 		Mat currentflame;
 		Mat getcurrentflame(){return currentflame;};
 		void setcurrentflame(Mat flame){currentflame=flame;};
+
+
+
+		Mat disflame;
+		Mat getdisflame(){return disflame;};
+		void setdisflame(Mat flame){disflame=flame;};
 
 
 		Mat preframe;
@@ -79,6 +92,126 @@ class StichAlg
 		unsigned int preflag;
 		unsigned int  getpreframeflage(){return preflag;};
 		void setpreframeflag(int flag){preflag=flag;};
+
+
+
+		unsigned int Seampostion;
+		unsigned int getSeamPos(){return Seampostion;};
+		void setSeamPos(unsigned int sem){ Seampostion=sem;};
+
+
+		Mat ProcessPreimage;
+
+		int xoffsetfeat;
+		int yoffsetfeat;
+
+		void setpreprocessimage(Mat src){memcpy(ProcessPreimage.data,src.data,ProcessPreimage.cols*ProcessPreimage.rows*ProcessPreimage.channels());};
+		Mat getpreprocessimage(){return ProcessPreimage;};
+
+
+		
+
+			/********frame********/
+		Mat zeroflame;
+		Mat getzeroflame(){return zeroflame;};
+		void setzeroflame(Mat flame){memcpy(zeroflame.data,flame.data,flame.cols*flame.rows*flame.channels());};
+
+
+
+				/********angle********/
+		double gyroangle;
+		void setgyroangle(double flag){gyroangle=flag;};
+		double getgyroangle(){return gyroangle;};
+		
+
+
+
+		double zeroptzangle;
+		double zeroptztiangle;
+
+
+			/********zero********/
+
+		int zerolostcout;
+	      int zerolostflag;
+
+		int zeroflag;
+		int zerocalibflag;
+		double zeroangle;
+		int zeroprocessflag;
+		int zerocaliboffset;
+		int zerocalibing;
+		int zerocalibrationstatus;
+
+		int tailcut;
+
+		void setzerocalibrationstatus(int flag){zerocalibrationstatus=flag;};
+		int getzerocalibrationstatus(){return zerocalibrationstatus;};
+		
+		void setzerolostflag(int flag){zerolostflag=flag;};
+		int getzerolostflag(){return zerolostflag;};
+
+		void setzerolostcout(int count){zerolostcout=count;};
+		void setzerolostcoutadd(){zerolostcout++;};
+		int getzerolostcout(){return zerolostcout;};
+		
+
+		void settailcut(int cut){tailcut=cut;};
+		int gettailcut(){return tailcut;};
+
+		double calibrationzeroangle;
+		void setcalibrationzeroangle(double angle){calibrationzeroangle=angle;};
+		double getcalibrationzeroangle(){return calibrationzeroangle;};
+		
+		int zerodropflame;
+		void setzerodropflame(int flag){zerodropflame=flag;};
+		int getzerodropflame(){return zerodropflame;};
+
+		int zerodroreset;
+		void setzerodroreset(int flag){zerodroreset=flag;};
+		int getzzerodroreset(){return zerodroreset;};
+		
+		
+		void setzerocalibing(int flag){zerocalibing=flag;};
+		int getzerocalibing(){return zerocalibing;};
+		
+		void setzeroprocessflag(int flag){zeroprocessflag=flag;};
+		int getzeroprocessflag(){return zeroprocessflag;};
+
+		void setzerocaliboffset(int offset){zerocaliboffset=offset;};
+		int getzerocaliboffset(){return zerocaliboffset;};
+
+		
+
+
+
+		void setzerocalib(int flag){zerocalibflag=flag;};
+		int getzerocalib(){return zerocalibflag;};
+		void setzeroangle(double flag){zeroangle=flag;};
+		double getzeroangle(){return zeroangle;};
+		void setzeroflag(int flag){zeroflag=flag;};
+		int getzeroflag(){return zeroflag;};
+		void zeroprocess();
+		int judgezero();
+
+
+		void Panoprocess();
+
+		void zerolostreset();
+
+		void stichprocess();
+
+		void Zeropreprocess();
+
+		void zerolostjudge();
+
+		void zeroreset();
+
+
+
+		
+
+
 
 
 	private:

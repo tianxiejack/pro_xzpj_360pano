@@ -20,7 +20,6 @@ void Queue::create()
 		image_queue_create(&bufQue[FROMEPANOSTICH][chId], PROCESSQUEUENUM,
 				Config::getinstance()->getcamwidth()*Config::getinstance()->getcamheight()*Config::getinstance()->getcamchannel(),
 				memtype_normal);
-
 	
 }
 

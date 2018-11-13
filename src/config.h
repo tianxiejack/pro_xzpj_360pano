@@ -128,6 +128,8 @@
 #define ZEROCALIBRATIONMODE (0)
 
 #define MVDETECTALG (1)
+
+#define CALIBLOSTCOUNT (3)
 //#define PANOSRCSHIFT (0)
 
 #endif /* CONFIG_H_ */

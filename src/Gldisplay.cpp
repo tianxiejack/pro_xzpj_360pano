@@ -9,6 +9,8 @@
 #include"Render.hpp"
 #include <GL/glew.h>
 #include "osa_image_queue.h"
+#include"Queuebuffer.hpp"
+
 Render render;
 static GLMain *gThis = NULL;
 GLMain::GLMain()
@@ -22,6 +24,8 @@ GLMain::~GLMain()
 void GLMain::DrawGLScene()
 {
 	int fullcount=0;
+	Queue*queuebuf=Queue::getinstance();
+	
 	for(int chId=0; chId<gThis->queuenum; chId++)
 		gThis->queueinfo[chId]=image_queue_getFull(&gThis->m_bufQue[chId]);
 
@@ -40,13 +44,15 @@ void GLMain::DrawGLScene()
 			
 		
 		}
+	//fullcount=queuebuf->getfullcount(Queue::FROMEPANOSTICH,0);
+	
 	for(int chId=0; chId<1; chId++)
 		{
 		//gThis->processqueueinfo[chId]=image_queue_peekFull(gThis->IPocess_bufQue[chId]);
 		//if(gThis->processqueueinfo[chId].)
-		fullcount = OSA_bufGetFullCount(gThis->IPocess_bufQue[chId]);
+		fullcount = queuebuf->getfullcount(Queue::FROMEPANOSTICH,chId);
 		if(fullcount>1)
-		gThis->processqueueinfo[chId]=image_queue_getFull(gThis->IPocess_bufQue[chId]);
+		gThis->processqueueinfo[chId]=(OSA_BufInfo*)queuebuf->getfull(Queue::FROMEPANOSTICH,chId,OSA_TIMEOUT_NONE);
 		else
 		gThis->processqueueinfo[chId]=NULL;	
 
@@ -72,7 +78,8 @@ void GLMain::DrawGLScene()
 
 	  for(int chId=0; chId<1; chId++)
 		if(gThis->processqueueinfo[chId]!=NULL)
-			image_queue_putEmpty(gThis->IPocess_bufQue[chId],gThis->processqueueinfo[chId]);
+			queuebuf->putempty(Queue::FROMEPANOSTICH,chId,gThis->processqueueinfo[chId]);
+			//image_queue_putEmpty(gThis->IPocess_bufQue[chId],gThis->processqueueinfo[chId]);
 
 	 for(int chId=0; chId<gThis->queuenum; chId++)
 		if(gThis->queueinfo[chId]!=NULL)

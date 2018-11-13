@@ -530,6 +530,7 @@ void Render::RenderScene(void)
 			default:
 				break;
 		}
+
 	movMultidetectrect();
 	Drawfusion();
 	Drawosd();
@@ -1428,8 +1429,13 @@ void Render::Drawfusion()
 
 	vector<OSDPoint> osdpoints;
 	double aspect=0;
+
+	static GLfloat colour[3][4] ={ { 1.0f, 0.0f, 0.0f, 0.2f },
+		{ 0.0f, 1.0f, 0.0f, 0.2f },
+		{ 0.0f, 0.0f, 1.0f, 0.2f }
+				};
 	
-	
+	GLTriangleBatch     radarcamera[MAXCAMER];
 	
 	glViewport(0,0,renderwidth,renderheight);
 	modelViewMatrix.PushMatrix();
@@ -1437,21 +1443,24 @@ void Render::Drawfusion()
 	glEnable(GL_BLEND);
    	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	Glosdhandle.setwindow(renderwidth,renderheight);
-	Glosdhandle.setcolorline(GLRED);
-	Glosdhandle.setcolorlinealpha(0.2);
-	Glosdhandle.drawbegin();
+	
+	
+	
 	
 	if(getmenumode()==PANOMODE)
 	for(int i=RENDERCAMERA1;i<=RENDERCAMERA3;i++)
 		{
 			Rect rect=viewcamera[i].updownselcectrect;
+			Glosdhandle.setcolorline(i-RENDERCAMERA1);
+			Glosdhandle.setcolorlinealpha(0.2);
+			Glosdhandle.drawbegin();
 			Glosdhandle.drawrectfill(rect.x,rect.y,rect.width,rect.height);
 		}
 	//Glosdhandle.drawrect(detect_vect360[i].x, detect_vect360[i].y, detect_vect360[i].width, detect_vect360[i].height);
 	
 	Glosdhandle.drawend();
 	
-
+	//return;
 	if(getmenumode()==PANOMODE)
 	{
 		lx=viewcamera[RENDERRADER].leftdownrect.x;
@@ -1462,8 +1471,8 @@ void Render::Drawfusion()
 
 
 
-		static GLfloat red[] = { 1.0f, 0.0f, 0.0f, 0.2f };
-		shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), red);
+		
+		
 
 		for(int i=RENDERCAMERA1;i<=RENDERCAMERA3;i++)
 		{
@@ -1504,8 +1513,12 @@ void Render::Drawfusion()
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			for(int i=RENDERCAMERA1;i<=RENDERCAMERA3;i++)
 			{
+				shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), colour[i-RENDERCAMERA1]);
 				radarcamera[i].Draw();
 			}
+
+
+		
 		int pre180num=0;
 
 		for(int i=0;i<detect_vect180.size();i++)
@@ -1541,6 +1554,9 @@ void Render::Drawfusion()
 				//printf("iner =%f outer=%f langle=%f rightalgle=%f radaroutter=%f   radarinner=%f  %d   %d\n",inradar,outradar,leftangle,rightangle,radaroutter,radarinner,w,h);
 
 			}
+
+
+		
 		for(int i=0;i<detect_vect360.size();i++)
 			{
 				recttartget=detect_vect360[i];
@@ -1576,29 +1592,15 @@ void Render::Drawfusion()
 
 
 		
-
+		
 
 		
 
 		
 	}
 	glDisable(GL_BLEND);
-	/*
-	OSDPoint testpoint;
-	detect_vectradarpoints.clear();
-	testpoint.x=5;
-	testpoint.y=0;
-	detect_vectradarpoints.push_back(testpoint);
-	testpoint.x=6;
-	testpoint.y=0;
-	detect_vectradarpoints.push_back(testpoint);
-	testpoint.x=6;
-	testpoint.y=1;
-	detect_vectradarpoints.push_back(testpoint);
-	testpoint.x=5;
-	testpoint.y=1;
-	detect_vectradarpoints.push_back(testpoint);
-	*/
+	
+
 	if(getmenumode()==PANOMODE)
 	{
 		lx=viewcamera[RENDERRADER].leftdownrect.x;
@@ -1620,6 +1622,7 @@ void Render::Drawfusion()
 
 					}
 					Glosdhandle.drawloops(detect_vectradarpoints[j]);
+					detect_vectradarpoints[j].clear();
 			}
 	//	printf("viewprojectlen=%f\n",viewprojectlen);
 		
@@ -1627,9 +1630,9 @@ void Render::Drawfusion()
 		
 		Glosdhandle.drawend();
 	}
+	
+
 	modelViewMatrix.PopMatrix();
-
-
 
 }
 void Render::Drawosd()
@@ -1654,31 +1657,12 @@ void Render::Drawosd()
 	Drawosdmenu();
 
 	
-	
 
-/*
-	wchar_t intext3[] = {
-	L"X3APPPPPP\u8fdb\\n"
-	};
-	glUseProgram(0);
-	char buffers[20];
-
-	Glosdhandle.drawbegin();
-	sprintf(buffers, "%d\n", 2);
-	Glosdhandle.drawstrings(100,100,buffers);
-	Glosdhandle.drawend();
-
-
-	glUseProgram(0);
-	Glosdhandle.drawunicodebegin();
-	Glosdhandle.drawunicode(-100, 100, intext3);
-	Glosdhandle.drawunicode(100, 100, intext3);
-	Glosdhandle.drawunicodeend();
-*/
 
 }
 void Render::pano360View(int x,int y,int width,int height)
 {
+	//return;
 	int startnum=0;
 	unsigned int extrablackw=PANOEXTRAH/4;
 	char numflame[30];
@@ -1693,6 +1677,7 @@ void Render::pano360View(int x,int y,int width,int height)
        modelViewMatrix.Translate(0.0f, 0.0f, -viewfocus);
 	Angle2pos();
 	OptiSeamfun();
+	
 	Pano360fun();
 	/*
 	if(seamfunsion)
@@ -1934,7 +1919,7 @@ void Render::pano360View(int x,int y,int width,int height)
     	glRasterPos2f(0.5, -0.9);
 	sprintf(numflame,"image cutnum :%d\n",shotcutnum);
 	if(shotcutnum>0)
-      glutBitmapString(GLUT_BITMAP_HELVETICA_18, (unsigned char *)numflame);
+      	glutBitmapString(GLUT_BITMAP_HELVETICA_18, (unsigned char *)numflame);
 
 }
 

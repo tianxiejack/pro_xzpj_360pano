@@ -10,6 +10,9 @@
 #include "TwoPoints.h"
 #include "LBFuzzyGaussian.h"
 #include "config.hpp"
+#include"Queuebuffer.hpp"
+#include"StichAlg.hpp"
+#include"DetectAlg.hpp"
 #define IMAGEQUEUESIZE 4
 #define IMAGCAPEQUEUESIZE 2
 #define IMAGEQUEUEWIDTH 1920
@@ -114,11 +117,11 @@ void ImageProcess::Init()
 	blackrect=Rect(board,boardh,Config::getinstance()->getmvprocesswidth()/Config::getinstance()->getmvdownup()-2*board,Config::getinstance()->getmvprocessheight()/(Config::getinstance()->getmvdownup())-2*boardh);
 	
 	MAIN_threadCreate();
-	MAIN_detectthreadCreate();
+	//MAIN_detectthreadCreate();
 }
 void ImageProcess::Create()
 {
-
+/*
 	char bufname[50];
 	m_pMovDetector=MvDetector_Create();
 	m_pMovDetector->init(NotifyFunc,( void *) this);
@@ -144,7 +147,7 @@ void ImageProcess::Create()
 		}
 	
 	OSA_printf("***********Create* end=**************\n");
-	
+	*/
 }
 void ImageProcess::unInit()
 {
@@ -193,7 +196,7 @@ void ImageProcess::CaptureThreadProcess(Mat src,OSA_BufInfo* frameinfo)
 	setnextImagePinpang();
 #endif
 	//OSA_semSignal(&mainProcThrObj.procNotifySem);
-
+/*
 	detectprocesstest(src,frameinfo);
 	
 	if(Panorest())
@@ -205,13 +208,18 @@ void ImageProcess::CaptureThreadProcess(Mat src,OSA_BufInfo* frameinfo)
 		return ;
 	
 	detectprocess(src,frameinfo);
-	
+
+
+
 	
 	if(getzeroflameupdate()==0)
 	if(abs(frameinfo->framegyroyaw*1.0/ANGLESCALE-AngleStich)<ANGLEINTREVAL&&(getzerocalibing()==0)&&(getpanoflagenable()==1))
 		{
 			return ;
 		}
+
+*/
+	
 
 	OSA_BufInfo* info=NULL;
 	info = image_queue_getEmpty(&mcap_bufQue[queueid]);
@@ -229,9 +237,10 @@ void ImageProcess::CaptureThreadProcess(Mat src,OSA_BufInfo* frameinfo)
 	info->framegyroroll=frameinfo->framegyroroll;
 	info->framegyropitch=frameinfo->framegyropitch;
 	info->framegyroyaw=frameinfo->framegyroyaw;
+	info->calibration=frameinfo->calibration;
 	image_queue_putFull(&mcap_bufQue[queueid], info);
 
-	AngleStich=frameinfo->framegyroyaw*1.0/ANGLESCALE;
+	//AngleStich=frameinfo->framegyroyaw*1.0/ANGLESCALE;
 
 
 }
@@ -1161,9 +1170,37 @@ void ImageProcess::cpupanoprocess(Mat& src)
 }
 
 
+int ImageProcess::detectenable(OSA_BufInfo* info)
+{
+	int ret=0;
+	ret=1;
+	return ret;
+}
 
-
-
+int ImageProcess::stichenable(OSA_BufInfo* info)
+{
+	int ret=0;
+	//OSA_printf("%s:%d.\n",__func__,__LINE__);
+	if(Panorest())
+		return ret;
+	//OSA_printf("%s:%d.\n",__func__,__LINE__);
+	if(getscanpanflag()==0)
+		return ret;
+	//OSA_printf("%s:%d.\n",__func__,__LINE__);
+	if(info->calibration==0)
+		return ret;
+	//OSA_printf("%s:%d.\n",__func__,__LINE__);
+	if(StichAlg::getinstance()->getzeroflameupdate()==0)
+	if(abs(info->framegyroyaw*1.0/ANGLESCALE-AngleStich)<ANGLEINTREVAL&&(getzerocalibing()==0)&&(getpanoflagenable()==1))
+		{
+			//OSA_printf("%s:%d.\n",__func__,__LINE__);
+			return ret;
+		}
+	//OSA_printf("%s:%d.getzerocalibing=%d  getpanoflagenable=%d\n",__func__,__LINE__,getzerocalibing(),getpanoflagenable());
+	AngleStich=info->framegyroyaw*1.0/ANGLESCALE;
+	ret=1;
+	return ret;
+}
 
 
 
@@ -1174,12 +1211,54 @@ void ImageProcess::main_proc_func()
 	unsigned int framecount=0;
 	OSA_BufInfo* info=NULL;
 	OSA_BufInfo* infocap=NULL;
+	OSA_BufInfo *outputif=NULL;
 	int queueid=0;
 	Mat pre;
 	int xoffset,yoffset;
 	double imageangle=0;
+
+	Queue *queuebuf;
 	while(mainProcThrObj.exitProcThread ==  false)
 	{
+
+		infocap=image_queue_getFullforever(&mcap_bufQue[queueid]);
+		if(infocap==NULL)
+				continue;
+		Mat src1=Mat(infocap->height,infocap->width,CV_8UC3,infocap->virtAddr);
+
+		queuebuf=Queue::getinstance();
+
+		if(detectenable(infocap))
+			DetectAlg::getinstance()->detectprocess(src1,infocap);
+
+		if(stichenable(infocap))
+			outputif=(OSA_BufInfo *)queuebuf->getempty(Queue::TOPANOSTICH,0,OSA_TIMEOUT_NONE);
+		else
+			outputif=NULL;
+		
+		if(outputif==NULL)
+			{
+				 image_queue_putEmpty(&mcap_bufQue[queueid],infocap);
+				 continue;
+			}
+		
+		Mat dst1=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth(),CV_8UC3,outputif->virtAddr);
+
+
+		
+		outputif->channels = infocap->channels;
+		outputif->width =Config::getinstance()->getpanoprocesswidth();
+		outputif->height =Config::getinstance()->getpanoprocessheight();
+		outputif->timestamp =infocap->timestamp;
+		outputif->framegyroroll=infocap->framegyroroll;
+		outputif->framegyropitch=infocap->framegyropitch;
+		outputif->framegyroyaw=infocap->framegyroyaw;
+
+		memcpy(dst1.data,src1.data,Config::getinstance()->getpanoprocessheight()*Config::getinstance()->getpanoprocesswidth()*3);
+		
+		 queuebuf->putfull(Queue::TOPANOSTICH,0,outputif);
+		 image_queue_putEmpty(&mcap_bufQue[queueid],infocap);
+	continue;
 	/******************************************/
 		settailcut(0);
 	

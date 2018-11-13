@@ -85,6 +85,8 @@ public:
 
 		int Panorest();
 
+		int detectenable(OSA_BufInfo* info);
+
 
 		//////////////////ring buffer/////////////////////
 		OSA_BufHndl m_bufQue[IMAGEQUEUE];
@@ -106,6 +108,9 @@ public:
 		double currentcapangle;
 		double getcurrentcapangle(){return currentcapangle;};
 		void setcurrentcapangle(double angle){currentcapangle=angle;};
+
+		int stichenable();
+		int stichenable(OSA_BufInfo* info);
 		
 		double getpreangle(){return preangle;};
 		void setpreangle(double angle){preangle=angle;};

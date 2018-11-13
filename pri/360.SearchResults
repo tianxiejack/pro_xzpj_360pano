@@ -1,12 +1,5 @@
----- currentbufid Matches (11 in 4 files) ----
-ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):				char *data=(char *)m_bufQue[queueid].bufInfo[(info->currentbufid-1+IMAGEQUEUESIZE)%IMAGEQUEUESIZE].virtAddr;
-ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):				unsigned w=m_bufQue[queueid].bufInfo[(info->currentbufid-1+IMAGEQUEUESIZE)%IMAGEQUEUESIZE].width;
-ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):				unsigned h=m_bufQue[queueid].bufInfo[(info->currentbufid-1+IMAGEQUEUESIZE)%IMAGEQUEUESIZE].height;
-ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):				double angle=m_bufQue[queueid].bufInfo[(info->currentbufid-1+IMAGEQUEUESIZE)%IMAGEQUEUESIZE].framegyroyaw*1.0/ANGLESCALE;
-Osa_buf.h (z:\home\wj\cuda-workspace\360pano\src\osa_cap\inc):  int currentbufid;
-Osa_image_queue.cpp (z:\home\wj\cuda-workspace\360pano\src):		info->currentbufid=bufId;
-Osa_image_queue.cpp (z:\home\wj\cuda-workspace\360pano\src):		info->currentbufid=bufId;
-StichAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\stich):				char *data=(char *)m_bufQue[queueid].bufInfo[(info->currentbufid-1+IMAGEQUEUESIZE)%IMAGEQUEUESIZE].virtAddr;
-StichAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\stich):				unsigned w=m_bufQue[queueid].bufInfo[(info->currentbufid-1+IMAGEQUEUESIZE)%IMAGEQUEUESIZE].width;
-StichAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\stich):				unsigned h=m_bufQue[queueid].bufInfo[(info->currentbufid-1+IMAGEQUEUESIZE)%IMAGEQUEUESIZE].height;
-StichAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\stich):				double angle=m_bufQue[queueid].bufInfo[(info->currentbufid-1+IMAGEQUEUESIZE)%IMAGEQUEUESIZE].framegyroyaw*1.0/ANGLESCALE;
+---- radar180 Matches (4 in 2 files) ----
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	radar180.Draw();
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	radar180.Draw();
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	gltMakeradar(radar180, radarinner, radaroutter, 360, 10,angle180,0);
+Render.hpp (z:\home\wj\cuda-workspace\360pano\src):	GLTriangleBatch     radar180;

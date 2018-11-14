@@ -46,8 +46,8 @@ void StichAlg::Zeropreprocess()
 						///////////////zero angle
 						setgyroangle(0);
 						setcurrentangle(0);
-						zeroptzangle=getpanopan();
-						zeroptztiangle=getpanotitle();
+						zeroptzangle=Plantformpzt::getinstance()->getpanopan();
+						zeroptztiangle=Plantformpzt::getinstance()->getpanotitle();
 						
 						setptzzeroangle(zeroptzangle);
 						setptzzerotitleangle(zeroptztiangle);

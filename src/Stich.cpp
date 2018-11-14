@@ -42,6 +42,8 @@ double mvprocessangle[MULTICPUPANONUM];
 int stichreset=0;
 
 int modelnum[MULTICPUPANONUM];
+
+
 void setmodelnum(int chid)
 {
 	modelnum[chid]++;
@@ -153,7 +155,7 @@ void stichinit()
 	OSA_mutexCreate(&disLock[i]);
 	memset(mvprocessangle,0,sizeof(mvprocessangle));
 	memset(modelnum,0,sizeof(modelnum));
-	plantformcontrlinit();
+	
 	cylinderremapinit();
 	deinterlanceinit();
 

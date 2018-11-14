@@ -194,6 +194,18 @@ int getoddenv()
 
 	return oddeven;
 }
+
+int gyrostart=0;
+
+void setgyrostart(int gyro)
+{
+	gyrostart=gyro;
+
+}
+int getgyrostart()
+{
+	return gyrostart;
+}
 int  GyroCalibration()
 {
 	int ret=0;
@@ -303,7 +315,10 @@ int getGyroprocess(Mat& frame,GYRO_DATA_T *gyro)
 
 	//GYRO_NINEAXIS nineaxia;
 	proptotocal(frame);
-	
+
+
+	if(getgyrostart()==0)
+		return 0;
 	if(GyroCalibration()==0)
 		return 0;
 	GyrogetRPY();

@@ -98,6 +98,12 @@
 #define MOVDETECTSRCHEIGHT (PANO360HEIGHT)
 
 
+#define PTZBOARD (9600)
+#define PTZADDR (1)
+#define PTZDP (0)
+#define PTZWAIT (1)
+
+
 #define MULTICPUPANONUM (20)
 
 #define ZEROJUEGE (15)
@@ -130,6 +136,8 @@
 #define MVDETECTALG (1)
 
 #define CALIBLOSTCOUNT (3)
+
+#define CONFIGINIT (0)
 //#define PANOSRCSHIFT (0)
 
 #endif /* CONFIG_H_ */

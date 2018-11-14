@@ -63,15 +63,15 @@ class DetectAlg
 		
 		void detectprocess(Mat src,OSA_BufInfo* frameinfo);
 
-		
-
-
+		LKmove lkmove;
+		double LKprocessangle[MOVELKBLOCKNUM];
+		CMvDectInterface *m_pMovDetector;
 
 
 	private:
 			/*******************detect******************/
 		 IBGS *bgs;
-		CMvDectInterface *m_pMovDetector;
+
 		Mat panograysrc;
 		Mat detedtgraysrc;
 		Mat panoblock[MOVEBLOCKNUM];
@@ -99,7 +99,7 @@ class DetectAlg
 		int JudgeLkFast(Mat src);
 		int LkAngle[MOVELKBLOCKNUM];
 		double LKangleoffset[MOVELKBLOCKNUM];
-		double LKprocessangle[MOVELKBLOCKNUM];
+
 		//static DetectAlg *Pthis;
 		std::vector<TRK_RECT_INFO>	detect_vect;
 		int blocknum;
@@ -121,7 +121,7 @@ class DetectAlg
 		double zeroptzangle;
 		double zeroptztiangle;
 
-		LKmove lkmove;
+
 		std::vector<cv::Rect>	detectlk;
 
 

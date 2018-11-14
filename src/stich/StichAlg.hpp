@@ -58,6 +58,13 @@ class StichAlg
 			void setcamerazeroossfet(double flag){camerazeroossfet=flag;};
 			double getcamerazeroossfet(){return camerazeroossfet;};
 
+
+			void setzerocalib(int flag){zerocalibflag=flag;};
+			int getzerocalib(){return zerocalibflag;};
+			void setzeroangle(double flag){zeroangle=flag;};
+			double getzeroangle(){return zeroangle;};
+			void setzeroflag(int flag){zeroflag=flag;};
+
 		
 		static StichAlg *getinstance();
 	private:
@@ -185,11 +192,7 @@ class StichAlg
 
 
 
-		void setzerocalib(int flag){zerocalibflag=flag;};
-		int getzerocalib(){return zerocalibflag;};
-		void setzeroangle(double flag){zeroangle=flag;};
-		double getzeroangle(){return zeroangle;};
-		void setzeroflag(int flag){zeroflag=flag;};
+
 		int getzeroflag(){return zeroflag;};
 		void zeroprocess();
 		int judgezero();

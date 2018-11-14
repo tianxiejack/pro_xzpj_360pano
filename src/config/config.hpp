@@ -39,8 +39,11 @@ class Config{
 
 
 	 /*pano*/
+	 double panozeroptz;
 	 int panoprocesswidth;
 	 int panoprocessheight;
+	 inline double getpanozeroptz(){return panozeroptz;};
+	 void setpanozeroptz(double angle){panozeroptz=angle;}
 
 	 inline int getpanoprocesswidth(){return panoprocesswidth;};
 	 inline  int getpanoprocessheight(){return panoprocessheight;};
@@ -54,12 +57,24 @@ class Config{
 	 inline  int getmvprocessheight(){return mvprocessheight;};
 	 inline  int getmvdownup(){return mvdownup;};
 
+	 int ptzwait;
+	 int ptzbroad;
+	 int ptzaddres;
+	 int ptzdp;
+	 
+
+	 inline int getptzwait(){return ptzwait;};
+	 inline  int getptzbroad(){return ptzbroad;};
+	 inline  int getptzaddres(){return ptzaddres;};
+	 inline  int getptzdp(){return ptzdp;};
+
 
 	 
 
 	static Config *getinstance();
 	void saveconfig();
 	void loadconfig();
+	void SaveConfig();
 	private:
 
 

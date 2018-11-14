@@ -1,5 +1,7 @@
----- radar180 Matches (4 in 2 files) ----
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	radar180.Draw();
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	radar180.Draw();
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	gltMakeradar(radar180, radarinner, radaroutter, 360, 10,angle180,0);
-Render.hpp (z:\home\wj\cuda-workspace\360pano\src):	GLTriangleBatch     radar180;
+---- getpanotitle Matches (6 in 5 files) ----
+ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):						zeroptztiangle=Plantformpzt::getinstance()->getpanotitle();
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):			angle=getpanotitle();
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):double Plantformpzt::getpanotitle()
+Plantformcontrl.hpp (z:\home\wj\cuda-workspace\360pano\src):		double getpanotitle();
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):					angle=Plantformpzt::getinstance()->getpanotitle();
+StichAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\stich):						zeroptztiangle=Plantformpzt::getinstance()->getpanotitle();

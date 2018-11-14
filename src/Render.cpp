@@ -18,7 +18,7 @@
 #include "FileRW.hpp"
 #include "config.hpp"
 #include "plantformcontrl.hpp"
-
+//#include"Gyroprocess.hpp"
 
 
 
@@ -189,22 +189,11 @@ bool Render::LoadTGATexture(const char *szFileName, GLenum minFilter, GLenum mag
 
 void Render::ptzinit()
 {
-	initptzpos(0,360-7.3);
-	double zeroangle=360-7.3;
 	
-	while(PTZOK)
-		{
-			double angle=0;
-			angle=getpanotitle();
-			double angleoffet=angle-zeroangle;
-			if(angleoffet>300)
-				angleoffet=angleoffet-360;
-			if(angleoffet<-300)
-				angleoffet=angleoffet+360;
-			if(abs(angleoffet)<0.2)
-				break;
-			OSA_waitMsecs(1000);		
-		}
+	
+
+	//setgyrostart(1);
+	
 
 }
 
@@ -301,8 +290,8 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 		Mousezeropos();
 	//else if(getmenumode()==PANOMODE)
 		Mouse2Select();
-
-	viewcameraprocess();
+	if(getmenumode()==PANOMODE)
+		viewcameraprocess();
 
 	Mousemenu();
 }
@@ -453,25 +442,25 @@ void Render::ProcessOitKeys(unsigned char key, int x, int y)
 //				shotcut=(shotcut+1)%2;
 				break;
 			case 'r':
-				setpanoscan();
+				Plantformpzt::getinstance()->setpanoscan();
 				break;
 			case 'e':
-				setpanoantiscan();
+				Plantformpzt::getinstance()->setpanoantiscan();
 				break;
 			case 't':
-				setpanoscanstop();
+				Plantformpzt::getinstance()->setpanoscanstop();
 				break;
 			case '2':
-				setpanopanpos(0);
+				Plantformpzt::getinstance()->setpanopanpos(0);
 				break;
 			case '4':
-				setpanopanpos(90);
+				Plantformpzt::getinstance()->setpanopanpos(90);
 				break;
 			case '6':
-				setpanopanpos(180);
+				Plantformpzt::getinstance()->setpanopanpos(180);
 				break;
 			case '8':
-				setpanopanpos(270);
+				Plantformpzt::getinstance()->setpanopanpos(270);
 				break;
 			
 			
@@ -544,7 +533,7 @@ void Render::selectmod()
 	
 	displayMode=PANO_360_MODE;
 	setmenumode(SELECTMODE);
-	setpanoscanstop();
+	Plantformpzt::getinstance()->setpanoscanstop();
 	setscanpanflag(0);
 }
 
@@ -553,7 +542,7 @@ void Render::zeromod()
 	
 	displayMode=PANO_360_MODE;
 	setmenumode(SELECTZEROMODE);
-	setpanoscanstop();
+	Plantformpzt::getinstance()->setpanoscanstop();
 	setscanpanflag(0);
 }
 
@@ -565,10 +554,10 @@ void Render::panomod()
 			double zeroangle=getptzzeroangle()-1;
 			if(zeroangle<0)
 				zeroangle+=360;
-			setpanopanpos(zeroangle);
+			Plantformpzt::getinstance()->setpanopanpos(zeroangle);
 			while(1)
 				{
-					angle=getpanopan();
+					angle=Plantformpzt::getinstance()->getpanopan();
 					double angleoffet=angle-zeroangle;
 					if(angleoffet>300)
 						angleoffet=angleoffet-360;
@@ -582,10 +571,10 @@ void Render::panomod()
 			zeroangle=getptzzerotitleangle();
 			if(zeroangle<0)
 				zeroangle+=360;
-			setpanotitlepos(zeroangle);
+			Plantformpzt::getinstance()->setpanotitlepos(zeroangle);
 			while(1)
 				{
-					angle=getpanotitle();
+					angle=Plantformpzt::getinstance()->getpanotitle();
 					double angleoffet=angle-zeroangle;
 					if(angleoffet>300)
 						angleoffet=angleoffet-360;
@@ -606,6 +595,7 @@ void Render::panomod()
 	if(getmenumode()==SELECTZEROMODE)
 		{
 			setstichreset(1);
+			Config::getinstance()->SaveConfig();
 
 		}
 
@@ -617,7 +607,7 @@ void Render::panomod()
 	displayMode=PANO_360_MODE;
 	setmenumode(PANOMODE);
 	setscanpanflag(1);
-	setpanoscan();
+	Plantformpzt::getinstance()->setpanoscan();
 
 }
 void Render::singleViewInit(void)
@@ -1167,7 +1157,7 @@ void Render::Drawmenuupdate()
 				contxt[i].display=HIDEMODE;
 
 		}
-     if(getplantformcalibration())
+     if(Plantformpzt::getinstance()->getplantformcalibration())
 	 	contxt[CALIBRATION].display=HIDEMODE;
 	 else
 	 	contxt[CALIBRATION].display=DISMODE;
@@ -1190,7 +1180,7 @@ void Render::Drawmenuupdate()
 
 
 
- if(getplantformcalibration()&&getmenumode()==PANOMODE)
+ if(Plantformpzt::getinstance()->getplantformcalibration()&&getmenumode()==PANOMODE)
  	{
     if(getmodeling())
 		contxt[MODELING].display=DISMODE;
@@ -1288,6 +1278,10 @@ void Render::Drawlines()
 	Glosdhandle.setwindow(renderwidth,renderheight);
 	Glosdhandle.setcolorline(GLBLUE);
 	Glosdhandle.drawbegin();
+
+
+	if(getmenumode()==SELECTMODE||getmenumode()==SELECTZEROMODE)
+		Glosdhandle.drawrect(selectx,selecty,selectw,selecth);
 	/*
 	if(getmenumode()==PANOMODE)
 	for(int i=RENDERCAMERA1;i<RENDERCAMERMAX;i++)
@@ -1846,13 +1840,20 @@ void Render::pano360View(int x,int y,int width,int height)
 	viewcamera[RENDERCAMERA1].leftdownrect.width=w;
 	viewcamera[RENDERCAMERA1].leftdownrect.height=h;
 	glViewport(lx,ly,w,h);
-	
+
+
+	if(getmenumode()==PANOMODE)
 	glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE+viewcamera[RENDERCAMERA1].panotextureindex]);
+	else
+		glBindTexture(GL_TEXTURE_2D, textureID[CAPTEXTURE]);
 	
 	m3dLoadIdentity44(identy);
 	//shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, transformPipeline.GetModelViewProjectionMatrix(), 0);
 	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, identy, 0);
+	if(getmenumode()==PANOMODE)
 	panselecttriangleBatch[RENDERCAMERA1].Draw();
+	else
+	pansrctriangleBatch.Draw();
 
 
 
@@ -2798,8 +2799,8 @@ void Render::MouseSelectpos()
 				mousetitleangle=mousetitleangle+360;
 			//printf("the angle =%f \n",mouseangle);
 			setscanpanflag(0);
-			setpanopanpos(mouseangle);
-			setpanotitlepos(mousetitleangle);
+			Plantformpzt::getinstance()->setpanopanpos(mouseangle);
+			Plantformpzt::getinstance()->setpanotitlepos(mousetitleangle);
 				;
 			
 
@@ -2881,7 +2882,8 @@ void Render::Mousezeropos()
 				mousetitleangle=mousetitleangle+360;
 			//printf("the angle =%f \n",mouseangle);
 			setscanpanflag(0);
-			setpanopanpos(mouseangle);
+			Plantformpzt::getinstance()->setpanopanpos(mouseangle);
+			Config::getinstance()->setpanozeroptz(mouseangle);
 			
 				;
 			

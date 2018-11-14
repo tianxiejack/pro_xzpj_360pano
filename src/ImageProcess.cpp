@@ -162,7 +162,7 @@ void ImageProcess::unInit()
 void ImageProcess::CaptureThreadProcess(Mat src,OSA_BufInfo* frameinfo)
 {
 	int queueid=0;
-	setplantformcalibration(frameinfo->calibration);
+	Plantformpzt::getinstance()->setplantformcalibration(frameinfo->calibration);
 	
 #if 0
 	int frameid=getImagePinpang();
@@ -394,17 +394,17 @@ int  ImageProcess::Panorest()
 	if(getstichreset()==0)
 		return 0;
 
-	lkmove.lkmovdetectreset();
-
-	m_pMovDetector->mvPause();
+	DetectAlg::getinstance()->lkmove.lkmovdetectreset();
+	DetectAlg::getinstance()->m_pMovDetector->mvPause();
+	
 	Gyrorest();
-	setcamerazeroossfet(0);
-	setzeroflameupdate(1);
-	setzeroangle(0);
-	setzeroflag(0);
+	StichAlg::getinstance()->setcamerazeroossfet(0);
+	StichAlg::getinstance()->setzeroflameupdate(1);
+	StichAlg::getinstance()->setzeroangle(0);
+	StichAlg::getinstance()->setzeroflag(0);
 	setstichreset(0);
 	for(int i=0;i<MOVELKBLOCKNUM;i++)
-		LKprocessangle[i]=0;
+		DetectAlg::getinstance()->LKprocessangle[i]=0;
 	return 1;
 }
 void ImageProcess::zeroprocess()
@@ -1383,8 +1383,8 @@ void ImageProcess::main_proc_func()
 						///////////////zero angle
 						setgyroangle(0);
 						setcurrentangle(0);
-						zeroptzangle=getpanopan();
-						zeroptztiangle=getpanotitle();
+						zeroptzangle=Plantformpzt::getinstance()->getpanopan();
+						zeroptztiangle=Plantformpzt::getinstance()->getpanotitle();
 						
 						setptzzeroangle(zeroptzangle);
 						setptzzerotitleangle(zeroptztiangle);

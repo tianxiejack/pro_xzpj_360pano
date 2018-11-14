@@ -20,7 +20,8 @@
 #include"StichAlg.hpp"
 #include"Queuebuffer.hpp"
 #include"DetectAlg.hpp"
-
+#include "plantformcontrl.hpp"
+#include"Comcontrl.hpp"
 static GLMain render;
 
 ImageProcess *Imageprocesspt;
@@ -43,7 +44,7 @@ void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capIn
 	int queueid=0;
 	OSA_BufInfo* info=NULL;
 	int calibration=0;
-	
+	setgyrostart(Plantformpzt::getinstance()->getplantinitflag());
 	Mat cap;// = Mat(TV_HEIGHT,TV_WIDTH,CV_8UC2,src);
 
 	if(cap_chid==TV_DEV_ID)
@@ -169,7 +170,7 @@ void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capIn
 
 int main_pano(int argc, char **argv)
 {
-	#if 0
+	#if CONFIGINIT
 	Config::getinstance()->saveconfig();
 	return 0;
 	#endif
@@ -178,6 +179,8 @@ int main_pano(int argc, char **argv)
 	Queue::getinstance()->create();
 	DetectAlg::getinstance()->create();
 	StichAlg::getinstance()->create();
+	Plantformpzt::getinstance()->create();
+	COM_Contrl::getinstance()->create();
 	
 	GLMain_InitPrm dsInit;
 	kalmanfilterinit();
@@ -203,6 +206,8 @@ int main_pano(int argc, char **argv)
 	ChosenCaptureGroup *grop[2];
 	grop[0] = ChosenCaptureGroup :: GetTVInstance();
 	grop[1] = ChosenCaptureGroup :: GetHOTInstance();
+
+	//setgyrostart(1);
 	OSA_printf("run app success!\n");
 	render.mainloop();
 	return 0;

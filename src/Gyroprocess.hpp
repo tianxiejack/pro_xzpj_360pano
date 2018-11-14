@@ -26,4 +26,5 @@ void setgyrozero(double zero);
 void kalmanfilterinit();
 int getoddenv();
 void Gyrorest();
+void setgyrostart(int gyro);
 #endif /* GYROPROCESS_HPP_ */

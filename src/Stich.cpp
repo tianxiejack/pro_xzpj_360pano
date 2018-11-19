@@ -124,13 +124,15 @@ void cylinderremapinit()
 	double x, y;
 	int drcpoint;
 	double fovAngle=2*atan(width/(2.0*R));
+	int cylinderw=fovAngle*Config::getinstance()->getcamfx();
+	printf("^^^^^^^^^^^^^^^^cylinderw=%d^^^^^^^^^^^^^^\n",cylinderw);
 	for (int hnum = 0; hnum < height;hnum++)
 	{
 		for (int wnum = PANOSRCSHIFT; wnum < width;wnum++)
 		{
 			double k = R / sqrt(R*R + (wnum - width / 2)*(wnum - width / 2));
 			//x = (wnum - width / 2) / k + width / 2;
-			#if 0
+			#if 1
 			x= width/2.0 + R * tan((wnum-R * fovAngle/2)/R) ;
 			y=hnum;
 			#elif 0

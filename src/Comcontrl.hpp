@@ -33,22 +33,44 @@ typedef struct {
 }MAIN_COMThrObj;
 
 
+typedef struct _dev_obj {
+	int  devId;
+	int  recvLen;
+	int  sendLen;
+	//eUartStat uartStat;
+	//int  devPortType;		// Enum_MuxPortType
+
+	
+	Bool tskLoop;
+	Bool istskStopDone;
+
+	UInt8* sendBuf;
+	UInt8* recvBuf;
+}NetObj;
+#define MAX_RECV_BUF_LEN 256
+
+typedef void ( *COMNOTIFYFUNClk)(int button, int state, int x, int y);
 class COM_Contrl
 {
 	public:
 		static COM_Contrl *instance;
 		static COM_Contrl *getinstance();
+		void registkey(COMNOTIFYFUNClk fun);
 		void create();
 	private:
 	COM_Contrl();
 	~COM_Contrl();
+	COMNOTIFYFUNClk renderkey;
 	UDPBase UDP;
 	int udpfd;
-	unsigned char buf[1000];
-
+	unsigned char recvbuf[1000];
+	unsigned char sendbuf[100];
+	NetObj Netobj;
 	MAIN_COMThrObj	mainObj;
 
-
+	int NETCTRL_lookupSync(NetObj*pObj);
+	int NETCTRL_checkSum(NetObj* pObj);
+	int NETCTRL_platformRecv(unsigned char  *pData,unsigned int  uLen,int context);
 	void main_Recv_func();
 	int MAIN_threadRecvCreate(void);
 	int MAIN_threadRecvDestroy(void);

@@ -65,6 +65,9 @@ class StichAlg
 			double getzeroangle(){return zeroangle;};
 			void setzeroflag(int flag){zeroflag=flag;};
 
+			void setzerocalibing(int flag){zerocalibing=flag;};
+			int getzerocalibing(){return zerocalibing;};
+
 		
 		static StichAlg *getinstance();
 	private:
@@ -179,8 +182,7 @@ class StichAlg
 		int getzzerodroreset(){return zerodroreset;};
 		
 		
-		void setzerocalibing(int flag){zerocalibing=flag;};
-		int getzerocalibing(){return zerocalibing;};
+		
 		
 		void setzeroprocessflag(int flag){zeroprocessflag=flag;};
 		int getzeroprocessflag(){return zeroprocessflag;};

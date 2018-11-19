@@ -204,7 +204,7 @@ int OpticalFlowCalculator::calculateOpticalFlowprocess(const cv::Mat &gray_image
 
 		}
 
-		printf("********************tempnum=%d *****************\n",tempnum);
+		//printf("********************tempnum=%d *****************\n",tempnum);
      }
    else
    {

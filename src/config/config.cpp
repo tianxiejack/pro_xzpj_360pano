@@ -16,7 +16,7 @@ FileStorage configfilestore;
 
 Config *Config::instance=new Config();
 
-Config::Config():panozeroptz(0)
+Config::Config():panozeroptz(0),intergralenable(1),cam_fov(0)
 {
 	#if CONFIGINIT
 	configfilestore=FileStorage(CONFIGFILENAME, FileStorage::WRITE);
@@ -97,6 +97,10 @@ void Config::loadconfig()
 	ptzbroad=(int )struct_node["ptzbroad"];
 	ptzaddres=(int )struct_node["ptzaddres"];
 	ptzdp=(int )struct_node["ptzdp"];
+
+
+
+	cam_fov=2*atan2(cam_width,2*cam_fx)*180/3.141592653;
 	
 
 	printf("%s c w=%d c h=%d  d w=%d d h=%d",__func__,cam_width,cam_height,display_width,display_height);

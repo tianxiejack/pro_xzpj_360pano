@@ -22,6 +22,7 @@
 #include"DetectAlg.hpp"
 #include "plantformcontrl.hpp"
 #include"Comcontrl.hpp"
+#include <gst/gst.h>
 static GLMain render;
 
 ImageProcess *Imageprocesspt;
@@ -170,6 +171,8 @@ void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capIn
 
 int main_pano(int argc, char **argv)
 {
+	/* Initialize GStreamer */
+	gst_init (NULL, NULL);
 	#if CONFIGINIT
 	Config::getinstance()->saveconfig();
 	return 0;
@@ -209,6 +212,8 @@ int main_pano(int argc, char **argv)
 
 	//setgyrostart(1);
 	OSA_printf("run app success!\n");
+	//gst_videnc_create();
+	
 	render.mainloop();
 	return 0;
 }

@@ -35,6 +35,24 @@ typedef struct {
 	void 						*pParent;
 }MAIN_plantfromThrObj;
 
+
+typedef struct  {
+	int  devId;
+	int  recvLen;
+	int  sendLen;
+	//eUartStat uartStat;
+	//int  devPortType;		// Enum_MuxPortType
+
+	
+	Bool tskLoop;
+	Bool istskStopDone;
+
+	UInt8* sendBuf;
+	UInt8* recvBuf;
+}ComObj;
+
+typedef void ( *PLANTFORMNOTIFYFUNClk)(void *contex);
+
 class Plantformpzt
 {
 
@@ -45,31 +63,54 @@ class Plantformpzt
 		PLANTFORMINITPAN,
 		PLANTFORMINITTITLE,
 		PLANTFORMGETANGEL,
+		PLANTFORMGETCALLBACK,
 		PLANTFORMMAX,
 
 
 		};
+
+
+	
 	#define SENDLEN (7)
 	public:
+	enum{
+		RENDERPANO,
+		PLANTFORPANOMMAX,
+		};
 		static Plantformpzt *getinstance();
 		void create();
 		void destery();
+		void registcall(PLANTFORMNOTIFYFUNClk fun,int index);
+		void Enbalecallback(int index,double pan,double title);
+		PLANTFORMNOTIFYFUNClk callback[PLANTFORMMAX];
+		int callbackeable[PLANTFORMMAX];
+		double callbackpan[PLANTFORMMAX];
+		double callbacktitle[PLANTFORMMAX];
+		
 	private:
 		Plantformpzt();
 		~Plantformpzt();
 		static Plantformpzt *instance;
 
 
+		int COMCTRL_lookupSync(ComObj*pObj);
+		int COMCTRL_checkSum(ComObj* pObj);
+
+
 	private:
 		CUartBase Uart;
-
-
+		int speedpan;
+		int speedtitle;
+		double titlpanangle;
+		ComObj platformcom;
+		unsigned char recvbuf[2000];
+		unsigned char sendbuf[300];
 
 		int fd;
 		#define TIMEOUTCOUNT (5)
 		
 
-		unsigned char recvbuff[2000];
+		//unsigned char recvbuff[2000];
 
 		PELCO_D_REQPKT PELCO_D;
 		int mainloop ;

@@ -10,7 +10,12 @@
 //#include <cuda_runtime.h>
 #include "cuda_runtime_api.h"
 #include "osa_image_queue.h"
-
+#include <gst/gst.h>
+/*
+#include <gst/app/gstappsrc.h>
+#include <gst/app/gstappsink.h>
+#include <gst/gstclock.h>
+*/
 int cuMap(OSA_BufInfo* info)
 {
 	if(info != NULL && info->memtype == memtype_glpbo){
@@ -52,6 +57,7 @@ int image_queue_create(OSA_BufHndl *hndl, int nBuffers, size_t buffsize, int mem
 	int ret = OSA_SOK;
 	cudaError_t custat;
 	int i;
+
 	unsigned int page_size=getpagesize();
 	OSA_BufCreate bufInit;
 	GLuint pbos[OSA_BUF_NUM_MAX] = {0,};
@@ -62,6 +68,10 @@ int image_queue_create(OSA_BufHndl *hndl, int nBuffers, size_t buffsize, int mem
 	memset(&bufInit, 0, sizeof(bufInit));
 	memset(pbos, 0, sizeof(pbos));
 	bufInit.numBuf = nBuffers;
+
+	GstMapInfo *info=NULL;
+	GstBuffer *buffer=NULL;
+	int iret =0;
 	for(i=0; i<bufInit.numBuf; i++)
 	{
 		switch(memtype)
@@ -69,6 +79,18 @@ int image_queue_create(OSA_BufHndl *hndl, int nBuffers, size_t buffsize, int mem
 		case memtype_normal:
 			bufInit.bufVirtAddr[i] = memalign(page_size,buffsize);
 			OSA_assert(bufInit.bufVirtAddr[i] != NULL);
+			break;
+		case memtype_gst:
+			info= new GstMapInfo;
+			printf("begin buffsize=%d\n",buffsize);
+			buffer = gst_buffer_new_allocate(NULL,buffsize, NULL);
+			iret = gst_buffer_map(buffer, info, GST_MAP_WRITE);
+			OSA_assert(iret != 0);
+			bufInit.bufVirtAddr[i] = info->data;
+			bufInit.bufPhysAddr[i] = buffer;
+			printf("end buffsize=%d\n",buffsize);
+			//pData->pushBuffQueue.bufInfo[i].resource = info;
+
 			break;
 		case memtype_malloc:
 			bufInit.bufVirtAddr[i] = malloc(buffsize);

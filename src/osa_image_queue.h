@@ -11,6 +11,7 @@
 enum {
 	memtype_default = 0,//memtype_glpbo
 	memtype_normal,
+	memtype_gst,
 	memtype_malloc,
 	memtype_null,
 	memtype_cuhost,

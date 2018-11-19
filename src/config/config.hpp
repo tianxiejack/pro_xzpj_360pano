@@ -14,6 +14,7 @@ class Config{
      int cam_width;
      int cam_height;
      int cam_channel;
+     double cam_fov;
 
      double cam_fx; 
      double cam_fy; 
@@ -67,6 +68,14 @@ class Config{
 	 inline  int getptzbroad(){return ptzbroad;};
 	 inline  int getptzaddres(){return ptzaddres;};
 	 inline  int getptzdp(){return ptzdp;};
+
+
+
+
+
+	 int intergralenable;
+	 inline int getintergralenable(){return intergralenable;};
+	 void setintergralenable(int enable){ intergralenable=enable;};
 
 
 	 

@@ -1,16 +1,25 @@
 #include "plantformcontrl.hpp"
 #include <sys/time.h>
 #include <errno.h>
+
+#include"demo_global_def.h"
+
+#define MAX_RECV_BUF_LEN 256
 Plantformpzt *Plantformpzt::instance=NULL;
 
 static IPelcoBaseFormat *PlantformContrl;
 
 #define UART422NAME "/dev/ttyTHS1"
 Plantformpzt::Plantformpzt():fd(0),mainloop(1),address(1),ptzpd(0),panangle(0),titleangle(0),calibration(0),plantformpan(720),plantformtitle(720),
-plantinitflag(0)
+plantinitflag(0),speedpan(55),speedtitle(55),titlpanangle(0)
 {
-
-
+	
+	memset(&platformcom,0,sizeof(platformcom));
+	memset(callbackeable,0,sizeof(callbackeable));
+	memset(callbackpan,0,sizeof(callbackpan));
+	memset(callbacktitle,0,sizeof(callbacktitle));
+	memset(callback,0,sizeof(callbacktitle));
+	
 }
 Plantformpzt::~Plantformpzt()
 {
@@ -30,6 +39,8 @@ Plantformpzt* Plantformpzt::getinstance()
 void Plantformpzt::create()
 {
 	memset(timeout,0,sizeof(timeout));
+	platformcom.recvBuf=recvbuf;
+	platformcom.recvBuf=sendbuf;
 	timeoutflag[PLANTFORMINITPAN]=-1;
 	timeoutflag[PLANTFORMINITTITLE]=-1;
 	plantformcontrlinit();
@@ -116,6 +127,49 @@ int Plantformpzt::MAIN_contrlthreadDestroy(void)
 
 	return iRet;
 }
+int Plantformpzt::COMCTRL_lookupSync(ComObj*pObj)
+{
+	int stat 		= -1;
+	Uint8 *pCur 	= pObj->recvBuf;
+	unsigned char  *pMsg	= (unsigned char *)pCur;
+
+	//OSA_printf("%x  %x  %x  %x  %x  %x  %x  \n",pMsg[0],pMsg[1],pMsg[2],pMsg[3],pMsg[4],pMsg[5],pMsg[6]);
+	
+	while(pObj->recvLen >= 3)
+	{
+		if(pMsg[0]==0xFF && (pMsg[1]==0x01) && (pMsg[2]==0x00)){
+			stat = 0;
+			break;
+		}
+		else{
+			pCur++;
+			pObj->recvLen--;
+			pMsg= (unsigned char *)pCur;
+		}
+	}
+	
+	if(pCur!=pObj->recvBuf){
+		memcpy(pObj->recvBuf, pCur, pObj->recvLen);
+	}
+
+	return stat;
+}
+
+int Plantformpzt::COMCTRL_checkSum(ComObj* pObj)
+{
+	UINT iCou=0;
+	unsigned char checkSum=0;
+	unsigned char  *pMsg= (unsigned char  *)pObj->recvBuf;
+	//return SDK_SOK;
+	if(pMsg[6]!=chechsum(pMsg))
+			{
+			
+				return -1 ;
+			}
+	
+	return SDK_SOK;
+}
+
 
 void Plantformpzt::main_Recv_func()
 {
@@ -129,15 +183,108 @@ void Plantformpzt::main_Recv_func()
 	int buflen=0;
 	unsigned short pana=0;
 	unsigned short titlea=0;
+
+
+	int headLenNetMsg=3;
+	int LenNetMsg =7;
+	char *pMsgHead=NULL;
+	pMsgHead 	= (char *)platformcom.recvBuf;
+	int iLen=0, nWait=0, recvLen=0, result=0, stat=0;
+	
 	while(mainRecvThrObj.exitProcThread ==  false)
 	{
 
-			buflen=Uart.UartRecv( fd,  recvbuff, 100);
-			//for(int i=0;i<buflen;i++)
-			//OSA_printf("[%d]=%d\t",i,recvbuff[i]);
-			//OSA_printf("buflen=%d\n",buflen);
-			if(buflen==0)
+			buflen=Uart.UartRecv( fd,  platformcom.recvBuf, MAX_RECV_BUF_LEN-platformcom.recvLen);
+			/*
+			for(int i=0;i<buflen;i++)
+			OSA_printf("[%d]=%x\t",i,platformcom.recvBuf[i]);
+			OSA_printf("buflen=%d\n",buflen);
+			*/
+
+			if(buflen<=0)
 				continue;
+
+			platformcom.recvLen += buflen;
+			if(platformcom.recvLen == MAX_RECV_BUF_LEN)
+			{
+				//printf(" [DEBUG:] %s recv buf is full, clean !!!\n",__func__);
+				//platformcom.recvLen = 0;
+			}
+
+
+			//OSA_printf("platformcom.recvLen=%d headLenNetMsg=%d\n",platformcom.recvLen,headLenNetMsg);
+			while(platformcom.recvLen >= headLenNetMsg)
+			{
+				// check msg head and data len
+				if(nWait == 0)
+				{
+					stat = COMCTRL_lookupSync(&platformcom);
+					if(stat==SDK_SOK)
+					{
+						nWait = platformcom.recvLen - LenNetMsg;
+						iLen = LenNetMsg;
+						//printf(" [DEBUG:] %s lookup head ok type=%02x size=%02x\r\n", 
+						//		__func__, pMsgHead->eCmdType, pMsgHead->uiSize);
+					}
+					else
+						break;
+				}
+				// deal data part
+				//printf("********LINE=%d*****nWait=%d******************\n",__LINE__,nWait);
+				if(nWait >= 0)
+				{
+						if(COMCTRL_checkSum(&platformcom) == SDK_SOK)
+				                {
+									if(platformcom.recvBuf[3]==0x59)
+							{
+								pana=platformcom.recvBuf[4]<<8|platformcom.recvBuf[5];
+								panangle=pana*1.0/100;
+							}
+						else if(platformcom.recvBuf[3]==0x5b)
+							{
+								titlea=platformcom.recvBuf[4]<<8|platformcom.recvBuf[5];
+								titleangle=titlea*1.0/100;
+
+							}
+						plantformpan=panangle;
+						plantformtitle=titleangle;
+						
+						//printf("***plantformpan=%f**plantformtitle=%f******************\n",plantformpan,plantformtitle);
+						
+						if(timeoutflag[PLANTFORMGETTITLE]==1||timeoutflag[PLANTFORMGETPAN]==1)
+							{
+								printf("*****************ptz OSA_semSignal********************\n");
+								if(timeoutflag[PLANTFORMGETTITLE]==1)
+									timeoutflag[PLANTFORMGETTITLE]=0;
+								if(timeoutflag[PLANTFORMGETPAN]==1)
+									timeoutflag[PLANTFORMGETPAN]=0;
+								OSA_semSignal(&mainRecvThrObj.procNotifySem);
+								printf("timeoutflag[PLANTFORMGETTITLE]=%d  timeoutflag[PLANTFORMGETPAN]=%d\n",timeoutflag[PLANTFORMGETTITLE],timeoutflag[PLANTFORMGETPAN]);
+							}
+		                }
+				else
+						;
+							//printf(" [DEBUG:] %s check sum error type\n", __func__);
+	                    
+					platformcom.recvLen = nWait;
+					if(platformcom.recvLen > 0)
+					{
+						memcpy(platformcom.recvBuf, platformcom.recvBuf+iLen, platformcom.recvLen);
+						nWait = 0;
+					}
+				}
+				else
+				{
+					nWait = 0;
+					break;
+				}
+			}// while(packet - recvbuf <= buffLen)     
+
+
+
+
+/*
+			
 			if(buflen!=SENDLEN)
 				{
 				
@@ -169,7 +316,7 @@ void Plantformpzt::main_Recv_func()
 				}
 			
 			
-			
+			*/
 			//puts(recvbuff);
 		}
 
@@ -193,12 +340,16 @@ void Plantformpzt::main_contrl_func()
 
 	double anglepan=0;
 	double angletitle=0;
-	angletitle=360-7.3;
+	angletitle=360+titlpanangle;
+	if(angletitle>=360)
+		angletitle=angletitle-360;
+	else if(angletitle<0)
+		angletitle=angletitle+360;
 	anglepan=Config::getinstance()->getpanozeroptz();
 
 	while(mainContrlThrdetectObj.exitProcThread ==  false)
 	{
-		milliseconds_sleep(33);
+		milliseconds_sleep(330);
 		if(timeoutflag[PLANTFORMGETPAN])
 			{
 				timeout[PLANTFORMGETPAN]++;
@@ -261,6 +412,41 @@ void Plantformpzt::main_contrl_func()
 				initptzpos(anglepan,angletitle);
 				getpanotitlepos();
 				
+
+			}
+
+
+		//if(timeoutflag[PLANTFORMGETCALLBACK]==1)
+			{
+				if(callbackeable[RENDERPANO]==1)
+					{
+						double angle=0;
+						getpanopanpos();
+						getpanotitlepos();
+						angle=gettitleangle();
+						double angleoffettitle=angle-callbacktitle[RENDERPANO];
+						if(angleoffettitle>300)
+							angleoffettitle=angleoffettitle-360;
+						if(angleoffettitle<-300)
+							angleoffettitle=angleoffettitle+360;
+						angle=getpanangle();
+						double angleoffetpan=angle-callbackpan[RENDERPANO];
+						if(angleoffetpan>300)
+							angleoffetpan=angleoffetpan-360;
+						if(angleoffetpan<-300)
+							angleoffetpan=angleoffetpan+360;
+						
+						if(abs(angleoffetpan)<0.1&&abs(angleoffettitle)<0.1)
+							{
+								callbackeable[RENDERPANO]=0;
+								//timeoutflag[PLANTFORMGETCALLBACK]=0;
+								if(callback[RENDERPANO]!=NULL)
+									callback[RENDERPANO](NULL);
+								
+							}
+						
+
+					}
 
 			}
 
@@ -334,7 +520,11 @@ void Plantformpzt::plantformcontrlinit()
 
 	double anglepan=0;
 	double angletitle=0;
-	angletitle=360-7.3;
+	angletitle=360+titlpanangle;
+	if(angletitle>=360)
+		angletitle=angletitle-360;
+	else if(angletitle<0)
+		angletitle=angletitle+360;
 	anglepan=Config::getinstance()->getpanozeroptz();
 
 
@@ -386,7 +576,7 @@ void Plantformpzt::plantformcontrlinit()
 void Plantformpzt::setpanoscan()
 {
 	int len=0;
-	PlantformContrl->MakeMove(&PELCO_D, PTZ_MOVE_Right,20,true, address);
+	PlantformContrl->MakeMove(&PELCO_D, PTZ_MOVE_Right,speedpan,true, address);
 
 
 	unsigned char *pelcodbuf=( unsigned char *) &PELCO_D;
@@ -400,7 +590,7 @@ void Plantformpzt::setpanoscan()
 void Plantformpzt::setpanoantiscan()
 {
 	int len=0;
-	PlantformContrl->MakeMove(&PELCO_D, PTZ_MOVE_Left,20,true, address);
+	PlantformContrl->MakeMove(&PELCO_D, PTZ_MOVE_Left,speedpan,true, address);
 
 
 	unsigned char *pelcodbuf=( unsigned char *) &PELCO_D;
@@ -417,6 +607,22 @@ void Plantformpzt::setpanoscanstop()
 	
 	Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
 	OSA_waitMsecs(10);
+}
+
+
+void Plantformpzt::registcall(PLANTFORMNOTIFYFUNClk fun,int index)
+{
+
+	callback[index]=fun;
+
+}
+void Plantformpzt::Enbalecallback(int index,double pan,double title)
+{
+	callbackpan[index]=pan;
+	callbacktitle[index]=title;
+	callbackeable[index]=1;
+	timeoutflag[PLANTFORMGETCALLBACK]=1;
+
 }
 
 void Plantformpzt::setpanopanpos(double value)
@@ -482,9 +688,11 @@ double Plantformpzt::getpanopan()
 	pelcodbuf[5]=0x00;
 	pelcodbuf[6]=0x52;
 	Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
-	timeoutflag[PLANTFORMGETPAN]=1;
-	if(Config::getinstance()->getptzwait())
-	OSA_semWait(&mainRecvThrObj.procNotifySem,OSA_TIMEOUT_FOREVER);
+	timeoutflag[PLANTFORMGETPAN]=0;
+	printf("*******%s*******\n",__func__);
+	//if(Config::getinstance()->getptzwait())
+	//OSA_semWait(&mainRecvThrObj.procNotifySem,OSA_TIMEOUT_FOREVER);
+	OSA_waitMsecs(100);
 	timeoutflag[PLANTFORMGETPAN]=0;
 	return panangle;
 
@@ -501,9 +709,11 @@ double Plantformpzt::getpanotitle()
 	pelcodbuf[5]=0x00;
 	pelcodbuf[6]=0x54;
 	Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
-	timeoutflag[PLANTFORMGETTITLE]=1;
-	if(Config::getinstance()->getptzwait())
-	OSA_semWait(&mainRecvThrObj.procNotifySem,OSA_TIMEOUT_FOREVER);
+	timeoutflag[PLANTFORMGETTITLE]=0;
+	printf("*******%s*******\n",__func__);
+	//if(Config::getinstance()->getptzwait())
+	//OSA_semWait(&mainRecvThrObj.procNotifySem,OSA_TIMEOUT_FOREVER);
+	OSA_waitMsecs(100);
 	timeoutflag[PLANTFORMGETTITLE]=0;
 	return titleangle;
 }
@@ -520,6 +730,7 @@ void Plantformpzt::getpanopanpos()
 	pelcodbuf[5]=0x00;
 	pelcodbuf[6]=0x52;
 	Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+	printf("*******%s*******\n",__func__);
 	OSA_waitMsecs(10);
 
 }
@@ -537,6 +748,7 @@ void Plantformpzt::getpanotitlepos()
 	pelcodbuf[5]=0x00;
 	pelcodbuf[6]=0x54;
 	Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+	printf("*******%s*******\n",__func__);
 	OSA_waitMsecs(10);
 
 }

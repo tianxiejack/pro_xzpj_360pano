@@ -1191,7 +1191,7 @@ int ImageProcess::stichenable(OSA_BufInfo* info)
 		return ret;
 	//OSA_printf("%s:%d.\n",__func__,__LINE__);
 	if(StichAlg::getinstance()->getzeroflameupdate()==0)
-	if(abs(info->framegyroyaw*1.0/ANGLESCALE-AngleStich)<ANGLEINTREVAL&&(getzerocalibing()==0)&&(getpanoflagenable()==1))
+	if(abs(info->framegyroyaw*1.0/ANGLESCALE-AngleStich)<ANGLEINTREVAL&&(StichAlg::getinstance()->getzerocalibing()==0)&&(getpanoflagenable()==1))
 		{
 			//OSA_printf("%s:%d.\n",__func__,__LINE__);
 			return ret;
@@ -1225,14 +1225,17 @@ void ImageProcess::main_proc_func()
 		if(infocap==NULL)
 				continue;
 		Mat src1=Mat(infocap->height,infocap->width,CV_8UC3,infocap->virtAddr);
-
+		//OSA_printf("******begin*angle=%f*********************\n",infocap->framegyroyaw*1.0/ANGLESCALE);
 		queuebuf=Queue::getinstance();
 
 		if(detectenable(infocap))
 			DetectAlg::getinstance()->detectprocess(src1,infocap);
 
 		if(stichenable(infocap))
-			outputif=(OSA_BufInfo *)queuebuf->getempty(Queue::TOPANOSTICH,0,OSA_TIMEOUT_NONE);
+			{
+				outputif=(OSA_BufInfo *)queuebuf->getempty(Queue::TOPANOSTICH,0,OSA_TIMEOUT_NONE);
+				//OSA_printf("******process*angle=%f*****outputif=%p****************\n",infocap->framegyroyaw*1.0/ANGLESCALE,outputif);
+			}
 		else
 			outputif=NULL;
 		
@@ -1255,6 +1258,10 @@ void ImageProcess::main_proc_func()
 		outputif->framegyroyaw=infocap->framegyroyaw;
 
 		memcpy(dst1.data,src1.data,Config::getinstance()->getpanoprocessheight()*Config::getinstance()->getpanoprocesswidth()*3);
+
+		//OSA_printf("******end*angle=%f*********************\n",outputif->framegyroyaw*1.0/ANGLESCALE);
+		//imshow("dst",dst1);
+		//waitKey(1);
 		
 		 queuebuf->putfull(Queue::TOPANOSTICH,0,outputif);
 		 image_queue_putEmpty(&mcap_bufQue[queueid],infocap);

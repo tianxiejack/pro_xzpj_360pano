@@ -592,7 +592,7 @@ int  getPano360OffsetT(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset)
              Mat tempsrc;
 		static unsigned int tempcount=0;
 		static unsigned int tempcounterror=0;
-		char bufname[50];
+		char bufname[100];
              if(RESIZE)
              resize(src,tempsrc,Size(960,540),0,0,INTER_LINEAR);
              
@@ -614,7 +614,7 @@ int  getPano360OffsetT(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset)
 
 		Rect temprect;
 		if(FEATURETEST==0)
-		temprect=Rect(0,0.5*tempsrc.rows-0.35*tempsrc.rows,0.2*tempsrc.cols, 0.7*tempsrc.rows);
+		temprect=Rect(0,0.5*tempsrc.rows-0.35*tempsrc.rows,0.3*tempsrc.cols, 0.7*tempsrc.rows);
 		else
 		temprect=Rect(0,0.5*tempsrc.rows-0.4*tempsrc.rows,0.2*tempsrc.cols, 0.8*tempsrc.rows);
 		Mat templ(tempsrc, temprect); 
@@ -632,16 +632,19 @@ int  getPano360OffsetT(cv::Mat & src,cv::Mat & dst,int *xoffset ,int* yoffset)
 		//if(FEATURETEST==0)
 		sprintf(bufname,"/home/ubuntu/calib/%d.bmp",tempcount);
 		tempcounterror++;
-		if(maxVal<0.90)
+		if(maxVal<0.80)
 			{
-				sprintf(bufname,"/home/ubuntu/calib/error%d.bmp",tempcount);
-				imwrite(bufname,tempdst);
+			
+				matchLoc = maxLoc;
+				rectangle(tempdst, Rect(matchLoc.x,matchLoc.y,temprect.width,temprect.height), Scalar(255,0,0),1,  8);
+				sprintf(bufname,"/home/ubuntu/calib/error%f_%d.bmp",maxVal,tempcount);
+				//imwrite(bufname,tempdst);
 			return -1;
 			}
 	
-			
-
-		OSA_printf("the %s  maxVal=%f  minVal=%f\n",__func__,maxVal,minVal);
+		
+		
+		//OSA_printf("the %s  maxVal=%f  minVal=%f\n",__func__,maxVal,minVal);
 
 		normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat()); 
 		

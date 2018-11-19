@@ -18,16 +18,19 @@
 #include <math.h>
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/highgui/highgui.hpp>
+
 #include <GLBatch.h>
 #include <GLShaderManager.h>
 #include <GLMatrixStack.h>
 #include <GLGeometryTransform.h>
 #include <GLFrustum.h>
+#include"Compress.hpp"
 #include "config.h"
 #include <iostream>
 #include "Glosd.hpp"
 #include "osd.hpp"
 #include"menu.hpp"
+
 //#include "mvdectInterface.hpp"
 //static const int ALPHA_MASK_HEIGHT= DEFAULT_IMAGE_HEIGHT;
 //static const int ALPHA_MASK_WIDTH = (DEFAULT_IMAGE_WIDTH/16);
@@ -96,6 +99,13 @@ public:
 		} Textureid; 
 	//bool getPointsValue(int direction, int x, Point2f *Point);
 
+
+
+	Compress compress;
+	unsigned char *screenpiex;
+	Mat screenpiexframe;
+	unsigned char screenenable;
+
 	void destroyPixList();
 	void SetupRC(int windowWidth, int windowHeight);
 	void ShutdownRC();
@@ -106,6 +116,8 @@ public:
 	void initPixle(void);
 	void readPixleFile(const char* file, int index);
 	void InitScanAngle(void);
+	void screenshot();
+	void screenshotinit();
 	void readScanAngle(const char * filename);
 	void writeScanAngle(const char *filename,float angle,float angleofruler);
 	void ProcessOitKeys(unsigned char key, int x, int y);
@@ -165,7 +177,7 @@ public:
 	void leftdown2leftup(Rect& down,Rect& up);
 	void leftup2leftdown(Rect& down,Rect& up);
 	/******************modeselect ***********************/
-	
+	static void callbackpanomod(void *contex);
 	void selectmod();
 	void panomod();
 	void zeromod();
@@ -245,7 +257,7 @@ public:
 	/******************display mod ***********************/
 
 	void pano360View(int x,int y,int width,int height);
-
+	void pano360triangleBatchhalfhead(int mod);
 
 	/******************360pano***********************/
 	
@@ -342,6 +354,9 @@ public:
 	unsigned int pano360texturewidth;
 	unsigned int pano360textureheight;
 
+	void pano360triangleBatchhalf();
+	void pano360triangleBatchhalfhead(GLBatch &Batch,int mod);
+	void pano360triangleBatchhalfhead(GLTriangleBatch &Batch,int mod);
 	void getnumofpano360texture(int startx,int endx,int* texturestart,int* textureend);
 
 
@@ -407,9 +422,13 @@ public:
 	#define SELECTMAX (10)
 	GLBatch	panselecttriangleBatch[SELECTMAX];
 	void gltMakeradar(GLTriangleBatch& diskBatch, GLfloat innerRadius, GLfloat outerRadius, GLint nSlices, GLint nStack,double anglestart,double angleend);
+	void gltMakeradar(GLTriangleBatch& diskBatch, GLfloat innerRadius, GLfloat outerRadius, GLint nSlices, GLint nStacks,double anglestart,double angleend,int mod);
 	void gltMakeradarpoints(vector<OSDPoint>& osdpoints, GLfloat innerRadius, GLfloat outerRadius, GLint nSlices,double anglestart,double angleend);
 	GLTriangleBatch     radar180;
 	GLTriangleBatch     radar360;
+
+	GLTriangleBatch     radar180half;
+	GLTriangleBatch     radar360half;
 	GLTriangleBatch     radarcamera[MAXCAMER];
 	GLTriangleBatch     radarMultidetect;
 	double radarinner;

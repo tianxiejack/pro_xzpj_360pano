@@ -46,8 +46,10 @@ void StichAlg::Zeropreprocess()
 						///////////////zero angle
 						setgyroangle(0);
 						setcurrentangle(0);
+						printf("BEGIN %s %d \n",__func__,__LINE__);
 						zeroptzangle=Plantformpzt::getinstance()->getpanopan();
 						zeroptztiangle=Plantformpzt::getinstance()->getpanotitle();
+						printf("END %s %d \n",__func__,__LINE__);
 						
 						setptzzeroangle(zeroptzangle);
 						setptzzerotitleangle(zeroptztiangle);
@@ -66,8 +68,10 @@ int StichAlg::judgezero()
 	double currentA=getcurrentangle();
 	double zeroA=getzeroangle();
 
-	
-	if(currentA>360-ZEROJUEGE)
+	double fovshift=Config::getinstance()->cam_fov*2/3;
+	//if(currentA>360-ZEROJUEGE)
+	//printf("fovshift=%f currentA=%f  zeroA=%f  \n",fovshift,currentA,zeroA);
+	if(currentA>360-fovshift)
 		{
 			//currentA-=360;
 			setzeroflag(1);
@@ -124,6 +128,7 @@ void StichAlg::zeroprocess()
 		{
 			if(zerobool==0||calibool==1)
 				{
+					//printf("[the zerobool=%d calibool=%d]\n",zerobool,calibool);
 					setzerocalibing(0);
 					return ;
 				}
@@ -188,11 +193,17 @@ void StichAlg::zeroprocess()
 
 void StichAlg::stichprocess()
 {
+	//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
 	zerolostjudge();
-	zerolostreset();
+	//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
+	//zerolostreset();
+	//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
 	Zeropreprocess();
+	//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
 	zeroprocess();
+	//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
 	Panoprocess();
+	//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
 
 }
 
@@ -310,7 +321,7 @@ void StichAlg::main_proc_func()
 		if(inputif==NULL)
 			continue;
 		
-		
+		//OSA_printf("StichAlg %s:*****************begin**********************\n",__func__);
 		Mat src=Mat(inputif->height,inputif->width,CV_8UC3,inputif->virtAddr);
 		setcurrentflame(src);
 		//imshow("stichalg",src);
@@ -334,18 +345,20 @@ void StichAlg::main_proc_func()
 		setgyroangle(angle);
 
 
+		//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
 
 		OSA_BufInfo *outputif=(OSA_BufInfo *)queuebuf->getempty(Queue::FROMEPANOSTICH,0,OSA_TIMEOUT_NONE);
 		
 		if(outputif == NULL){
 			//OSA_printf("FROMEPANOSTICH NO QUEUE FREE\n");
 			queuebuf->putempty(Queue::TOPANOSTICH,0, inputif);
+			OSA_printf("StichAlg %s:**********1*******end**********************\n",__func__);
 			continue;
 			
 			}
 		Mat dst=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth(),CV_8UC3,outputif->virtAddr);
 		setdisflame(dst);
-
+		//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
 		int count=queuebuf->getfullcount(Queue::FROMEPANOSTICH,0);
 		if(count>0)
 			{
@@ -367,11 +380,11 @@ void StichAlg::main_proc_func()
 			setpreframeflag(0);
 		
 			
-
+		//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
 
 		double exec_time = (double)getTickCount();
 		stichprocess();
-
+		//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
 		exec_time = ((double)getTickCount() - exec_time)*1000./getTickFrequency();
 	 	//OSA_printf("the %s exec_time=%f MS\n",__func__,exec_time);
 
@@ -390,7 +403,7 @@ void StichAlg::main_proc_func()
 		outputif->framegyroyaw=getcurrentangle()*ANGLESCALE;
 
 
-
+		//OSA_printf("StichAlg %s:***********2******end**********************\n",__func__);
 		queuebuf->putfull(Queue::FROMEPANOSTICH,0, outputif);
 		queuebuf->putempty(Queue::TOPANOSTICH,0, inputif);
 

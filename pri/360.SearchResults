@@ -1,7 +1,7 @@
----- getpanotitle Matches (6 in 5 files) ----
-ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):						zeroptztiangle=Plantformpzt::getinstance()->getpanotitle();
-Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):			angle=getpanotitle();
-Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):double Plantformpzt::getpanotitle()
-Plantformcontrl.hpp (z:\home\wj\cuda-workspace\360pano\src):		double getpanotitle();
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):					angle=Plantformpzt::getinstance()->getpanotitle();
-StichAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\stich):						zeroptztiangle=Plantformpzt::getinstance()->getpanotitle();
+---- ZEROJUEGE Matches (6 in 3 files) ----
+Config.h (z:\home\wj\cuda-workspace\360pano\src):#define ZEROJUEGE (15)
+ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(currentA>360-ZEROJUEGE)
+ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):			//if((getcurrentangle()<360-ZEROJUEGE)&&(getcurrentangle()>0))
+ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):	//if(getcurrentangle()>360-ZEROJUEGE)
+StichAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\stich):	//if(currentA>360-ZEROJUEGE)
+StichAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\stich):			//if((getcurrentangle()<360-ZEROJUEGE)&&(getcurrentangle()>0))

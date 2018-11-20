@@ -11,7 +11,7 @@ static IPelcoBaseFormat *PlantformContrl;
 
 #define UART422NAME "/dev/ttyTHS1"
 Plantformpzt::Plantformpzt():fd(0),mainloop(1),address(1),ptzpd(0),panangle(0),titleangle(0),calibration(0),plantformpan(720),plantformtitle(720),
-plantinitflag(0),speedpan(55),speedtitle(55),titlpanangle(0)
+plantinitflag(0),speedpan(30),speedtitle(30),titlpanangle(-7.3)
 {
 	
 	memset(&platformcom,0,sizeof(platformcom));
@@ -19,6 +19,7 @@ plantinitflag(0),speedpan(55),speedtitle(55),titlpanangle(0)
 	memset(callbackpan,0,sizeof(callbackpan));
 	memset(callbacktitle,0,sizeof(callbacktitle));
 	memset(callback,0,sizeof(callbacktitle));
+	
 	
 }
 Plantformpzt::~Plantformpzt()
@@ -41,6 +42,9 @@ void Plantformpzt::create()
 	memset(timeout,0,sizeof(timeout));
 	platformcom.recvBuf=recvbuf;
 	platformcom.recvBuf=sendbuf;
+
+	titlpanangle=Config::getinstance()->getpanozeroptztitle();
+	speedtitle=speedpan=Config::getinstance()->getptzspeed();
 	timeoutflag[PLANTFORMINITPAN]=-1;
 	timeoutflag[PLANTFORMINITTITLE]=-1;
 	plantformcontrlinit();
@@ -627,6 +631,15 @@ void Plantformpzt::Enbalecallback(int index,double pan,double title)
 
 void Plantformpzt::setpanopanpos(double value)
 {
+	if(Config::getinstance()->getptzpaninverse())
+		{
+			value=-value;
+		}
+	if(value>360)
+		value=value-360;
+	if(value<0)
+		value=value+360;
+	
 	if(getplantformcalibration()==0)
 		return ;
 	unsigned short panvalue=value*100;
@@ -644,6 +657,17 @@ void Plantformpzt::setpanopanpos(double value)
 
 void Plantformpzt::setpanotitlepos(double value)
 {
+
+	if(Config::getinstance()->getptzpaninverse())
+		{
+			value=-value;
+		}
+	if(value>360)
+		value=value-360;
+	if(value<0)
+		value=value+360;
+
+
 	if(getplantformcalibration()==0)
 		return ;
 	unsigned short panvalue=value*100;
@@ -657,6 +681,25 @@ void Plantformpzt::setpanotitlepos(double value)
 
 void Plantformpzt::initptzpos(double pan,double title)
 {
+	if(Config::getinstance()->getptzpaninverse())
+		{
+			pan=-pan;
+		}
+	if(pan>360)
+		pan=pan-360;
+	if(pan<0)
+		pan=pan+360;
+
+
+	if(Config::getinstance()->getptztitleinverse())
+		{
+			title=-title;
+		}
+	if(title>360)
+		title=title-360;
+	if(title<0)
+		title=title+360;
+
 	
 	unsigned short panvalue=title*100;
 	PlantformContrl->MakeSetTilPos(&PELCO_D, panvalue,address);

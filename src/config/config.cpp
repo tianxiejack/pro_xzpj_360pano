@@ -16,7 +16,7 @@ FileStorage configfilestore;
 
 Config *Config::instance=new Config();
 
-Config::Config():panozeroptz(0),intergralenable(1),cam_fov(0)
+Config::Config():panozeroptz(0),intergralenable(1),cam_fov(0),ptzpaninverse(0),ptztitleinverse(0),panoprocessshift(0),panoprocesstailcut(0),ptzspeed(20),angleinterval(10)
 {
 	#if CONFIGINIT
 	configfilestore=FileStorage(CONFIGFILENAME, FileStorage::WRITE);
@@ -46,16 +46,17 @@ void Config::SaveConfig()
 void Config::saveconfig()
 {
 	
-	configfilestore <<"camera" << "{" << "cam_width" << CAPTURETVWIDTH << "cam_height" << CAPTURETVHEIGHT << "cam_channel" << 3 << "cam_fx" << CAMERAFOCUSLENGTH << "cam_fy" << CAMERAFOCUSLENGTH<< "cam_ox" \
-		<< CAPTURETVWIDTH/2<< "cam_oy" << CAPTURETVHEIGHT/2<< "cam_k1" <<0 << "cam_k2" << 0<< "cam_k3" << 0<< "cam_k4" << 0<< "}";
+	configfilestore <<"camera" << "{" << "cam_width" << cam_width << "cam_height" << cam_height << "cam_channel" << cam_channel << "cam_fx" << cam_fx << "cam_fy" << cam_fy<< "cam_ox" \
+		<< cam_ox<< "cam_oy" << cam_oy<< "cam_k1" <<cam_k1 << "cam_k2" << cam_k2<< "cam_k3" << cam_k3<< "cam_k4" << cam_k4<< "}";
 
-	configfilestore <<"display" << "{" << "display_width" << CAPTURETVWIDTH << "display_height" << CAPTURETVHEIGHT << "display_channel" << 3 << "}";
+	configfilestore <<"display" << "{" << "display_width" << display_width << "display_height" << display_height << "display_channel" << display_channel << "}";
 
-	configfilestore <<"panoalg" << "{" << "panoprocesswidth" << PANO360WIDTH << "panoprocessheight" << PANO360HEIGHT  <<"panozeroptz"<< panozeroptz << "}";
+	configfilestore <<"panoalg" << "{" << "panoprocesswidth" << panoprocesswidth << "panoprocessheight" << panoprocessheight  <<"panozeroptz"<< panozeroptz << "panozeroptztitle"<<panozeroptztitle<<"panoprocessshift"<<panoprocessshift<<"panoprocesstailcut"<<panoprocesstailcut\
+		<<"panocylinder"<<panocylinder<<"panofusion"<<panofusion<<"angleinterval"<<angleinterval<<"}";
 
-	configfilestore <<"mvdetect" << "{" << "mvprocesswidth" << MOVDETECTSRCWIDTH << "mvprocessheight" << MOVDETECTSRCHEIGHT  <<"mvdownup"<<MOVDETECTDOW<< "}";
+	configfilestore <<"mvdetect" << "{" << "mvprocesswidth" << mvprocesswidth << "mvprocessheight" << mvprocessheight  <<"mvdownup"<<mvdownup<< "}";
 
-	configfilestore <<"ptz" << "{" << "ptzwait" << PTZWAIT << "ptzbroad" << PTZBOARD  <<"ptzaddres"<<PTZADDR<<"ptzdp"<<PTZDP<< "}";
+	configfilestore <<"ptz" << "{" << "ptzwait" << ptzwait << "ptzbroad" << ptzbroad  <<"ptzaddres"<<ptzaddres<<"ptzdp"<<ptzdp<<"ptzpaninverse"<< ptzpaninverse<<"ptztitleinverse"<<ptztitleinverse<<"ptzspeed"<<ptzspeed<<"}";
 
 	
 	
@@ -86,6 +87,10 @@ void Config::loadconfig()
 	panoprocesswidth=(int )struct_node["panoprocesswidth"];
 	panoprocessheight=(int )struct_node["panoprocessheight"];
 	panozeroptz=(double)struct_node["panozeroptz"];
+	panozeroptztitle=(double)struct_node["panozeroptztitle"];
+	panocylinder=(int )struct_node["panocylinder"];
+	panofusion=(int ) struct_node["panofusion"];
+	angleinterval=(double )struct_node["angleinterval"];
 
 	struct_node = configfilestore["mvdetect"];
 	mvprocesswidth=(int )struct_node["mvprocesswidth"];
@@ -97,7 +102,10 @@ void Config::loadconfig()
 	ptzbroad=(int )struct_node["ptzbroad"];
 	ptzaddres=(int )struct_node["ptzaddres"];
 	ptzdp=(int )struct_node["ptzdp"];
+	ptzpaninverse=(int )struct_node["ptzpaninverse"];
+	ptztitleinverse=(int )struct_node["ptztitleinverse"];
 
+	ptzspeed=(int )struct_node["ptzspeed"];
 
 
 	cam_fov=2*atan2(cam_width,2*cam_fx)*180/3.141592653;

@@ -113,7 +113,7 @@ void ImageProcess::Init()
 	if(Config::getinstance()->getmvdownup()<=2)
 		board=150;
 	
-	
+	AngleStich=-Config::getinstance()->getangleinterval();
 	blackrect=Rect(board,boardh,Config::getinstance()->getmvprocesswidth()/Config::getinstance()->getmvdownup()-2*board,Config::getinstance()->getmvprocessheight()/(Config::getinstance()->getmvdownup())-2*boardh);
 	
 	MAIN_threadCreate();
@@ -496,7 +496,7 @@ void ImageProcess::Panoprocess(Mat src,Mat dst)
 	
 	setSeamPos(piexoffset);
 	Mat temp;
-	if(CYLINDER)
+	if(Config::getinstance()->getpanocylinder())
 	temp=src;//getCurrentFame();
 	else
 	temp=dst;
@@ -523,13 +523,13 @@ void ImageProcess::Panoprocess(Mat src,Mat dst)
 	else
 		{
 		//memcpy(temp.data,src.data,PANO360WIDTH*PANO360HEIGHT*3);
-		if(CYLINDER==0)
-		Matcpy(src,temp,PANOSRCSHIFT);
+		if(Config::getinstance()->getpanocylinder()==0)
+		Matcpy(src,temp,Config::getinstance()->getpanoprocessshift());
 		}
 	//return ;
 	double exec_time = (double)getTickCount();
-	if(CYLINDER)
-		cylinder(temp,dst,1.0*(Config::getinstance()->getcamfx())*Config::getinstance()->getpanoprocesswidth()/Config::getinstance()->getcamwidth(),PANOSRCSHIFT);
+	if(Config::getinstance()->getpanocylinder())
+		cylinder(temp,dst,1.0*(Config::getinstance()->getcamfx())*Config::getinstance()->getpanoprocesswidth()/Config::getinstance()->getcamwidth(),Config::getinstance()->getpanoprocessshift());
 
 		
 	exec_time = ((double)getTickCount() - exec_time)*1000./getTickFrequency();
@@ -1034,10 +1034,10 @@ void ImageProcess::Multicpupanoprocess(Mat& src)
 	double angle=getcurrentangle();
 	int panx=getpanooffet(angle);
 	int pany=0;
-	int panw=processsrc.cols-PANOSRCSHIFT;
+	int panw=processsrc.cols-Config::getinstance()->getpanoprocessshift();
 	int panh=processsrc.rows;
 	Rect panorio(panx,pany,panw,panh);
-	Rect srcrio(0,0,processsrc.cols-PANOSRCSHIFT,processsrc.rows);
+	Rect srcrio(0,0,processsrc.cols-Config::getinstance()->getpanoprocessshift(),processsrc.rows);
 
 	
 	
@@ -1121,7 +1121,7 @@ void ImageProcess::cpupanoprocess(Mat& src)
 	double angle=getcurrentangle();
 	int panx=getpanooffet(angle);
 	int pany=PANOEXTRAH/2;
-	int panw=processsrc.cols-PANOSRCSHIFT;
+	int panw=processsrc.cols-Config::getinstance()->getpanoprocessshift();
 	int panh=processsrc.rows;
 	Rect panorio(panx,pany,panw,panh);
 	
@@ -1130,7 +1130,7 @@ void ImageProcess::cpupanoprocess(Mat& src)
 		
 		
 		
-	Rect srcrio(0,0,processsrc.cols-PANOSRCSHIFT,processsrc.rows);
+	Rect srcrio(0,0,processsrc.cols-Config::getinstance()->getpanoprocessshift(),processsrc.rows);
 	unsigned int pan360w=0;
 	unsigned int pan360h=0;
 
@@ -1190,8 +1190,9 @@ int ImageProcess::stichenable(OSA_BufInfo* info)
 	if(info->calibration==0)
 		return ret;
 	//OSA_printf("%s:%d.\n",__func__,__LINE__);
+	
 	if(StichAlg::getinstance()->getzeroflameupdate()==0)
-	if(abs(info->framegyroyaw*1.0/ANGLESCALE-AngleStich)<ANGLEINTREVAL&&(StichAlg::getinstance()->getzerocalibing()==0)&&(getpanoflagenable()==1))
+	if(abs(info->framegyroyaw*1.0/ANGLESCALE-AngleStich)<Config::getinstance()->getangleinterval()&&(StichAlg::getinstance()->getzerocalibing()==0)&&(getpanoflagenable()==1))
 		{
 			//OSA_printf("%s:%d.\n",__func__,__LINE__);
 			return ret;
@@ -1376,7 +1377,7 @@ void ImageProcess::main_proc_func()
 		
 		if(getzeroflameupdate())
 			{
-				//if(getcurrentangle()<ANGLEINTREVAL&&getcurrentangle()>0)
+				//if(getcurrentangle()<Config::getinstance()->getangleinterval()&&getcurrentangle()>0)
 				if(getcurrentangle()>0)
 					{
 						setzeroflameupdate(0);

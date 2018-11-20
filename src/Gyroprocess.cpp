@@ -68,7 +68,7 @@ void proptotocal(Mat& frame)
 	if(numpacket==7)
 	{
 
-	OSA_printf("THE num PACKET=%d numpacket%d\n",numpacket,nintcount);
+	//OSA_printf("THE num PACKET=%d numpacket%d\n",numpacket,nintcount);
 	nintcount=0;
 	}
 	else

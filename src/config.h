@@ -63,7 +63,8 @@
 
 #define PANOEXTRAH 20
 
-#define PANOSRCSHIFT (870)
+//#define PANOSRCSHIFT (870)
+#define PANOSRCSHIFT (100)
 
 
 
@@ -104,6 +105,8 @@
 #define PTZDP (0)
 #define PTZWAIT (1)
 
+#define PTZPANINVERSE (0)
+#define PTZTITLEINVERSE (1)
 
 #define MULTICPUPANONUM (20)
 

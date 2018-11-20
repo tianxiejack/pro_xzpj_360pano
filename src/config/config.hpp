@@ -41,10 +41,34 @@ class Config{
 
 	 /*pano*/
 	 double panozeroptz;
+	 double panozeroptztitle;
 	 int panoprocesswidth;
 	 int panoprocessheight;
+	 int panocylinder;
+	 int panofusion;
+
+	 double angleinterval;
+	 
+	 int panoprocessshift;
+	 int panoprocesstailcut;
+
+
+	 inline int getpanoprocessshift(){return panoprocessshift;};
+	 void setpanoprocessshift(int shift){panoprocessshift=shift;}
+
+	  inline int getpanoprocesstailcut(){return panoprocesstailcut;};
+	 void setpanoprocesstailcut(int shift){panoprocesstailcut=shift;}
+
+	 inline int  getpanocylinder(){return panocylinder;};
+	 inline int  getpanofusion(){return panofusion;};
+	 inline double  getangleinterval(){return angleinterval;};
+	 
 	 inline double getpanozeroptz(){return panozeroptz;};
 	 void setpanozeroptz(double angle){panozeroptz=angle;}
+
+
+	  inline double getpanozeroptztitle(){return panozeroptztitle;};
+	 void setpanozeroptztitle(double angle){panozeroptztitle=angle;}
 
 	 inline int getpanoprocesswidth(){return panoprocesswidth;};
 	 inline  int getpanoprocessheight(){return panoprocessheight;};
@@ -62,12 +86,21 @@ class Config{
 	 int ptzbroad;
 	 int ptzaddres;
 	 int ptzdp;
+
+	 int ptzpaninverse;
+	 int ptztitleinverse;
+	 int ptzspeed;
+
+	 inline int getptzpaninverse(){return ptzpaninverse;};
+	 inline  int getptztitleinverse(){return ptztitleinverse;};
 	 
 
 	 inline int getptzwait(){return ptzwait;};
 	 inline  int getptzbroad(){return ptzbroad;};
 	 inline  int getptzaddres(){return ptzaddres;};
 	 inline  int getptzdp(){return ptzdp;};
+
+	 inline int getptzspeed(){return ptzspeed;};
 
 
 

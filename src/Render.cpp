@@ -628,7 +628,7 @@ void Render::panomod()
 		{
 			Config::getinstance()->setintergralenable(1);
 			setpanoflagenable(1);
-			setfusionenalge(1);
+			setfusionenalge(Config::getinstance()->getpanofusion());
 			setscanpanflag(1);
 			Plantformpzt::getinstance()->setpanoscan();
 			displayMode=PANO_360_MODE;
@@ -882,7 +882,7 @@ void Render::Pano360fun()
 	//Angle2pos();
 	int tailcut=gettailcut();
 
-	if(CYLINDER)
+	if(Config::getinstance()->getpanocylinder())
 	if(tailcut>PANODSTTAILSHIFT)
 		tailcut=tailcut-PANODSTTAILSHIFT;
 	getPanoSubPos(&xoffset,&yoffset,&width,&height);
@@ -1113,10 +1113,10 @@ void Render::Pano360init()
 {
 	for(int i=0;i<MAXSEAM;i++)
 	{
-		if(CYLINDER)
-		Seamframe[i]=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth()-PANOSRCSHIFT-PANOCYLINDCUT,CV_8UC3,cv::Scalar(0,0,0));
+		if(Config::getinstance()->getpanocylinder())
+		Seamframe[i]=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth()-Config::getinstance()->getpanoprocessshift()-Config::getinstance()->getpanoprocesstailcut(),CV_8UC3,cv::Scalar(0,0,0));
 		else
-		Seamframe[i]=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth()-PANOSRCSHIFT,CV_8UC3,cv::Scalar(0,0,0));
+		Seamframe[i]=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth()-Config::getinstance()->getpanoprocessshift(),CV_8UC3,cv::Scalar(0,0,0));
 		
 	}
 	fusionframe=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth(),CV_8UC3,cv::Scalar(0,0,0));
@@ -2952,7 +2952,7 @@ void Render::MouseSelectpos()
 			if(renderheight-mov180viewy>MOUSEy)
 				{
 					//panposx=x*pano360texturew/(2*renderwidth)-(Config::getinstance()->getpanoprocesswidth()-PANOSRCSHIFT)/2;
-					panposx=x*pano360texturew/(2*renderwidth)+PANOSRCSHIFT-(Config::getinstance()->getpanoprocesswidth())/2;
+					panposx=x*pano360texturew/(2*renderwidth)+Config::getinstance()->getpanoprocessshift()-(Config::getinstance()->getpanoprocesswidth())/2;
 					mouseangle=offet2anglepano(panposx);
 
 					mousetitleangle=1.0*(cent180y-y)*CameraFov/(cent180h)+getptzzerotitleangle();
@@ -2963,7 +2963,7 @@ void Render::MouseSelectpos()
 				}
 			else
 				{
-					panposx=(x+renderwidth)*pano360texturew/(renderwidth*2)+PANOSRCSHIFT-(Config::getinstance()->getpanoprocesswidth())/2;
+					panposx=(x+renderwidth)*pano360texturew/(renderwidth*2)+Config::getinstance()->getpanoprocessshift()-(Config::getinstance()->getpanoprocesswidth())/2;
 					mouseangle=offet2anglepano(panposx);
 
 					mousetitleangle=1.0*(cent360y-y)*CameraFov/(cent360h)+getptzzerotitleangle();
@@ -2976,7 +2976,7 @@ void Render::MouseSelectpos()
 				mouseangle=mouseangle+360;
 
 
-			mousetitleangle=-mousetitleangle;
+			mousetitleangle=mousetitleangle;
 				if(mousetitleangle>360)
 				mousetitleangle=mousetitleangle-360;
 			else if(mousetitleangle<0)
@@ -3037,7 +3037,7 @@ void Render::Mousezeropos()
 				return ;
 			if(renderheight-mov180viewy>MOUSEy)
 				{
-					panposx=x*pano360texturew/(2*renderwidth)+PANOSRCSHIFT-(Config::getinstance()->getpanoprocesswidth())/2;
+					panposx=x*pano360texturew/(2*renderwidth)+Config::getinstance()->getpanoprocessshift()-(Config::getinstance()->getpanoprocesswidth())/2;
 					mouseangle=offet2anglepano(panposx);
 
 					mousetitleangle=1.0*(cent180y-y)*CameraFov/(cent180h)+getptzzerotitleangle();
@@ -3048,7 +3048,7 @@ void Render::Mousezeropos()
 				}
 			else
 				{
-					panposx=(x+renderwidth)*pano360texturew/(renderwidth*2)+PANOSRCSHIFT;
+					panposx=(x+renderwidth)*pano360texturew/(renderwidth*2)+Config::getinstance()->getpanoprocessshift();
 					mouseangle=offet2anglepano(panposx);
 
 					mousetitleangle=1.0*(cent360y-y)*CameraFov/(cent360h)+getptzzerotitleangle()-(Config::getinstance()->getpanoprocesswidth())/2;
@@ -3061,7 +3061,7 @@ void Render::Mousezeropos()
 				mouseangle=mouseangle+360;
 
 
-			mousetitleangle=-mousetitleangle;
+			mousetitleangle=mousetitleangle;
 				if(mousetitleangle>360)
 				mousetitleangle=mousetitleangle-360;
 			else if(mousetitleangle<0)

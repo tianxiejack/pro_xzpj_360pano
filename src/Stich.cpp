@@ -128,7 +128,7 @@ void cylinderremapinit()
 	printf("^^^^^^^^^^^^^^^^cylinderw=%d^^^^^^^^^^^^^^\n",cylinderw);
 	for (int hnum = 0; hnum < height;hnum++)
 	{
-		for (int wnum = PANOSRCSHIFT; wnum < width;wnum++)
+		for (int wnum = Config::getinstance()->getpanoprocessshift(); wnum < width;wnum++)
 		{
 			double k = R / sqrt(R*R + (wnum - width / 2)*(wnum - width / 2));
 			//x = (wnum - width / 2) / k + width / 2;
@@ -144,8 +144,8 @@ void cylinderremapinit()
 			x=width/2+R*tan((wnum-width/2)/R);
 			y = (hnum - height / 2) / k + height / 2;
 			#endif
-			cylinderremapx.at<float>(hnum,wnum-PANOSRCSHIFT)= static_cast<float>(x);
-			cylinderremapy.at<float>(hnum,wnum-PANOSRCSHIFT)= static_cast<float>(y);
+			cylinderremapx.at<float>(hnum,wnum-Config::getinstance()->getpanoprocessshift())= static_cast<float>(x);
+			cylinderremapy.at<float>(hnum,wnum-Config::getinstance()->getpanoprocessshift())= static_cast<float>(y);
 		
 		}
 	}
@@ -393,7 +393,7 @@ void FusionSeam(Mat& src,Mat & dst,int seampostion)
 		}
 	else
 		{
-		if(ANGLEINTREVAL>10)
+		if(Config::getinstance()->getangleinterval()>10)
 			{
 				if(processWidth>350)
 				processWidth=350;

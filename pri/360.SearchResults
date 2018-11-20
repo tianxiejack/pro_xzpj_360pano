@@ -1,7 +1,3 @@
----- ZEROJUEGE Matches (6 in 3 files) ----
-Config.h (z:\home\wj\cuda-workspace\360pano\src):#define ZEROJUEGE (15)
-ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(currentA>360-ZEROJUEGE)
-ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):			//if((getcurrentangle()<360-ZEROJUEGE)&&(getcurrentangle()>0))
-ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):	//if(getcurrentangle()>360-ZEROJUEGE)
-StichAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\stich):	//if(currentA>360-ZEROJUEGE)
-StichAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\stich):			//if((getcurrentangle()<360-ZEROJUEGE)&&(getcurrentangle()>0))
+---- PANOCYLINDCUT Matches (2 in 2 files) ----
+Config.h (z:\home\wj\cuda-workspace\360pano\src):#define PANOCYLINDCUT (200)
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):		Seamframe[i]=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth()-Config::getinstance()->getpanoprocessshift()-PANOCYLINDCUT,CV_8UC3,cv::Scalar(0,0,0));

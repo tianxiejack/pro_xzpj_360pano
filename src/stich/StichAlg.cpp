@@ -236,7 +236,7 @@ void StichAlg::Panoprocess()
 	
 	setSeamPos(piexoffset);
 	Mat temp;
-	if(CYLINDER)
+	if(Config::getinstance()->getpanocylinder())
 	temp=src;//getCurrentFame();
 	else
 	temp=dst;
@@ -256,13 +256,13 @@ void StichAlg::Panoprocess()
 	else
 		{
 		//memcpy(temp.data,src.data,PANO360WIDTH*PANO360HEIGHT*3);
-		if(CYLINDER==0)
-		Matcpy(src,temp,PANOSRCSHIFT);
+		if(Config::getinstance()->getpanocylinder()==0)
+		Matcpy(src,temp,Config::getinstance()->getpanoprocessshift());
 		}
 	//return ;
 	double exec_time = (double)getTickCount();
-	if(CYLINDER)
-		cylinder(temp,dst,1.0*(Config::getinstance()->getcamfx())*Config::getinstance()->getpanoprocesswidth()/Config::getinstance()->getcamwidth(),PANOSRCSHIFT);
+	if(Config::getinstance()->getpanocylinder())
+		cylinder(temp,dst,1.0*(Config::getinstance()->getcamfx())*Config::getinstance()->getpanoprocesswidth()/Config::getinstance()->getcamwidth(),Config::getinstance()->getpanoprocessshift());
 
 		
 	exec_time = ((double)getTickCount() - exec_time)*1000./getTickFrequency();

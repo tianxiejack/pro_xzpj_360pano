@@ -497,6 +497,8 @@ void Multipotionto360(std::vector<cv::Rect> &mv,int chid)
 			//mv[i].x=chid*MOVDETECTSRCWIDTH+mv[i].x;
 			mv[i].x=offset+mv[i].x;
 			//mv.push_back();
+			//cout<<"***mv360*****"<<mv[i]<<"   "<<anglepos<<endl;
+			
 
 		}
 

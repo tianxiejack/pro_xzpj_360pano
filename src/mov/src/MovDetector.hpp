@@ -11,7 +11,7 @@
 #include "mvdectInterface.hpp"
 #include "postDetector.hpp"
 #include "MOG3.hpp"
-
+#include "Detectfilter.hpp"
 
 #include "vibe-background-sequential.h" 	//__MV_DETECT_VIBE_
 
@@ -94,6 +94,8 @@ public:
 	cv::Mat backframe[DETECTOR_NUM];
 	CPostDetect		m_postDetect[DETECTOR_NUM];
 	CPostDetect		m_postDetect2[DETECTOR_NUM];
+
+	DetectFilter   m_detectfilter[DETECTOR_NUM];
 	
 	OSA_TskHndl m_maskDetectTsk[DETECTOR_NUM];
 	BOOL			m_bExit;

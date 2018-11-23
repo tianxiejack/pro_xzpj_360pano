@@ -180,6 +180,62 @@ double dotProduct(const vector<float>& v1, const vector<float>& v2)
 		assert(v1.size() == v2.size()); 
 		return dotProduct(v1, v2) / (module(v1) * module(v2));
 	}
+
+
+void median_filter_matches(vector<DMatch>& match,  std::vector<KeyPoint>& keypoints_1,std::vector<KeyPoint>& keypoints_2)
+{
+ 	double min_dist=10000, max_dist=0;
+ 	int midindex=0;
+      std::vector< DMatch > matches;
+	vector<float> diffs;
+	 for ( int i = 0; i < ( int ) match.size(); i++ )
+	    {
+	    	    float px_diff =keypoints_1[match[i].queryIdx].pt.x-keypoints_2[match[i].trainIdx].pt.x;
+	    	   diffs.push_back(px_diff);
+	    }
+	 vector<float> diffs_sorted = diffs;
+      std::sort(diffs_sorted.begin(), diffs_sorted.end());
+       float median = diffs[diffs_sorted.size()/2];
+	 for(int i = 0; i < match.size(); i++)
+	 	{
+			float px_diff =keypoints_1[match[i].queryIdx].pt.x-keypoints_2[match[i].trainIdx].pt.x;
+			if(px_diff/median<1.2)
+				matches.push_back(match[i]);
+	 	}
+    		
+	 match.swap(matches);
+  
+	
+    
+
+    
+}
+
+
+
+void angle_filter_matches(vector<DMatch>& match,  std::vector<KeyPoint>& keypoints_1,std::vector<KeyPoint>& keypoints_2)
+{
+ 	double min_dist=10000, max_dist=0;
+ 	int midindex=0;
+      std::vector< DMatch > matches;
+
+	
+	 for(int i = 0; i < match.size(); i++)
+	 	{
+			float px_diff =keypoints_1[match[i].queryIdx].pt.x-keypoints_2[match[i].trainIdx].pt.x;
+			float py_diff =keypoints_1[match[i].queryIdx].pt.y-keypoints_2[match[i].trainIdx].pt.y;
+			double backward_angle = atan2(py_diff, px_diff)*180/3.141592653;
+			if(abs(backward_angle)<2)
+				matches.push_back(match[i]);
+	 	}
+    		
+	 match.swap(matches);
+  
+	
+    
+
+    
+}
 void retinewithdistance(vector<DMatch>& match,   Mat descriptors_1,Mat descriptors_2)
 {
 
@@ -197,8 +253,8 @@ void retinewithdistance(vector<DMatch>& match,   Mat descriptors_1,Mat descripto
 
 
     sort(match.begin(), match.end()); 
-    printf ( "-- Max dist : %f \n", max_dist );
-    printf ( "-- Min dist : %f \n", min_dist );
+   // printf ( "-- Max dist : %f \n", max_dist );
+  //  printf ( "-- Min dist : %f \n", min_dist );
 
   
   //  for ( int i = 0; i < descriptors_1.rows; i++ )
@@ -210,6 +266,9 @@ void retinewithdistance(vector<DMatch>& match,   Mat descriptors_1,Mat descripto
             matches.push_back ( match[i] );
         }
     }
+
+
+
 
     match.swap(matches);
 
@@ -294,7 +353,7 @@ void refineMatcheswithHomography(vector<DMatch>& matches, double reprojectionThr
 }
 
 
-void find_feature_matches ( const Mat& img_1, const Mat& img_2,
+int find_feature_matches ( const Mat& img_1, const Mat& img_2,
                             std::vector<KeyPoint>& keypoints_1,
                             std::vector<KeyPoint>& keypoints_2,
                             std::vector< DMatch >& matches )
@@ -314,7 +373,11 @@ void find_feature_matches ( const Mat& img_1, const Mat& img_2,
    Ptr<DescriptorExtractor> descriptor = DescriptorExtractor::create ( "ORB" );
    Ptr<DescriptorMatcher> matcher  = DescriptorMatcher::create ( "BruteForce-Hamming" );
   #else
-   Ptr<FeatureDetector> detector = FeatureDetector::create ( "SURF" );
+  //initModule_nonfree();//if use SIFT or SURF
+//   Ptr<FeatureDetector> detector = FeatureDetector::create ( "SURF" );
+ const int minHessian = 700;
+    SurfFeatureDetector detector(minHessian);
+
    Ptr<DescriptorExtractor> descriptor = DescriptorExtractor::create ( "SURF" );
    Ptr<DescriptorMatcher> matcher  = DescriptorMatcher::create ( "BruteForce" );
   #endif
@@ -324,20 +387,67 @@ void find_feature_matches ( const Mat& img_1, const Mat& img_2,
     detector->detect ( img_2,keypoints_2 );
      exec_time = ((double)getTickCount() - exec_time)*1000./getTickFrequency();
 
-    OSA_printf("the %s detect exec_time=%f\n",__func__,exec_time);
+
+    if(keypoints_1.size()<=10||keypoints_2.size()<=10)
+		return -1;
+
+   // OSA_printf("the %s detect exec_time=%f\n",__func__,exec_time);
     exec_time = (double)getTickCount();
     descriptor->compute ( img_1, keypoints_1, descriptors_1 );
     descriptor->compute ( img_2, keypoints_2, descriptors_2 );
      exec_time = ((double)getTickCount() - exec_time)*1000./getTickFrequency();
-     OSA_printf("the %s compute exec_time=%f\n",__func__,exec_time);
+   //  OSA_printf("the %s compute exec_time=%f\n",__func__,exec_time);
    
     vector<DMatch> match;
     //BFMatcher matcher ( NORM_HAMMING );
     exec_time = (double)getTickCount();
     matcher->match ( descriptors_1, descriptors_2, match );
-	 exec_time = ((double)getTickCount() - exec_time)*1000./getTickFrequency();
-     OSA_printf("the %s match exec_time=%f\n",__func__,exec_time);
+
+/*
+   FlannBasedMatcher matcherknn; 
+
+   vector<vector<DMatch> > m_knnMatches; 
+
+   const float minRatio=1.f / 1.5f; 
+   matcherknn.knnMatch(descriptors_1,descriptors_2,m_knnMatches,2);
+
+   cout << "total match points: " << m_knnMatches.size() << endl;
 	
+
+	for (int i = 0; i < m_knnMatches.size(); i++)
+	{
+		if (m_knnMatches[i][0].distance < 0.2 * m_knnMatches[i][1].distance)
+		{
+			match.push_back(m_knnMatches[i][0]);
+		}
+	}
+
+*/
+/*
+	 flann::Index flannIndex(descriptors_1, flann::LshIndexParams(12, 20, 2), cvflann::FLANN_DIST_HAMMING);
+    //  cv::flann::Index flannIndex(descriptors_1, cv::flann::KDTreeIndexParams(4));
+  //  vector<DMatch> GoodMatchePoints;
+    
+    Mat macthIndex(descriptors_2.rows, 2, CV_32SC1);
+    Mat matchDistance(descriptors_2.rows, 2, CV_32FC1);
+    flannIndex.knnSearch(descriptors_2, macthIndex, matchDistance, 2, flann::SearchParams(64));
+
+    // Lowe's algorithm
+    for (int i = 0; i < matchDistance.rows; i++)
+    {
+        if (matchDistance.at<float>(i,0) < 0.6 * matchDistance.at<float>(i, 1))
+        {
+            DMatch dmatches(i, macthIndex.at<int>(i, 0), matchDistance.at<float>(i, 0));
+            match.push_back(dmatches);
+        }
+    }
+
+*/
+	
+	 exec_time = ((double)getTickCount() - exec_time)*1000./getTickFrequency();
+   //  OSA_printf("the %s match exec_time=%f\n",__func__,exec_time);
+	if(match.size()==0)
+		return -1;
 	for(int i=0; i<match.size(); i++)  
 	{  
 		
@@ -345,10 +455,16 @@ void find_feature_matches ( const Mat& img_1, const Mat& img_2,
 	 
 	} 
 
-    // refineMatcheswithHomography(matches,3,keypoints_1,keypoints_2);
+     //refineMatcheswithHomography(matches,3,keypoints_1,keypoints_2);
   
-     retinefeature(matches,descriptors_1,descriptors_2);
+     //retinefeature(matches,descriptors_1,descriptors_2);
      retinewithdistance(matches,descriptors_1,descriptors_2);
+     median_filter_matches(matches,keypoints_1,keypoints_2);
+     angle_filter_matches(matches,keypoints_1,keypoints_2);
+	if(matches.size()<=10)
+		return -1;
+
+	return 0;
     
 }
 cv::Mat  FindHomography(Mat& src,Mat & dst)

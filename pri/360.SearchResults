@@ -1,3 +1,6 @@
----- PANOCYLINDCUT Matches (2 in 2 files) ----
-Config.h (z:\home\wj\cuda-workspace\360pano\src):#define PANOCYLINDCUT (200)
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):		Seamframe[i]=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth()-Config::getinstance()->getpanoprocessshift()-PANOCYLINDCUT,CV_8UC3,cv::Scalar(0,0,0));
+---- boardh Matches (7 in 2 files) ----
+DetectAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\detect):	int boardh=30;
+DetectAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\detect):			 boardh=0;
+DetectAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\detect):	blackrect=Rect(board,boardh,Config::getinstance()->getmvprocesswidth()/Config::getinstance()->getmvdownup()-2*board,Config::getinstance()->getmvprocessheight()/(Config::getinstance()->getmvdownup())-2*boardh);
+ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):	int boardh=30;
+ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):	blackrect=Rect(board,boardh,Config::getinstance()->getmvprocesswidth()/Config::getinstance()->getmvdownup()-2*board,Config::getinstance()->getmvprocessheight()/(Config::getinstance()->getmvdownup())-2*boardh);

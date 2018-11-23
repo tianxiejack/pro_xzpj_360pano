@@ -621,7 +621,7 @@ void ImageProcess::setwarndetect(int w,int h,int chid)
 
 }
 
-#define MINAREDETECT (100)
+#define MINAREDETECT (20)
 
 
 
@@ -649,6 +649,7 @@ void ImageProcess::panomoveprocess()
 				{
 				
 					resize(src,MvtestFRramegray,Size(Config::getinstance()->getmvprocesswidth()/Config::getinstance()->getmvdownup(),Config::getinstance()->getmvprocessheight()/Config::getinstance()->getmvdownup()),0,0,INTER_LINEAR);
+					blur( MvtestFRramegray, MvtestFRramegray, Size(3,3) );
 					src=MvtestFRramegray;
 				}
 
@@ -667,7 +668,7 @@ void ImageProcess::panomoveprocess()
 				//imshow("LKRramegray",LKRramegray);
 				//waitKey(1);
 				//lkmove.lkmovdetect(src,0);
-				printf("the  ");
+				//printf("the  ");
 			}
 			else
 				m_pMovDetector->setFrame(src,src.cols,src.rows,0,10,MINAREDETECT,200000,40);
@@ -1180,6 +1181,8 @@ int ImageProcess::detectenable(OSA_BufInfo* info)
 int ImageProcess::stichenable(OSA_BufInfo* info)
 {
 	int ret=0;
+	if(Config::getinstance()->getpanocalibration()==0)
+		return 1;
 	//OSA_printf("%s:%d.\n",__func__,__LINE__);
 	if(Panorest())
 		return ret;

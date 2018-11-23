@@ -16,7 +16,7 @@ FileStorage configfilestore;
 
 Config *Config::instance=new Config();
 
-Config::Config():panozeroptz(0),intergralenable(1),cam_fov(0),ptzpaninverse(0),ptztitleinverse(0),panoprocessshift(0),panoprocesstailcut(0),ptzspeed(20),angleinterval(10)
+Config::Config():panozeroptz(0),intergralenable(1),cam_fov(0),ptzpaninverse(0),ptztitleinverse(0),panoprocessshift(0),panoprocesstailcut(0),ptzspeed(20),angleinterval(10),panocalibration(1)
 {
 	#if CONFIGINIT
 	configfilestore=FileStorage(CONFIGFILENAME, FileStorage::WRITE);
@@ -52,7 +52,7 @@ void Config::saveconfig()
 	configfilestore <<"display" << "{" << "display_width" << display_width << "display_height" << display_height << "display_channel" << display_channel << "}";
 
 	configfilestore <<"panoalg" << "{" << "panoprocesswidth" << panoprocesswidth << "panoprocessheight" << panoprocessheight  <<"panozeroptz"<< panozeroptz << "panozeroptztitle"<<panozeroptztitle<<"panoprocessshift"<<panoprocessshift<<"panoprocesstailcut"<<panoprocesstailcut\
-		<<"panocylinder"<<panocylinder<<"panofusion"<<panofusion<<"angleinterval"<<angleinterval<<"}";
+		<<"panocylinder"<<panocylinder<<"panofusion"<<panofusion<<"angleinterval"<<angleinterval<<"panocalibration"<<panocalibration<<"}";
 
 	configfilestore <<"mvdetect" << "{" << "mvprocesswidth" << mvprocesswidth << "mvprocessheight" << mvprocessheight  <<"mvdownup"<<mvdownup<< "}";
 
@@ -91,6 +91,7 @@ void Config::loadconfig()
 	panocylinder=(int )struct_node["panocylinder"];
 	panofusion=(int ) struct_node["panofusion"];
 	angleinterval=(double )struct_node["angleinterval"];
+	panocalibration=(int)struct_node["panocalibration"];
 
 	struct_node = configfilestore["mvdetect"];
 	mvprocesswidth=(int )struct_node["mvprocesswidth"];

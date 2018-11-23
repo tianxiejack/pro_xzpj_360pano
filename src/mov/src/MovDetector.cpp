@@ -87,6 +87,12 @@ int CMoveDetector_mv::creat(int history /*= 500*/,  float varThreshold /*= 16*/,
 	}
 
 
+	for( i=0;i<DETECTOR_NUM;i++)
+		{
+			m_detectfilter[i].create();
+		}
+
+
 	return	0;
 }
 
@@ -154,6 +160,11 @@ int CMoveDetector_mv::destroy()
 		minArea[i] = 0;
 		maxArea[i] = 0;
 	}
+
+	for( i=0;i<DETECTOR_NUM;i++)
+		{
+			m_detectfilter[i].destroy();
+		}
 	resetFlag = false;
 	return rtn;
 }
@@ -596,7 +607,7 @@ void CMoveDetector_mv::maskDetectProcess(OSA_MsgHndl *pMsg)
 		if(!frame[chId].empty())
 		{
 		//	Uint32 t1 = OSA_getCurTimeInMsec() ;
-
+		m_detectfilter[chId].backgroundupdate(frame[chId]);		
 #if 1
 		if(frame[chId].cols != m_BKWidth[chId] || frame[chId].rows != m_BKHeight[chId]){
 			if(model[chId]!= NULL)	{
@@ -659,6 +670,8 @@ void CMoveDetector_mv::maskDetectProcess(OSA_MsgHndl *pMsg)
 				
 				if( m_notifyFunc != NULL )
 				{
+					//getMoveTarget();
+					m_detectfilter[chId].process(frame[chId],m_movTarget[chId]);
 					(*m_notifyFunc)(m_context, chId);
 				}
 		}

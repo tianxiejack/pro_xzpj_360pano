@@ -23,6 +23,7 @@
 #include "plantformcontrl.hpp"
 #include"Comcontrl.hpp"
 #include <gst/gst.h>
+#include"FileCapture.hpp"
 static GLMain render;
 
 ImageProcess *Imageprocesspt;
@@ -37,9 +38,52 @@ static int fullframe=0;
 int oddevenflag=-1;
 static Config *config;
 //static OSA_BufHndl *procossQ[QUE_CHID_COUNT];
+#define FILEREAD 1
+void processFrame_file(void *data,void *angle)
+{
+	bool status=0;
+	int cap_chid=TV_DEV_ID;
+	Mat img;
+	int queueid=0;
+	unsigned char *framdata=NULL;
+	OSA_BufInfo* info=NULL;
+	int calibration=1;
+	Mat cap;// = Mat(TV_HEIGHT,TV_WIDTH,CV_8UC2,src);
+	framdata=(unsigned char *)data;
+
+	//printf("the angle=%d\n",*(int *)angle);
+	if(FILEREAD==0)
+		return ;
+	info = image_queue_getEmptytime(imgQ[queueid],OSA_TIMEOUT_FOREVER);
+	if(info==NULL)
+			return ;
+	
+	if(cap_chid==TV_DEV_ID)
+		{
+			img = Mat(config->getcamheight(),config->getcamwidth(),CV_8UC3, info->virtAddr);
+		}
+	memcpy(img.data,framdata,img.cols*img.rows*img.channels());
+	info->channels = img.channels();
+	info->width = img.cols;
+	info->height = img.rows;
+	info->timestamp = 0;
+	info->calibration=calibration;
+	info->framegyroyaw=*(int *)angle;
+    	 Imageprocesspt->CaptureThreadProcess(img,info);
+	//cv::imshow(WindowName, img);
+	//waitKey(1);
+	  image_queue_putFull(imgQ[queueid], info);
+
+	if(DETECTTEST)
+		OSA_waitMsecs(500);
+	
+
+}
 void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capInfo, int format)
 {
 	bool status=0;
+	if(FILEREAD)
+		return ;
 	char WindowName[64]={0};
 	Mat img;
 	int queueid=0;
@@ -210,6 +254,10 @@ int main_pano(int argc, char **argv)
 	grop[0] = ChosenCaptureGroup :: GetTVInstance();
 	grop[1] = ChosenCaptureGroup :: GetHOTInstance();
 
+
+	FileCapture filecapture;
+	filecapture.create();
+	filecapture.registcallback(processFrame_file);
 	//setgyrostart(1);
 	OSA_printf("run app success!\n");
 	//gst_videnc_create();

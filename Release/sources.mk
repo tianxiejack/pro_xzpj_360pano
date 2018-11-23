@@ -34,6 +34,7 @@ src/mov/src \
 src/menu \
 src/lk \
 src/gpio \
+src/file \
 src/detect \
 src/config \
 src/compress \

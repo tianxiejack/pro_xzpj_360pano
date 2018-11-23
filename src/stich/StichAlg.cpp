@@ -194,14 +194,17 @@ void StichAlg::zeroprocess()
 void StichAlg::stichprocess()
 {
 	//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
-	zerolostjudge();
-	//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
-	//zerolostreset();
-	//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
-	Zeropreprocess();
-	//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
-	zeroprocess();
-	//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
+	if(Config::getinstance()->getpanocalibration())
+		{
+			zerolostjudge();
+			//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
+			//zerolostreset();
+			//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
+			Zeropreprocess();
+			//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
+			zeroprocess();
+			//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
+		}
 	Panoprocess();
 	//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
 

@@ -44,7 +44,7 @@ int  OpticalFlowCalculator::getOffsetT(const cv::Mat & src, const cv::Mat & dst,
              // resize(src,tempsrc,Size(1920,1080),0,0,INTER_LINEAR);
              Mat tempdst=dst;
 		Rect temprect;
-		temprect=Rect(tempsrc.cols*0.5-0.25*tempsrc.cols,0.5*tempsrc.rows-0.35*tempsrc.rows,0.5*tempsrc.cols, 0.7*tempsrc.rows);
+		temprect=Rect(tempsrc.cols*0.5-0.3*tempsrc.cols,0.5*tempsrc.rows-0.45*tempsrc.rows,0.6*tempsrc.cols, 0.9*tempsrc.rows);
 		Mat templ(tempsrc, temprect); 
 		Mat result(tempdst.cols - templ.cols + 1, tempdst.rows - templ.rows + 1, CV_8UC1);
 		matchTemplate(tempdst, templ, result, CV_TM_CCOEFF_NORMED); 
@@ -54,7 +54,7 @@ int  OpticalFlowCalculator::getOffsetT(const cv::Mat & src, const cv::Mat & dst,
 		//if(FEATURETEST==0)
 		sprintf(bufname,"/home/ubuntu/calib/lk%d.bmp",tempcount);
 		tempcounterror++;
-		if(maxVal<0.90)
+		if(maxVal<0.85)
 			{
 				//sprintf(bufname,"/home/ubuntu/calib/error%d.bmp",tempcount);
 				//imwrite(bufname,tempdst);
@@ -77,7 +77,62 @@ int  OpticalFlowCalculator::getOffsetT(const cv::Mat & src, const cv::Mat & dst,
 	//Point2i a(dx, dy); 
 	return status; 
 	}
+int OpticalFlowCalculator::clibrationformshift(const cv::Mat & src,const cv::Mat & dst,int xoffset ,int yoffset)
+{
+	 Rect rectsrc;
+	   Rect rectdst;
+	   if(xoffset>=0)
+		{
+			rectsrc.x=xoffset;
+			rectsrc.width=src.cols-xoffset;
 
+			rectdst.x=0;
+			rectdst.width=src.cols-xoffset;
+
+
+
+		}
+	   else
+		{
+			rectsrc.x=0;
+			rectsrc.width=src.cols+xoffset;
+
+			rectdst.x=-xoffset;
+			rectdst.width=src.cols+xoffset;
+
+
+
+		}
+
+
+		 if(yoffset>=0)
+		{
+			rectsrc.y=yoffset;
+			rectsrc.height=src.rows-yoffset;
+
+			rectdst.y=0;
+			rectdst.height=src.rows-yoffset;
+
+
+
+		}
+	   else
+		{
+			rectsrc.y=0;
+			rectsrc.height=src.rows+yoffset;
+
+			rectdst.y=-yoffset;
+			rectdst.height=src.rows+yoffset;
+
+		}
+
+	
+		  src(rectsrc).copyTo(dst(rectdst));
+	 
+
+
+
+}
 
 int OpticalFlowCalculator::calculateOpticalFlowprocess(const cv::Mat &gray_image1, const cv::Mat &gray_image2, cv::Mat &dst, int pixel_step, double min_vector_size)
 {
@@ -97,7 +152,8 @@ int OpticalFlowCalculator::calculateOpticalFlowprocess(const cv::Mat &gray_image
 
     static int pointnum=0;
     int tempnum=0;
-
+    static int mathcount=0;
+    char matchname[20];
 
     const int MAX_COUNT = 500;
     Size subPixWinSize(10,10);
@@ -106,18 +162,25 @@ int OpticalFlowCalculator::calculateOpticalFlowprocess(const cv::Mat &gray_image
 
    int xoffset=0;
    int yoffset=0;
-   double percent=0.8;
+   double percent=0.6;
    int fixoffset=1;
-   int featureok=getOffsetT(gray_image1,gray_image2,&xoffset,&yoffset);
-   double upx=xoffset+fixoffset*percent;
-   double downx=xoffset-fixoffset*percent;
-   double upy=yoffset+fixoffset*percent;
-   double downy=yoffset-fixoffset*percent;
-   
-	
+   int trackok=getOffsetT(gray_image1,gray_image2,&xoffset,&yoffset);
+   int featureok=0;
+   int xbaseoffet=0;
+   int ybaseoffet=0;
+   double upx=xoffset+fixoffset*percent+xbaseoffet;
+   double downx=xoffset-fixoffset*percent-xbaseoffet;
+   double upy=yoffset+fixoffset*percent+ybaseoffet;
+   double downy=yoffset-fixoffset*percent-ybaseoffet;
+
+   double featurexoffet=0;
+   double featureyoffet=0;
+
   // printf("the xoffset=%d yoffset=%d [%d~%d] [%d~%d]\n",xoffset,yoffset,downx,upx,downy,upy);
 
     static int index=0;
+
+  #if 1
     if(index==0)
 	{
 		index++;
@@ -134,17 +197,59 @@ int OpticalFlowCalculator::calculateOpticalFlowprocess(const cv::Mat &gray_image
 	}
 
 
+	#else
+	if(index==0)
+	{
+		index++;
+		goodFeaturesToTrack(gray_image1, points_image1, MAX_COUNT, 0.01, 10, Mat(), 3, 0, 0.04);
+	      cornerSubPix(gray_image1, points_image1, subPixWinSize, Size(-1,-1), termcrit);
+	 }
+	
+
+	#endif
+
     std::vector<cv::Mat> pyramids;
     int num_vectors = 0;
-     if (MVDETECTALG)
+   //  if (MVDETECTALG)
+   if(1)
      {
-
+#if 1
 		cv::buildOpticalFlowPyramid(gray_image1, pyramids, winSize, MAX_LEVEL, true);
 		//cv::calcOpticalFlowPyrLK(gray_image1, gray_image2, points_image1, points_image2, status, err, winSize, MAX_LEVEL, termcrit, 0, 0.001);
 		cv::calcOpticalFlowPyrLK(pyramids, gray_image2, points_image1, points_image2, status, err, winSize, MAX_LEVEL, termcrit, 0, 0.001);
 		std::vector<cv::Point2f> src_points;
 		std::vector<cv::Point2f> dst_points;
+#else
 
+		vector<KeyPoint> keypoints_1, keypoints_2;
+		vector<DMatch> matches;
+		featureok= find_feature_matches ( gray_image1, gray_image2, keypoints_1, keypoints_2, matches );
+
+		points_image1.clear();
+		points_image2.clear();
+		for ( int i = 0; i < ( int ) matches.size(); i++ )
+		{
+		    points_image1.push_back ( keypoints_1[matches[i].queryIdx].pt );
+		    points_image2.push_back ( keypoints_2[matches[i].trainIdx].pt );
+		    featurexoffet+=keypoints_2[matches[i].trainIdx].pt.x- keypoints_1[matches[i].queryIdx].pt.x;
+		    featureyoffet+=keypoints_2[matches[i].trainIdx].pt.y- keypoints_1[matches[i].queryIdx].pt.y;
+		}
+		featurexoffet=featurexoffet/matches.size();
+		featureyoffet=featureyoffet/matches.size();
+		
+		/*
+		Mat first_match;
+		drawMatches(gray_image1, keypoints_1, gray_image2, keypoints_2, matches, first_match);
+		sprintf(matchname,"%d.jpg",mathcount);
+		//imshow("first_match ", first_match);
+		imwrite(matchname,first_match);
+		mathcount++;
+		//waitKey(1);
+		*/
+
+		std::vector<cv::Point2f> src_points;
+		std::vector<cv::Point2f> dst_points;
+#endif
 
 	 //   printf("points_image2.size()=%d\n",points_image2.size());
 
@@ -152,49 +257,94 @@ int OpticalFlowCalculator::calculateOpticalFlowprocess(const cv::Mat &gray_image
 		for (int i = 0; i < points_image2.size(); i++)
 		{
 			if (status[i])
+			//if(1)
 			{
 
 			//printf("the opt ok\n");
-				cv::Point2f start_point = points_image1.at(i);
-				cv::Point2f end_point = points_image2.at(i);
-				float x_diff = end_point.x - start_point.x;
-				float y_diff = end_point.y - start_point.y;
+			cv::Point2f start_point = points_image1.at(i);
+			cv::Point2f end_point = points_image2.at(i);
+			float x_diff = end_point.x - start_point.x;
+			float y_diff = end_point.y - start_point.y;
 			//printf("the opt x_diff=%f y_diff=%f\n",x_diff,y_diff);
 			 double backward_angle = atan2(start_point.y - end_point.y, start_point.x - end_point.x)*180/3.141592653;
-			if(featureok==0)
+			//printf("x_diff=%f y_diff=%f upx=%f,downx=%f,upy=%f,downy=%f \n",x_diff,y_diff,upx,downx,upy,downy);
+
+			
+			if(featureok==0&&trackok==0)
 				{
 					if((x_diff<upx)&&(x_diff>downx)&&(y_diff<upy)&&(y_diff>downy))
 						tempnum++;
 					else
 						continue;
-
 				}
 			else
 				break;
-				if (((std::abs(x_diff) > min_vector_size || std::abs(y_diff) > min_vector_size))&&(abs(backward_angle)<20)) // THIS USED TO BE 1.0
+				if (((std::abs(x_diff) > min_vector_size || std::abs(y_diff) > min_vector_size))&&(abs(backward_angle)<1)) // THIS USED TO BE 1.0
 		   //  if (((std::abs(x_diff) > min_vector_size || std::abs(y_diff) > min_vector_size))) // THIS USED TO BE 1.0
 				{
-
 					src_points.push_back(start_point);
 					dst_points.push_back(end_point);
 					num_vectors++;
 				}
+			//printf("x_diff=%f y_diff=%f backward_angle=%f \n",x_diff,y_diff,backward_angle);
 
 			}
 
+		}
+		//printf("featureok=%d num_vectors=%d tempnum=%d \n",featureok,num_vectors,tempnum);
+		if (num_vectors > 50)
+		{
+			vector<uchar> inliersMask(src_points.size());
+   			 cv::Mat H = findHomography(dst_points, src_points, CV_FM_RANSAC, 3, inliersMask);
+			//cv::Mat H = findHomography(dst_points, src_points, CV_RANSAC);
+			//cv::Mat compensated;
+			#if 0
+			warpPerspective(gray_image2, dst, H, cv::Size(gray_image2.cols, gray_image2.rows));
+			#else
+			double xshift=0;
+			double yshift=0;
+			int count=0;
+			for(int j=0;j<src_points.size();j++)
+				{
+					if(inliersMask[j])
+						{
+							xshift+=dst_points[j].x-src_points[j].x;
+							yshift+=dst_points[j].y-src_points[j].y;
+							count++;
+						}
+
+				}
+			xshift=xshift/count;
+			yshift=yshift/count;
+			clibrationformshift(gray_image2,dst,(int )xshift,(int )yshift);
+			#endif
+			//cv::absdiff(compensated, gray_image1, comp);
+			//cv::imshow("compensated",compensated);
+			//cv::imshow("gray_image2",gray_image1);
+			//cv::waitKey(1);
+			//cv::threshold(comp, comp, 50, 255, CV_THRESH_BINARY);
 
 		}
-		if (num_vectors > 10)
+	else if(featureok==0&&trackok==0)
 		{
+			// xoffset=featurexoffet;
+			// yoffset=featureyoffet;
+			//printf("the *********************1\n");
+			 if(trackok==0)
+				  clibrationformshift(gray_image2,dst,xoffset,yoffset);
+			   else
+				gray_image1.copyTo(dst);
+			 
 
-			cv::Mat H = findHomography(dst_points, src_points, CV_RANSAC);
-			cv::Mat compensated;
-			  warpPerspective(gray_image2, dst, H, cv::Size(gray_image2.cols, gray_image2.rows));
-		   // cv::absdiff(compensated, gray_image1, comp);
-		//cv::imshow("compensated",compensated);
-		//cv::imshow("gray_image2",gray_image1);
-		//cv::waitKey(1);;
-	   //	cv::threshold(comp, comp, 50, 255, CV_THRESH_BINARY);
+
+		}
+	else if(trackok==0)
+		{
+			printf("the *********************2\n");
+			 if(trackok==0)
+				  clibrationformshift(gray_image2,dst,xoffset,yoffset);
+			   else
+				gray_image1.copyTo(dst);
 
 		}
 	else
@@ -208,67 +358,10 @@ int OpticalFlowCalculator::calculateOpticalFlowprocess(const cv::Mat &gray_image
      }
    else
    {
-	   Rect rectsrc;
-	   Rect rectdst;
-	   if(xoffset>=0)
-		{
-			rectsrc.x=xoffset;
-			rectsrc.width=gray_image1.cols-xoffset;
-
-			rectdst.x=0;
-			rectdst.width=gray_image1.cols-xoffset;
-
-
-
-		}
-	   else
-		{
-			rectsrc.x=0;
-			rectsrc.width=gray_image1.cols+xoffset;
-
-			rectdst.x=-xoffset;
-			rectdst.width=gray_image1.cols+xoffset;
-
-
-
-		}
-
-
-		 if(yoffset>=0)
-		{
-			rectsrc.y=yoffset;
-			rectsrc.height=gray_image1.rows-yoffset;
-
-			rectdst.y=0;
-			rectdst.height=gray_image1.rows-yoffset;
-
-
-
-		}
-	   else
-		{
-			rectsrc.y=0;
-			rectsrc.height=gray_image1.rows+yoffset;
-
-			rectdst.y=-yoffset;
-			rectdst.height=gray_image1.rows+yoffset;
-
-		}
-
-/*
-	   cout<<"********rectsrc*************"<<endl;
-	   cout<<rectsrc<<endl;
-	   cout<<"********rectdst*************"<<endl;
-	   cout<<rectdst<<endl;
-*/
-	   if(featureok==0)
-		  gray_image2(rectsrc).copyTo(dst(rectdst));
+	    if(trackok==0)
+		  clibrationformshift(gray_image2,dst,xoffset,yoffset);
 	   else
 		gray_image1.copyTo(dst);
-	
-
-
-
  }
     
     return num_vectors;
@@ -314,7 +407,8 @@ int OpticalFlowCalculator::calculateOpticalFlowgray(const cv::Mat &gray_image1, 
 
 
 #if 0
-	static int index=0;
+	 int index=0;
+	points_image1.clear();
 	if(index==0)
 		{
 			index++;
@@ -329,7 +423,8 @@ int OpticalFlowCalculator::calculateOpticalFlowgray(const cv::Mat &gray_image1, 
 
 		}
 #elif 1
-static int index=0;
+ int index=0;
+points_image1.clear();
 if(index==0)
 		{
 		index++;
@@ -344,21 +439,19 @@ if(index==0)
 		    }
 }
 #else
+	points_image1.clear();
 	goodFeaturesToTrack(gray_image1, points_image1, MAX_COUNT, 0.01, 10, Mat(), 3, 0, 0.04);
       cornerSubPix(gray_image1, points_image1, subPixWinSize, Size(-1,-1), termcrit);
 
 
 #endif
+	
 
     std::vector<cv::Mat> pyramids;
     cv::buildOpticalFlowPyramid(gray_image1, pyramids, winSize, MAX_LEVEL, true);
-
     //cv::calcOpticalFlowPyrLK(gray_image1, gray_image2, points_image1, points_image2, status, err, winSize, MAX_LEVEL, termcrit, 0, 0.001);
-
     cv::calcOpticalFlowPyrLK(pyramids, gray_image2, points_image1, points_image2, status, err, winSize, MAX_LEVEL, termcrit, 0, 0.001);
-
     int num_vectors = 0;
-
     std::vector<cv::Point2f> src_points;
     std::vector<cv::Point2f> dst_points;
 
@@ -378,7 +471,7 @@ if(index==0)
 		 double backward_angle = atan2(start_point.y - end_point.y, start_point.x - end_point.x)*180/3.141592653;
 		 printf("the angle =%f \n",backward_angle);
 		 //&&(abs(backward_angle)<20)
-            if ((std::abs(x_diff) > min_vector_size || std::abs(y_diff) > min_vector_size)) // THIS USED TO BE 1.0
+            if ((std::abs(x_diff) > min_vector_size || std::abs(y_diff) > min_vector_size)&&(abs(backward_angle)<1)) // THIS USED TO BE 1.0
             {
                 cv::Vec4d &elem = optical_flow_vectors.at<cv::Vec4d> ((int)start_point.y, (int)start_point.x);
                 elem[0] = start_point.x;
@@ -393,21 +486,25 @@ if(index==0)
             }
             else
             {
-                cv::Vec4d &elem = optical_flow_vectors.at<cv::Vec4d> ((int)start_point.y, (int)start_point.x);
+            /*
+                 cv::Vec4d &elem = optical_flow_vectors.at<cv::Vec4d> ((int)start_point.y, (int)start_point.x);
                 elem[0] = start_point.x;
                 elem[1] = start_point.y;
                 elem[2] = 0.0;
                 elem[3] = 0.0;
+                */
             }
         }
         else
         {
+        /*
             cv::Point2f start_point = points_image1.at(i);
             cv::Vec4d &elem = optical_flow_vectors.at<cv::Vec4d> ((int)start_point.y, (int)start_point.x);
             elem[0] = -1.0;
             elem[1] = -1.0;
             elem[2] = 0.0;
             elem[3] = 0.0;
+            */
         }
     }
     if (num_vectors > 100)
@@ -430,9 +527,9 @@ if(index==0)
     //   warpAffine(gray_image1, compensated, pers_transform, cv::Size(gray_image1.cols, gray_image1.rows));
         cv::absdiff(compensated, gray_image1, comp);
         //std::cout << comp << std::endl;
-       cv::imshow("compensated",compensated);
-	 cv::imshow("gray_image2",gray_image1);
-	 cv::waitKey(1);;
+    //   cv::imshow("compensated",compensated);
+	// cv::imshow("gray_image2",gray_image1);
+	// cv::waitKey(1);;
         cv::threshold(comp, comp, 50, 255, CV_THRESH_BINARY);
 	  
     }

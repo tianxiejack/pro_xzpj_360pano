@@ -40,13 +40,24 @@
 //static const M3DVector3f DEFAULT_ORIGIN = {0.0f, 0.0f, 50.0f};
 using namespace cv;
 
+
+#define MAXTURESELECT (8)
 typedef struct{
 
 	Rect leftdownrect;
 
 	Rect updownselcectrect;
 	int active;
+	
 	int panotextureindex;
+
+	int blindtextnum;
+	int blindtextid[MAXTURESELECT];
+
+	//#define SELECTMAX (10)
+	GLBatch	*panselecttriangleBatch[MAXTURESELECT];
+	
+	
 
 
 }ViewCamera;
@@ -429,6 +440,13 @@ public:
 
 	GLTriangleBatch     radar180half;
 	GLTriangleBatch     radar360half;
+
+
+	GLTriangleBatch     radar90quarter;
+	GLTriangleBatch     radar180quarter;
+	GLTriangleBatch     radar270quarter;
+	GLTriangleBatch     radar360quarter;
+	
 	GLTriangleBatch     radarcamera[MAXCAMER];
 	GLTriangleBatch     radarMultidetect;
 	double radarinner;

@@ -15,7 +15,22 @@ DetectAlg::~DetectAlg()
 #define MINAREDETECT (100)
 
 
+void DetectAlg::equalize(Mat& src)
+{
+	int Total = src.total(); 
+	vector<int>piexl(256, 0); 
+	for (int i = 0; i < src.total();++i)
+		piexl[src.data[i]]++; 
+	for (int i = 1; i < 256; ++i)
+		piexl[i]+=piexl[i-1]; 
+	vector<int>piexlnew(256, 0); 
+		for (int i = 0; i < 256; ++i) { 
+			piexlnew[i] = double(piexl[i]) / Total * 255;
+			} 
+		for (int i = 0; i < src.total(); ++i)
+			src.data[i] =piexlnew[src.data[i]];
 
+}
 void DetectAlg::panomoveprocess()
 {
 	Mat process;
@@ -91,6 +106,9 @@ void DetectAlg::panomoveprocess()
 						}
 					else
 						process=panoblock[blocknum];
+					//blur(panoblockdown,panoblockdown,Size(3,3));
+					//equalize(panoblockdown);
+					//equalizeHist(panoblockdown, panoblockdown);
 					//sprintf(recoardnum,"%d.bmp",blocknum);
 					//imwrite(recoardnum,process);
 					//imshow(recoardnum,process);
@@ -105,24 +123,31 @@ void DetectAlg::panomoveprocess()
 								//setwarndetect(process.cols,process.rows,blocknum);
 								setmvprocessangle(LKprocessangle[blocknum],blocknum);
 							}
-
 						//if(blocknum==0)
 						if(newmat)
 							{
-							lkmove.lkmovdetectpreprocess(process,LKRramegray,blocknum);
+								if(Config::getinstance()->getpanocalibration())
+								{
+									lkmove.lkmovdetectpreprocess(process,LKRramegray,blocknum);
+								}
+								else
+									{
+										lkmove.backgroundmov[blocknum]=1;
+										memcpy(LKRramegray.data,process.data,LKRramegray.cols*LKRramegray.rows*LKRramegray.channels());
+									}
 							//printf("******newmatblocknum=%d prenum=%d\n******",blocknum,prenum);
-							
 							}
 						else
 							{
 								printf("******blocknum=%d prenum=%d\n******",blocknum,prenum);
 							}
 						//lkmove.lkmovdetect(process,blocknum);
+						//printf("**lkmovdetect****blocknum=%d prenum=%d\n******",blocknum,prenum);
+						//continue;
 
 						//cout<<"blackrect"<<blackrect<<endl;
 						if(getmodeling())
 							{
-							
 								int num=getmodelnum(blocknum);
 								if(num<MODELINGNUM&&newmat)
 									{
@@ -130,8 +155,7 @@ void DetectAlg::panomoveprocess()
 										//printf(" newmat proceess ****************num=%d\n",premodelnum);
 										LKRramegray(blackrect).copyTo(Modelframe[blocknum][premodelnum](blackrect));
 										//lkmove.lkmovdetectpreprocess(process,Modelframe[blocknum][num],blocknum);
-										setmodelnum(blocknum);
-										
+										setmodelnum(blocknum);	
 									}
 							}
 						else	
@@ -139,10 +163,9 @@ void DetectAlg::panomoveprocess()
 								//printf(" newmat proceess ****************num=%d\n",premodelnum);
 								LKRramegray(blackrect).copyTo(LKRramegrayblackboard(blackrect));
 							}
-
 						//int num=getmodelnum(blocknum);
 						if(getmodeling()==0)
-						videowriter[blocknum]<<LKRramegrayblackboard;
+							videowriter[blocknum]<<LKRramegrayblackboard;
 						else
 							videowriter[blocknum]<<Modelframe[blocknum][premodelnum];
 						/*
@@ -157,18 +180,13 @@ void DetectAlg::panomoveprocess()
 						*/
 						
 						//m_pMovDetector->setFrame(LKRramegray,LKRramegray.cols,LKRramegray.rows,0,10,MINAREDETECT,200000,40);
-						
-						
 						//printf("modeling=%d newmat=%d num=%d\n",blocknum,newmat,premodelnum);
-
-
-						
 						if(getmodeling())
 							{
 								m_pMovDetector->setFrame(Modelframe[blocknum][premodelnum],Modelframe[blocknum][premodelnum].cols,Modelframe[blocknum][premodelnum].rows,blocknum,10,MINAREDETECT,200000,50);
 							}
 						else
-							m_pMovDetector->setFrame(LKRramegrayblackboard,LKRramegrayblackboard.cols,LKRramegrayblackboard.rows,blocknum,10,MINAREDETECT,2000000,50);
+							m_pMovDetector->setFrame(LKRramegrayblackboard,LKRramegrayblackboard.cols,LKRramegrayblackboard.rows,blocknum,10,MINAREDETECT,2000000,10);
 						
 				}
 				}
@@ -333,6 +351,12 @@ void DetectAlg::create()
 	int boardh=30;
 	if(Config::getinstance()->getmvdownup()<=2)
 		board=150;
+	if(Config::getinstance()->getpanocalibration()==0)
+		{
+			board=0;
+			 boardh=0;
+
+		}
 	
 	
 	blackrect=Rect(board,boardh,Config::getinstance()->getmvprocesswidth()/Config::getinstance()->getmvdownup()-2*board,Config::getinstance()->getmvprocessheight()/(Config::getinstance()->getmvdownup())-2*boardh);
@@ -381,7 +405,14 @@ void DetectAlg::detectprocess(Mat src,OSA_BufInfo* frameinfo)
 		angle-=360;
 	setcurrentcapangle(angle);
 	if(MULTICPUPANOLK)
-		MulticpuLKpanoprocess(src);
+		{
+		if(Config::getinstance()->getpanocalibration())
+		{
+			MulticpuLKpanoprocess(src);
+		}
+		else
+		   Multicpufilepanoprocess(src);
+		}
 
 }
 int DetectAlg::JudgeLk(Mat src)
@@ -491,7 +522,50 @@ int DetectAlg::JudgeLkFast(Mat src)
 	return ret;
 
 }
+void DetectAlg::Multicpufilepanoprocess(Mat& src)
+{
+	static int modelingnum=0;
+	static int enablemodel=0;
+	double exec_time = (double)getTickCount();
+	Mat processsrc;
+	int blucknum=-1;
+	if(PANOGRAYDETECT)
+		{
+			cvtColor(src,detedtgraysrc,CV_BGR2GRAY);
+			processsrc=detedtgraysrc;
+		}
+	else
+		processsrc=src;
 
+	int angle=getcurrentcapangle()*1000;
+	
+	blucknum=angle/22500;
+
+	
+
+	//printf("the blucknum=%d angle=%f\n",blucknum,angle);
+	if(blucknum!=-1)
+		{
+			Mat dst=panoblock[blucknum];
+			memcpy(dst.data,processsrc.data,dst.cols*dst.rows*dst.channels());	
+			if(movblocknumpre!=blucknum)
+				{
+					//OSA_printf("the movblocknumpre=%d\n",movblocknumpre);
+					movblocknum=movblocknumpre;
+					movblocknumpre=blucknum;
+					LKprocessangle[blucknum]=1.0*angle/1000;
+					OSA_semSignal(&mainProcThrdetectObj.procNotifySem);
+					modelingnum++;
+					enablemodel=1;
+					
+					//setnewframe(1);
+				}
+			
+
+		}
+	
+
+}
 void DetectAlg::MulticpuLKpanoprocess(Mat& src)
 {
 	if(getpanoflagenable()==0)

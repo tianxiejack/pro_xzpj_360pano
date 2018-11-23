@@ -150,7 +150,8 @@ ofc_.calculatefeature(image1, image2);
 }
 void LKmove::runOpticalFlow(const cv::Mat &image1, const cv::Mat &image2, cv::Mat &optical_flow_vectors)
 {
-
+	static int countnum=0;
+	char bufname[50];
 #if 1
     cv::Mat debug_image;
     cv::Mat optical_flow_image;
@@ -163,15 +164,19 @@ void LKmove::runOpticalFlow(const cv::Mat &image1, const cv::Mat &image2, cv::Ma
   
    if(!debug_image.empty())
    	{
-   		lkmovdetectgetrect(debug_image,objectsrect);
-  		 imshow("debug_image",debug_image);
+   		//lkmovdetectgetrect(debug_image,objectsrect);
+  		// imshow("debug_image",debug_image);
    	}
    for(int i=0;i<objectsrect.size();i++)
    	{
-		rectangle(optical_flow_image, objectsrect[i], Scalar(255,255,255),1,  8);
+	//	rectangle(optical_flow_image, objectsrect[i], Scalar(255,255,255),1,  8);
    	}
-    imshow("optical_flow_image",optical_flow_image);
-    waitKey(1);
+   sprintf(bufname,"/home/ubuntu/lk/%d.jpg",countnum);
+   countnum++;
+  // if(!optical_flow_image.empty())
+   imwrite(bufname,optical_flow_image);
+   // imshow("optical_flow_image",optical_flow_image);
+   // waitKey(1);
 #else
 
 
@@ -223,14 +228,14 @@ void LKmove::lkmovdetectpreprocess(Mat &src,Mat &dst,int chid)
 void LKmove::lkmovdetect(Mat src,int chid)
 {
 	static int backg=0;
-	if(backg==0)
-		{
-			memcpy(background.data,src.data,src.cols*src.rows*src.channels());
-			backg=1;
+	if(backgroundmov[chid]==0)
+			{
+			memcpy(backgroundmovmat[chid].data,src.data,src.cols*src.rows*src.channels());
+			backgroundmov[chid]=1;
 			return ;
 		}
-	 cv::Mat optical_flow_vectors;
-	runOpticalFlow(background, src, optical_flow_vectors);
+	cv::Mat optical_flow_vectors;
+	runOpticalFlow(backgroundmovmat[chid], src, optical_flow_vectors);
 	//runOpticalFlowtest(background, src);
 
 	if(callback!=NULL)

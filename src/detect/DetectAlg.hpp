@@ -92,7 +92,7 @@ class DetectAlg
 		void MulticpuLKpanoprocess(Mat& src);
 
 
-		
+		void equalize(Mat& src);
 
 		void detectprocesstest(Mat src,OSA_BufInfo* frameinfo);
 		int JudgeLk(Mat src);
@@ -129,7 +129,7 @@ class DetectAlg
 		double getcurrentcapangle(){return currentcapangle;};
 		void setcurrentcapangle(double angle){currentcapangle=angle;};
 
-
+		void Multicpufilepanoprocess(Mat& src);
 		
 		
 		MAIN_ProcThrDetectObj	mainProcThrdetectObj;

@@ -48,11 +48,13 @@ class Config{
 	 int panofusion;
 
 	 double angleinterval;
+	 int panocalibration;
 	 
 	 int panoprocessshift;
 	 int panoprocesstailcut;
 
 
+	 inline int getpanocalibration(){return panocalibration;};
 	 inline int getpanoprocessshift(){return panoprocessshift;};
 	 void setpanoprocessshift(int shift){panoprocessshift=shift;}
 

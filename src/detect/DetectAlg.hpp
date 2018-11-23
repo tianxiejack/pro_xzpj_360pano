@@ -49,7 +49,7 @@ typedef struct {
 
 class DetectAlg 
 {
-
+	
 
 	public :
 		void create();
@@ -62,6 +62,8 @@ class DetectAlg
 		
 		
 		void detectprocess(Mat src,OSA_BufInfo* frameinfo);
+		
+		
 
 		LKmove lkmove;
 		double LKprocessangle[MOVELKBLOCKNUM];
@@ -80,7 +82,7 @@ class DetectAlg
 		int newframe;
 		void setnewframe(int flag){newframe=flag;};
 		int getnewframe(){return newframe;};
-
+		int mk_dir(char *dir);
 
 		
 		Mat Modelframe[MOVEBLOCKNUM][MODELINGNUM];

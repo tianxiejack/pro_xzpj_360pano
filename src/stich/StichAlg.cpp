@@ -291,7 +291,13 @@ void StichAlg::Panoprocess()
 		{
 			//Mat pre=getpreframe();
 			//if((getcurrentangle()<360-ZEROJUEGE)&&(getcurrentangle()>0))
-				FusionSeam(pre,dst,getSeamPos());
+				if(Config::getinstance()->getpanocalibration()==0)
+				{
+					fusiontail(dst,dst.cols-getSeamPos());
+					StichFusionSeam(dst,dst.cols-getSeamPos());
+				}
+				else
+					FusionSeam(pre,dst,getSeamPos());
 			//	histequision(dst);
 				//equalizeHist(dst, dst);
 				//OSA_printf("the getSeamPos=%d  getpreangle=%f getcurrentangle=%f\n",getSeamPos(),getpreangle(),getcurrentangle());
@@ -305,6 +311,122 @@ void StichAlg::Panoprocess()
 
 }
 
+void StichAlg::StichFusionSeam(Mat & src,int pos)
+{
+	if(pos<=0||pos>=src.cols)
+		return;
+
+
+	int rows = src.rows;
+	int cols = src.cols; 
+	double alpha = 1;
+	int angle=getcurrentangle()*1000;
+	int currentid=angle/22500;
+	int preid=(MAXFUSON+currentid-1)%MAXFUSON;
+	int lastid=(MAXFUSON+currentid+1)%MAXFUSON;
+	
+	int seampostion=min(pos,FIXDIS);
+	//printf("currentid=%d  preid=%d lastid=%d pos=%d\n",currentid,preid,lastid,pos);
+	
+	Mat dsthead=Fusiontail[preid];
+	Mat dsttail=Fusionhead[lastid];
+
+	
+	//printf("2FusionSeam w=%f  seampostion=%d\n",processWidth,seampostion);
+	for (int i = 0; i < rows; i++)
+	{
+		uchar* p  = src.ptr<uchar>(i); 
+		uchar* h = dsthead.ptr<uchar>(i);
+		uchar* t = dsttail.ptr<uchar>(i);
+		for (int j = 0; j < seampostion; j++)
+		{
+			if (h[(FIXDIS-seampostion+j)* 3] == 0 && h[(FIXDIS-seampostion+j) * 3 + 1] == 0 && h[(FIXDIS-seampostion+j) * 3 + 2] == 0)
+			{
+				alpha = 1;
+			}
+			else
+			alpha =( j)*1.0/ seampostion;
+			
+			p[j * 3] = p[(j) * 3] * alpha + h[(FIXDIS-seampostion+j)* 3] * (1 - alpha);
+			p[j * 3 + 1] = p[(j) * 3 + 1] * alpha + h[(FIXDIS-seampostion+j)* 3 + 1] * (1 - alpha);
+			p[j * 3 + 2] = p[(j)* 3 + 2] * alpha + h[(FIXDIS-seampostion+j)* 3 + 2] * (1 - alpha);
+
+			if (t[(j)* 3] == 0 && t[(j) * 3 + 1] == 0 && t[(j) * 3 + 2] == 0)
+			{
+				alpha = 1;
+			}
+			else
+			alpha =( j)*1.0/ seampostion;
+
+			p[(cols-seampostion+j) * 3] = p[(cols-seampostion+j) * 3] * alpha + t[(j)* 3] * (1 - alpha);
+			p[(cols-seampostion+j) * 3 + 1] = p[(cols-seampostion+j) * 3 + 1] * alpha + t[(j)* 3 + 1] * (1 - alpha);
+			p[(cols-seampostion+j) * 3 + 2] = p[(cols-seampostion+j)* 3 + 2] * alpha + t[(j)* 3 + 2] * (1 - alpha);
+			
+			
+		}
+	}
+	
+
+}
+void StichAlg::fusiontail(Mat src,int pos)
+{
+	if(pos<=0||pos>=src.cols)
+		return;
+	int w=src.cols;
+	int h=src.rows;
+	int channel=src.channels();
+	//int sem=min(FIXDIS,pos);
+	int angle=getcurrentangle()*1000;
+	int framid=angle/22500;
+	framid=framid%MAXFUSON;
+	char bufname[20];
+	Mat dsttail=Fusiontail[framid];
+	Mat dsthead=Fusionhead[framid];
+	unsigned char alpha=0;
+	fusiontailpanopos[framid]=getpanooffet(getcurrentangle());
+	if(channel==1)
+		return;
+	for (int i = 0; i <h ;i++)
+	{
+		for (int j = 0; j < FIXDIS;j++)
+		{	
+			dsthead.at<Vec3b>(i, j) = src.at<Vec3b>(i, j);
+			dsttail.at<Vec3b>(i, j) = src.at<Vec3b>(i, w-FIXDIS+j);
+		}
+
+
+	}
+	/*
+	sprintf(bufname,"head%d.jpg",framid);
+	imwrite(bufname,dsthead);
+	sprintf(bufname,"tail%d.jpg",framid);
+	imwrite(bufname,dsttail);
+	*/
+	/*
+	for (int i = 0; i <h ;i++)
+	{
+		for (int j = 0; j < FIXDIS;j++)
+		{	
+			unsigned char * piex  = src.ptr<uchar>(j*channel);
+			unsigned char * dst  = src.ptr<uchar>(j*4);
+			if(j<=pos)
+				alpha=255*j/pos;
+			else
+				alpha=255;
+			
+			dst[0]=piex[0];
+			dst[1]=piex[1];
+			dst[2]=piex[3];
+			dst[3]=alpha;
+			
+			//	dst.at<Vec3b>(hnum, wnum) = src.at<Vec3b>(int(hnum), int(wnum+offset));
+			
+		}
+	}
+	*/
+	
+
+}
 
 void StichAlg::main_proc_func()
 {
@@ -433,7 +555,7 @@ int StichAlg::MAIN_threadCreate(void)
 	iRet = OSA_thrCreate(&mainProcThrObj.thrHandleProc, mainProcTsk, 0, 0, &mainProcThrObj);
 	
 
-
+	
 
 
 
@@ -457,6 +579,23 @@ void StichAlg::create()
 {
 	ProcessPreimage=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth(),CV_8UC3,cv::Scalar(0));
 	zeroflame=Mat(Config::getinstance()->getcamheight(),Config::getinstance()->getcamwidth(),CV_8UC3,cv::Scalar(0));
+
+	
+	memset(fixfusondis,0,sizeof(fixfusondis));
+	memset(Fusion,0,sizeof(Fusion));
+	for(int i=0;i<MAXFUSON;i++)
+		{
+			fixfusondis[i]=FIXDIS;
+		}
+	for(int i=0;i<MAXFUSON;i++)
+			{
+				Fusiontail[i]=Mat(Config::getinstance()->getcamheight(),fixfusondis[i],CV_8UC3,cv::Scalar(0));
+			}
+	for(int i=0;i<MAXFUSON;i++)
+			{
+				Fusionhead[i]=Mat(Config::getinstance()->getcamheight(),fixfusondis[i],CV_8UC3,cv::Scalar(0));
+			}
+	
 	MAIN_threadCreate();
 
 }

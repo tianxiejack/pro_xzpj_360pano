@@ -40,11 +40,12 @@ typedef struct {
 	bool						initFlag;
 	void 						*pParent;
 }MAIN_ProcThrStichObj;
-
+#define MAXFUSON (16)
+#define FIXDIS (200)
 class StichAlg 
 {
 
-
+	
 	public :
 		void create();
 
@@ -68,8 +69,19 @@ class StichAlg
 			void setzerocalibing(int flag){zerocalibing=flag;};
 			int getzerocalibing(){return zerocalibing;};
 
-		
+			void fusiontail(Mat src,int pos);
+			void StichFusionSeam(Mat & dst,int seampostion);
 		static StichAlg *getinstance();
+	public:
+		
+		int Fusion[MAXFUSON];
+		int fixfusondis[MAXFUSON];
+		Mat Fusiontail[MAXFUSON];
+		Mat Fusionhead[MAXFUSON];
+		int  fusiontailpanopos[MAXFUSON];
+		int  fusionheadpanopos[MAXFUSON];
+		int getfusiontailpanopos(int chid){return fusiontailpanopos[chid];};
+		Mat  getFusiontail(int chid){return Fusiontail[chid];};
 	private:
 		
 		double currentangle;

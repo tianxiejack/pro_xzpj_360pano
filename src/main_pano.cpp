@@ -52,7 +52,7 @@ void processFrame_file(void *data,void *angle)
 	framdata=(unsigned char *)data;
 
 	//printf("the angle=%d\n",*(int *)angle);
-	if(FILEREAD==0)
+	if(Config::getinstance()->getcam_readfromfile()==0)
 		return ;
 	info = image_queue_getEmptytime(imgQ[queueid],OSA_TIMEOUT_FOREVER);
 	if(info==NULL)
@@ -82,7 +82,7 @@ void processFrame_file(void *data,void *angle)
 void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capInfo, int format)
 {
 	bool status=0;
-	if(FILEREAD)
+	if(Config::getinstance()->getcam_readfromfile())
 		return ;
 	char WindowName[64]={0};
 	Mat img;
@@ -228,6 +228,7 @@ int main_pano(int argc, char **argv)
 	StichAlg::getinstance()->create();
 	Plantformpzt::getinstance()->create();
 	COM_Contrl::getinstance()->create();
+
 	
 	GLMain_InitPrm dsInit;
 	kalmanfilterinit();
@@ -256,8 +257,11 @@ int main_pano(int argc, char **argv)
 
 
 	FileCapture filecapture;
-	filecapture.create();
-	filecapture.registcallback(processFrame_file);
+	if(Config::getinstance()->getcam_readfromfile())
+		{
+			filecapture.create();
+			filecapture.registcallback(processFrame_file);
+		}
 	//setgyrostart(1);
 	OSA_printf("run app success!\n");
 	//gst_videnc_create();

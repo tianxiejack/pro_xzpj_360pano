@@ -381,6 +381,8 @@ void histequision(Mat& src)
 
 }
 
+
+
 void FusionSeam(Mat& src,Mat & dst,int seampostion)
 {
 	double processWidth = src.cols - seampostion;

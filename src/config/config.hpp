@@ -25,6 +25,13 @@ class Config{
      double cam_k3;
      double cam_k4;
 
+     int cam_readfromfile;
+     int cam_fixcamereafov;
+
+     inline int getcam_fixcamereafov(){return cam_fixcamereafov;};
+     inline int getcam_readfromfile(){return cam_readfromfile;};
+     void setcam_readfromfile(int flag){cam_readfromfile=flag;};
+
      inline int getcamwidth(){return cam_width;};
      inline int getcamheight(){return cam_height;};
      inline int getcamchannel(){return cam_channel;};
@@ -79,7 +86,13 @@ class Config{
 	 int mvprocesswidth;
 	 int mvprocessheight;
 	 int mvdownup;
+	 int minarea;
+	 int maxarea;
+	 int detectthread;
 
+	 inline int getminarea(){return minarea;};
+	 inline int getmaxarea(){return maxarea;};
+	 inline int getdetectthread(){return detectthread;};
 	 inline int getmvprocesswidth(){return mvprocesswidth;};
 	 inline  int getmvprocessheight(){return mvprocessheight;};
 	 inline  int getmvdownup(){return mvdownup;};

@@ -488,8 +488,8 @@ static void * thrdhndl_push_buffer(void* arg)
 	pData->bPush = true;
 	Queue *queue;
 	queue=Queue::getinstance();
-	//VideoWriter videowriter;
-	//videowriter=VideoWriter("screen.avi", CV_FOURCC('M', 'J', 'P', 'G'), 2, Size(1920,1080));
+	VideoWriter videowriter;
+	videowriter=VideoWriter("screen.avi", CV_FOURCC('M', 'J', 'P', 'G'), 2, Size(1920,1080));
 	Mat dst=Mat(pData->height,pData->width,CV_8UC3,pData->bufferdata);
 	Mat src;
 	while(pData->bPush){
@@ -522,8 +522,8 @@ static void * thrdhndl_push_buffer(void* arg)
 				g_print("\n %s %d: gst_app_src_push_buffer error!\n", __func__, __LINE__);
 			}
 			#else
-			Mat src=Mat(1080,1920,CV_8UC3,bufInfo->virtAddr);
-			videowriter<<src;
+			//Mat src=Mat(1080,1920,CV_8UC3,bufInfo->virtAddr);
+			videowriter<<dst;
 			//imshow("zhongguo",src);
 			//waitKey(2);
 

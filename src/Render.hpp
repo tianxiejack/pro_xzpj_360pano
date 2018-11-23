@@ -106,6 +106,7 @@ public:
 		PANOTEXTURE4,
 		CAPTEXTURE,
 		SELECTTEXTURE,
+		FUSIONTAIL,
 		TEXTUREMAX,
 		} Textureid; 
 	//bool getPointsValue(int direction, int x, Point2f *Point);
@@ -178,6 +179,8 @@ public:
 	
 	void Pano360init();
 
+	void Fusiontailtexture(void);
+	int recordscreen;
 	static Render *pthis;
 
 	/***ViewCamera**/
@@ -187,6 +190,9 @@ public:
 	void viewcameraprocess();
 	void leftdown2leftup(Rect& down,Rect& up);
 	void leftup2leftdown(Rect& down,Rect& up);
+
+
+	VideoWriter videowriter;
 	/******************modeselect ***********************/
 	static void callbackpanomod(void *contex);
 	void selectmod();
@@ -333,6 +339,7 @@ public:
 	int gettailcut(){return tailcut;};
 	
 
+	void Drawosdcamera();
 	
 	/******************seamfunction***********************/
 	void BestSeam(Mat& src,Mat & dst,int seampostion);

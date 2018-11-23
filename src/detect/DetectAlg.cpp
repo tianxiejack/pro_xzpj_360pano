@@ -3,6 +3,10 @@
 #include"Stich.hpp"
 #include "plantformcontrl.hpp"
 #include"StichAlg.hpp"
+ 
+#include<dirent.h>
+#include<sys/types.h>
+#include<sys/stat.h>
 DetectAlg*DetectAlg::instance=NULL;
 
 
@@ -65,7 +69,7 @@ void DetectAlg::panomoveprocess()
 					setmvprocessangle(LKprocessangle[0],0);
 				#if 1
 				lkmove.lkmovdetectpreprocess(src,LKRramegray,0);
-				m_pMovDetector->setFrame(LKRramegray,LKRramegray.cols,LKRramegray.rows,0,10,MINAREDETECT,200000,30);
+				m_pMovDetector->setFrame(LKRramegray,LKRramegray.cols,LKRramegray.rows,0,10,Config::getinstance()->getminarea(),Config::getinstance()->getmaxarea(),Config::getinstance()->getdetectthread());
 				#else
 				lkmove.lkmovdetect(src,0);
 
@@ -76,7 +80,7 @@ void DetectAlg::panomoveprocess()
 				
 			}
 			else
-				m_pMovDetector->setFrame(src,src.cols,src.rows,0,10,MINAREDETECT,200000,40);
+				m_pMovDetector->setFrame(src,src.cols,src.rows,0,10,Config::getinstance()->getminarea(),Config::getinstance()->getmaxarea(),Config::getinstance()->getdetectthread());
 			return ;
 		}
 /*
@@ -183,10 +187,10 @@ void DetectAlg::panomoveprocess()
 						//printf("modeling=%d newmat=%d num=%d\n",blocknum,newmat,premodelnum);
 						if(getmodeling())
 							{
-								m_pMovDetector->setFrame(Modelframe[blocknum][premodelnum],Modelframe[blocknum][premodelnum].cols,Modelframe[blocknum][premodelnum].rows,blocknum,10,MINAREDETECT,200000,50);
+								m_pMovDetector->setFrame(Modelframe[blocknum][premodelnum],Modelframe[blocknum][premodelnum].cols,Modelframe[blocknum][premodelnum].rows,blocknum,10,Config::getinstance()->getminarea(),Config::getinstance()->getmaxarea(),Config::getinstance()->getdetectthread());
 							}
 						else
-							m_pMovDetector->setFrame(LKRramegrayblackboard,LKRramegrayblackboard.cols,LKRramegrayblackboard.rows,blocknum,10,MINAREDETECT,2000000,10);
+							m_pMovDetector->setFrame(LKRramegrayblackboard,LKRramegrayblackboard.cols,LKRramegrayblackboard.rows,blocknum,10,Config::getinstance()->getminarea(),Config::getinstance()->getmaxarea(),Config::getinstance()->getdetectthread());
 						
 				}
 				}
@@ -213,7 +217,7 @@ void DetectAlg::panomoveprocess()
 			//OSA_printf("***********video write***************\n");
 			//VideoWriter
 			//imwrite("blockpano.bmp",panoblock[0]);
-			m_pMovDetector->setFrame(process,process.cols,process.rows,0,10,MINAREDETECT,200000,30);
+			m_pMovDetector->setFrame(process,process.cols,process.rows,0,10,Config::getinstance()->getminarea(),Config::getinstance()->getmaxarea(),Config::getinstance()->getdetectthread());
 
 
 		}
@@ -315,6 +319,27 @@ void DetectAlg::NotifyFunc(void *context, int chId)
 	setmvdetect(detect,chId);
 	//if()
 }
+#define MODE (S_IRWXU | S_IRWXG | S_IRWXO)
+int DetectAlg::mk_dir(char *dir)
+{
+
+    DIR *mydir = NULL;
+    if((mydir= opendir(dir))==NULL)
+    {
+      int ret = mkdir(dir, MODE);
+      if (ret != 0)
+      {
+          return -1;
+      }
+      printf("%s created sucess!/n", dir);
+    }
+    else
+    {
+        printf("%s exist!/n", dir);
+    }
+ 
+    return 0;
+}
 void DetectAlg::create()
 {
 	for(int i=0;i<2;i++)
@@ -379,6 +404,7 @@ void DetectAlg::create()
 	#endif
 	//videowriter=VideoWriter("mov.avi", CV_FOURCC('M', 'J', 'P', 'G'), rate, videoSize);
 	//bool status=videowriter.open("mov.avi", CV_FOURCC('X', 'V', 'I', 'D'),rate, videoSize, false);
+	mk_dir("/home/ubuntu/calib/");
 	for(int i=0;i<MULTICPUPANONUM;i++)
 		{
 			sprintf(bufname,"/home/ubuntu/calib/mov%d.avi",i);
@@ -386,6 +412,7 @@ void DetectAlg::create()
 		}
 	
 	OSA_printf("***********Create* end=**************\n");
+	
 	
 	MAIN_threadCreate();
 

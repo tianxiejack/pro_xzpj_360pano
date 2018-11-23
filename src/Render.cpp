@@ -19,6 +19,7 @@
 #include "config.hpp"
 #include "plantformcontrl.hpp"
 #include"Queuebuffer.hpp"
+#include"StichAlg.hpp"
 //#include"Gyroprocess.hpp"
 
 
@@ -112,7 +113,7 @@ Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),
 	MOUSEST(0),mousex(0),mousey(0),mouseflag(0),pano360renderw(0),pano360renderH(0),pano360renderLux(0),pano360renderLuy(0),
 	CameraFov(0),maxtexture(0),pano360texturenum(0),pano360texturewidth(0),pano360textureheight(0),selecttexture(0),shotcutnum(0),
 	movviewx(0),movviewy(0),movvieww(0),movviewh(0),menumode(0),tailcut(0),radarinner(3.0),radaroutter(10),viewfov(90),viewfocus(10),
-	osdmenushow(0),osdmenushowpre(0),screenpiex(NULL),screenenable(1)
+	osdmenushow(0),osdmenushowpre(0),screenpiex(NULL),screenenable(1),recordscreen(0)
 	{
 		displayMode=SINGLE_VIDEO_VIEW_MODE;
 		
@@ -282,6 +283,8 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 	Fullscreen = true;
 	glutFullScreen();
 
+	//
+
 
 }
 
@@ -415,7 +418,9 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 						break;
 					case GLUT_KEY_F10://singprint
 						setpanoflagenable(0);
-					
+						break;
+					case GLUT_KEY_F12:
+						recordscreen=(recordscreen+1)%2;
 						break;
 					
 			
@@ -799,6 +804,32 @@ void Render::Selecttexture(void)
 	
 
 }
+void Render::Fusiontailtexture(void)
+{
+	int width=255;
+	int height=255;
+	int texturewidth=0;
+	int textureheith=0;
+	
+	GLbyte *pBits;
+	int nWidth, nHeight, nComponents;
+	GLenum eFormat;
+	eFormat=GL_BGR_EXT;
+	width=FIXDIS;
+	height=Config::getinstance()->getpanoprocessheight();
+	GLenum minFilter=GL_LINEAR;
+	GLenum magFilter=GL_LINEAR;
+	GLenum wrapMode=GL_CLAMP_TO_EDGE;
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapMode);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapMode);
+	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0,
+				 GL_BGRA_EXT, GL_UNSIGNED_BYTE, NULL);
+	
+
+}
 void Render::Capturetexture(void)
 {
 	int width=255;
@@ -971,7 +1002,18 @@ void Render::Pano360fun()
 			
 		}
 	//OSA_printf("[F=%s L=%d] x=%d y=%d w=%d h=%d p=%p\n",__func__,__LINE__,xoffset,yoffset,width,height,pBits);
-	
+	if(Config::getinstance()->getpanocalibration()==0)
+		{
+/*
+			int panangle=getPanoAngle()*1000;
+			int chid=panangle/22500;
+			int chidnext=panangle/22500;
+			chidnext=chidnext%MAXFUSON;
+			Mat fusion=StichAlg::getinstance()->getFusiontail(chidnext);
+			glBindTexture(GL_TEXTURE_2D, textureID[FUSIONTAIL]);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, fusion.cols, fusion.rows, GL_BGRA_EXT, GL_UNSIGNED_BYTE, fusion.data);
+*/			
+		}
 	
 	
 //	OSA_printf("[F=%s L=%d]\n",__func__,__LINE__);
@@ -1121,6 +1163,9 @@ void Render::Textureinit(void)
 	
 	glBindTexture(GL_TEXTURE_2D, textureID[SELECTTEXTURE]);
 	Selecttexture();
+
+	glBindTexture(GL_TEXTURE_2D, textureID[FUSIONTAIL]);
+	Fusiontailtexture();
 	
 	
 
@@ -1135,7 +1180,7 @@ void Render::Pano360init()
 		if(Config::getinstance()->getpanocylinder())
 		Seamframe[i]=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth()-Config::getinstance()->getpanoprocessshift()-Config::getinstance()->getpanoprocesstailcut(),CV_8UC3,cv::Scalar(0,0,0));
 		else
-		Seamframe[i]=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth()-Config::getinstance()->getpanoprocessshift(),CV_8UC3,cv::Scalar(0,0,0));
+		Seamframe[i]=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth()-Config::getinstance()->getpanoprocessshift()-Config::getinstance()->getpanoprocesstailcut(),CV_8UC3,cv::Scalar(0,0,0));
 		
 	}
 	fusionframe=Mat(Config::getinstance()->getpanoprocessheight(),Config::getinstance()->getpanoprocesswidth(),CV_8UC3,cv::Scalar(0,0,0));
@@ -1196,12 +1241,21 @@ void Render::screenshot()
 	//glFlush(); 
 	
 	//glPixelStorei(GL_UNPACK_ALIGNMENT, 4); 
+	
+	/*
+	if(recordscreen==0)
+		{
+			return ;
+		}
+	*/
+	
 	Queue *queue=Queue::getinstance();
 	#if 1
 	OSA_BufInfo *info=(OSA_BufInfo *)queue->getempty(Queue::DISPALYTORTP, 0,OSA_TIMEOUT_NONE);
 	if(info!=NULL)
 		{
-			glReadPixels(0, 0, renderwidth, renderheight, GL_RGB, GL_UNSIGNED_BYTE, info->virtAddr);
+			glReadPixels(0, 0, renderwidth, renderheight, GL_BGR, GL_UNSIGNED_BYTE, info->virtAddr);
+			
 			queue->putfull(Queue::DISPALYTORTP, 0, info);
 		}
 	else
@@ -1288,7 +1342,95 @@ void Render::Drawmenuupdate()
 
 }
 
+void Render::Drawosdcamera()
+{
+	int lx,ly,w,h;
+	Rect panarect;
+	Rect target;
+	unsigned int pan360w=pano360texturew;
+	unsigned int pan360whalf=pano360texturew/2;
+	
+	std::vector<cv::Rect>	detect;
+	//std::vector<cv::Rect>	detect_vect360;
+	Glosdhandle.setcolorline(GLRED);
+	int halfwidh=pano360texturew/2;
+	int halfheight=pano360textureh/2;
 
+	for(int c=RENDERCAMERA1;c<=RENDERCAMERA3;c++)
+		{
+	detect.clear();
+	lx=viewcamera[c].leftdownrect.x;
+	ly=viewcamera[c].leftdownrect.y;
+	w=viewcamera[c].leftdownrect.width;
+	h=viewcamera[c].leftdownrect.height;
+	glViewport(lx,ly,w,h);
+	Rect rect=viewcamera[c].updownselcectrect;
+	//rect=viewcamera[i].updownselcectrect;
+	int index=viewcamera[c].panotextureindex;
+	rect.y=rect.y-(renderheight-viewcamera[index].leftdownrect.y-viewcamera[index].leftdownrect.height);
+	
+	panarect.x=rect.x*halfwidh/renderwidth;//+index*halfwidh;
+	panarect.y=rect.y*pano360textureh/viewcamera[index].leftdownrect.height;
+	panarect.width=rect.width*halfwidh/renderwidth;
+	panarect.height=rect.height*pano360textureh/viewcamera[index].leftdownrect.height;
+
+	
+	//int size=detect_vect180.size();
+	if(index==0)
+		{
+			for(int i=0;i<detect_vect180.size();i++)
+				{
+					if(detect_vect180[i].x>=panarect.x&&detect_vect180[i].y>=panarect.y&&detect_vect180[i].x+detect_vect180[i].width<=panarect.x+panarect.width&&\
+						detect_vect180[i].y+detect_vect180[i].height<=panarect.y+panarect.height)
+						{
+							target.x=detect_vect180[i].x-panarect.x;
+							target.y=detect_vect180[i].y-panarect.y;
+							target.width=detect_vect180[i].width;
+							target.height=detect_vect180[i].height;
+							detect.push_back(target);
+						}
+
+				}
+		}
+	else
+		{
+			for(int i=0;i<detect_vect360.size();i++)
+				{
+					if(detect_vect360[i].x>=panarect.x&&detect_vect360[i].y>=panarect.y&&detect_vect360[i].x+detect_vect360[i].width<=panarect.x+panarect.width&&\
+						detect_vect360[i].y+detect_vect360[i].height<=panarect.y+panarect.height)
+						{
+							target.x=detect_vect360[i].x-panarect.x;
+							target.y=detect_vect360[i].y-panarect.y;
+							target.width=detect_vect360[i].width;
+							target.height=detect_vect360[i].height;
+							detect.push_back(target);
+						}
+
+				}
+		}
+	
+	
+	//rect.x=rect.x+index*renderwidth;
+	
+	
+
+	//panarect.x=rect.
+	
+
+	
+	Glosdhandle.setwindow(panarect.width,panarect.height);
+	Glosdhandle.drawbegin();
+	for(int i=0;i<detect.size();i++)
+		{
+			Glosdhandle.drawrect(detect[i].x, detect[i].y, detect[i].width, detect[i].height);
+		}
+	Glosdhandle.drawend();
+		}
+	
+	
+
+
+}
 void Render::Drawosdmenu()
 {
 
@@ -1730,15 +1872,21 @@ void Render::Drawosd()
 				Drawmovdetect();
 		}
 
+	Drawosdcamera();
+	
 	if(DETECTTEST)
 		Drawmovdetect();
 	if(getmenumode()==SINGLEMODE)
 		Drawmov();
 	Drawmenu();
-
+	
 	Drawlines();
+
+	
+	
 	Drawosdmenu();
 
+	
 	
 
 
@@ -1829,7 +1977,7 @@ void Render::pano360View(int x,int y,int width,int height)
 
 	*/
 	
-
+	
 	
 	/*************************************************************************/
 	lx=0;
@@ -1855,12 +2003,11 @@ void Render::pano360View(int x,int y,int width,int height)
                                      transformPipeline.GetProjectionMatrix(), 
                                      vLightPos, vWhite, 0);
 	#else
-
-	
 	m3dLoadIdentity44(identy);
 	//shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, transformPipeline.GetModelViewProjectionMatrix(), 0);
 	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, identy, 0);
 	#endif
+	
 	if(pano360texturenum==1)
 		{
 			pano360triangleBatchhalfhead(pan360triangleBatch,1);

@@ -94,6 +94,24 @@ typedef struct _CustomData
 
 } CustomData;
 
+
+typedef struct _recordHandle
+{
+	int index;
+	void* context;
+	unsigned int width;
+	unsigned int height;
+	unsigned int framerate;
+	unsigned int bitrate;
+	char format[30];
+	char ip_addr[30];
+	unsigned int ip_port;
+	unsigned short bEnable;
+	
+	OSA_BufHndl *pushQueue;
+	OSA_SemHndl *pushSem;
+}RecordHandle;
+
 CustomData customData;
 
 
@@ -538,6 +556,32 @@ static void * thrdhndl_push_buffer(void* arg)
 	return NULL;
 }
 char formatgst[30]="BGR";
+
+
+int record_img_init(int width,int height,char *formatgst)
+{
+	RecordHandle * recordHandle = (RecordHandle *)malloc(sizeof(RecordHandle));
+	memset(recordHandle, 0, sizeof(RecordHandle));
+	recordHandle->width = width;
+	recordHandle->height = height;
+	recordHandle->framerate = 20;
+	OSA_assert(gstCapture_data.format!=NULL);
+	strcpy(recordHandle->format, formatgst);
+	recordHandle->context = (CustomData *)malloc(sizeof(CustomData));
+	CustomData* pData = (CustomData* )recordHandle->context;
+	memset(pData, 0, sizeof(CustomData));
+	pData->height = recordHandle->height;
+	pData->width = recordHandle->width;
+	pData->framerate = recordHandle->framerate;
+	strcpy(pData->format, recordHandle->format);
+
+	pData->queue1 = NULL;
+	pData->omxh265enc = NULL;
+	pData->nvvidconv0 = NULL;
+	pData->fakesink1 = NULL;
+	
+
+}
 int record_main_init()
 {
 	CustomData* pData = &customData;

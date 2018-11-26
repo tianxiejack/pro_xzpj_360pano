@@ -198,7 +198,7 @@ static GstPadProbeReturn enc_buffer (GstPad *pad, GstPadProbeInfo *info, gpointe
 
 
 #define UDPSINK  (1)
-
+#define GST_ENCBITRATE	(5600000)
 static GstPadProbeReturn enc_tick_cb(GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
 	CustomData *pData = (CustomData *)user_data;
@@ -294,8 +294,10 @@ static GstPadProbeReturn enc_tick_cb(GstPad * pad, GstPadProbeInfo * info, gpoin
 		}
 
 	g_object_set (pData->omxh265enc, "iframeinterval", 60, NULL);
-	g_object_set (pData->omxh265enc, "bitrate", 4000000, NULL);
+	g_object_set (pData->omxh265enc, "bitrate", GST_ENCBITRATE, NULL);
 	g_object_set (pData->omxh265enc, "control-rate", 2, NULL);
+	g_object_set (pData->omxh265enc, "quality-level", 2, NULL);
+	
 
 	if(UDPSINK)
 		{
@@ -535,7 +537,7 @@ static void * thrdhndl_push_buffer(void* arg)
 	}
 	return NULL;
 }
-char formatgst[30]="RGB";
+char formatgst[30]="BGR";
 int record_main_init()
 {
 	CustomData* pData = &customData;
@@ -943,8 +945,8 @@ int gst_videnc_bitrate(int mode)
 	}
 	else if(mode == 2)
 	{
-		irtn = ChangeBitRate(GST_ENCBITRATE_8M);
-		irtn += ChangeQP_range(MIN_QP_8M, MAX_QP, MIN_I_8M, MAX_I, -1, -1);
+		//irtn = ChangeBitRate(GST_ENCBITRATE_8M);
+		//irtn += ChangeQP_range(MIN_QP_8M, MAX_QP, MIN_I_8M, MAX_I, -1, -1);
 	}
 	return irtn;
 }

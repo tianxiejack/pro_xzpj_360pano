@@ -16,7 +16,7 @@ Compress::~Compress()
 void Compress::create()
 {
 	gst_videnc_create();
-	gst_videnc_bitrate(1);
+	gst_videnc_bitrate(2);
 
 }
 

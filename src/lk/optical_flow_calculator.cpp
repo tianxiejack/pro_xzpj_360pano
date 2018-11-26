@@ -295,10 +295,10 @@ int OpticalFlowCalculator::calculateOpticalFlowprocess(const cv::Mat &gray_image
 		if (num_vectors > 50)
 		{
 			vector<uchar> inliersMask(src_points.size());
-   			 cv::Mat H = findHomography(dst_points, src_points, CV_FM_RANSAC, 3, inliersMask);
+   			 cv::Mat H = findHomography(dst_points, src_points, CV_RANSAC, 3, inliersMask);
 			//cv::Mat H = findHomography(dst_points, src_points, CV_RANSAC);
 			//cv::Mat compensated;
-			#if 0
+			#if 1
 			warpPerspective(gray_image2, dst, H, cv::Size(gray_image2.cols, gray_image2.rows));
 			#else
 			double xshift=0;

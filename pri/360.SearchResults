@@ -1,6 +1,4 @@
----- boardh Matches (7 in 2 files) ----
-DetectAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\detect):	int boardh=30;
-DetectAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\detect):			 boardh=0;
-DetectAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\detect):	blackrect=Rect(board,boardh,Config::getinstance()->getmvprocesswidth()/Config::getinstance()->getmvdownup()-2*board,Config::getinstance()->getmvprocessheight()/(Config::getinstance()->getmvdownup())-2*boardh);
-ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):	int boardh=30;
-ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):	blackrect=Rect(board,boardh,Config::getinstance()->getmvprocesswidth()/Config::getinstance()->getmvdownup()-2*board,Config::getinstance()->getmvprocessheight()/(Config::getinstance()->getmvdownup())-2*boardh);
+---- FILEREAD Matches (3 in 1 files) ----
+Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):#define FILEREAD 1
+Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(FILEREAD==0)
+Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(FILEREAD)

@@ -18,6 +18,7 @@ RM := rm -rf
 -include src/menu/subdir.mk
 -include src/lk/subdir.mk
 -include src/gpio/subdir.mk
+-include src/file/subdir.mk
 -include src/detect/subdir.mk
 -include src/config/subdir.mk
 -include src/compress/subdir.mk

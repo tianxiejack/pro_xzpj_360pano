@@ -206,9 +206,10 @@ void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capIn
 	//waitKey(1);
 	  image_queue_putFull(imgQ[queueid], info);
 
+/*
 	if(DETECTTEST)
 		OSA_waitMsecs(500);
-	
+	*/
 	//OSA_printf("%d %s. 1w=%d h=%d\n", OSA_getCurTimeInMsec(), __func__,info->width,info->height);
 
 }

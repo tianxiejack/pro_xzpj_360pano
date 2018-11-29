@@ -4,22 +4,25 @@
  *  Created on: 2018年9月14日
  *      Author: fsmdn113
  */
-#include"Render.hpp"
-#include"config.h"
-#include"osa.h"
+
+
+#include "Render.hpp"
+#include "config.h"
+#include "osa.h"
 #include <glut.h>
 #include <freeglut_ext.h>
-#include"Cylindrical.hpp"
+#include "Cylindrical.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
-#include"Homography.hpp"
-#include"Stich.hpp"
+#include "Homography.hpp"
+#include "Stich.hpp"
 #include "FileRW.hpp"
 #include "config.hpp"
 #include "plantformcontrl.hpp"
-#include"Queuebuffer.hpp"
-#include"StichAlg.hpp"
+#include "Queuebuffer.hpp"
+#include "StichAlg.hpp"
+
 //#include"Gyroprocess.hpp"
 
 
@@ -623,31 +626,29 @@ void Render::panomod()
 {
 	double angle=0;
 	bool enable=1;
+	
+		
 	if(getmenumode()==SELECTMODE)
 		{
 			double zeroanglepan=getptzzeroangle()-1;
 			if(zeroanglepan<0)
 				zeroanglepan+=360;
 			Plantformpzt::getinstance()->setpanopanpos(zeroanglepan);
-		
 			double zeroangletitle=getptzzerotitleangle();
 			if(zeroangletitle<0)
 				zeroangletitle+=360;
 			Plantformpzt::getinstance()->setpanotitlepos(zeroangletitle);
 			Plantformpzt::getinstance()->Enbalecallback(Plantformpzt::RENDERPANO,zeroanglepan,zeroangletitle);
 			enable=0;
-		}
-
+		} 
 	if(getmenumode()==SELECTZEROMODE)
 		{
 			setstichreset(1);
 			Config::getinstance()->SaveConfig();
-
 		}
-
-
 	if(enable)
 		{
+			
 			Config::getinstance()->setintergralenable(1);
 			setpanoflagenable(1);
 			setfusionenalge(Config::getinstance()->getpanofusion());
@@ -655,11 +656,11 @@ void Render::panomod()
 			Plantformpzt::getinstance()->setpanoscan();
 			displayMode=PANO_360_MODE;
 			setmenumode(PANOMODE);
+
+
+			
 		}
 	
-	
-	
-
 }
 void Render::singleViewInit(void)
 {

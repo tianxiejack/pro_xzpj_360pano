@@ -1,4 +1,12 @@
----- FILEREAD Matches (3 in 1 files) ----
-Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):#define FILEREAD 1
-Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(FILEREAD==0)
-Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(FILEREAD)
+---- DETECTTEST Matches (11 in 5 files) ----
+Config.h (z:\home\wj\cuda-workspace\360pano\src):#define DETECTTEST (0)
+DetectAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\detect):	if(DETECTTEST)
+ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):		if(DETECTTEST)
+ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):			printf("***********DETECTTEST*********\n");
+ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(DETECTTEST)
+ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):					if(DETECTTEST==0)
+Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(DETECTTEST)
+Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(DETECTTEST)
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	//#define DETECTTEST (1)
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(DETECTTEST)
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(DETECTTEST)

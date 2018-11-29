@@ -3,7 +3,7 @@
 #include"Stich.hpp"
 #include "plantformcontrl.hpp"
 #include"StichAlg.hpp"
- 
+
 #include<dirent.h>
 #include<sys/types.h>
 #include<sys/stat.h>
@@ -33,6 +33,21 @@ void DetectAlg::equalize(Mat& src)
 			} 
 		for (int i = 0; i < src.total(); ++i)
 			src.data[i] =piexlnew[src.data[i]];
+
+}
+
+void DetectAlg::detectprocesstest(Mat src)
+{	
+
+		if(DETECTTEST)
+		{
+			//src.copyTo(MvtestFRrame[pp]);
+			cvtColor(src,MvtestFRrame[pp],CV_BGR2GRAY);
+			pp^=1;
+			OSA_semSignal(&mainProcThrdetectObj.procNotifySem);
+			//printf("***********DETECTTEST*********\n");
+		}
+
 
 }
 void DetectAlg::panomoveprocess()
@@ -65,6 +80,8 @@ void DetectAlg::panomoveprocess()
 
 			if(PANOGRAYDETECT)
 			{
+
+			/*
 				if(lkmove.backgroundmov[0]==0)
 					setmvprocessangle(LKprocessangle[0],0);
 				#if 1
@@ -77,12 +94,17 @@ void DetectAlg::panomoveprocess()
 				//imshow("LKRramegray",LKRramegray);
 				//waitKey(1);
 				//lkmove.lkmovdetect(src,0);
+				*/
+				classifydetect->detect(src,0);
 				
 			}
 			else
 				m_pMovDetector->setFrame(src,src.cols,src.rows,0,10,Config::getinstance()->getminarea(),Config::getinstance()->getmaxarea(),Config::getinstance()->getdetectthread());
 			return ;
 		}
+
+
+	
 /*
 	if(PANOGRAYDETECT)
 		{
@@ -306,6 +328,16 @@ void DetectAlg::NotifyFunclk(void *context, int chId)
 
 
 }
+void DetectAlg::NotifyFunccd(void *context, int chId)
+{
+	
+	DetectAlg *pParent = (DetectAlg*)context;
+	pParent->classifydetect->getMoveTarget(pParent->detectlk,chId);
+	
+	setmvdetect(pParent->detectlk,chId);
+
+
+}
 
 void DetectAlg::NotifyFunc(void *context, int chId)
 {
@@ -392,6 +424,10 @@ void DetectAlg::create()
 
 	lkmove.lkmovdetectcreate(NotifyFunclk,( void *) this);
 
+	classifydetect=new ClassifyDetect();
+	
+	classifydetect->movdetectcreate(NotifyFunccd,( void *)this);
+	classifydetect->create();
 	//bgs = new FrameDifference;
 	//bgs = new StaticFrameDifference;
 	//bgs = new TwoPoints;
@@ -431,7 +467,13 @@ void DetectAlg::detectprocess(Mat src,OSA_BufInfo* frameinfo)
 	else if(angle>=360)
 		angle-=360;
 	setcurrentcapangle(angle);
-	if(MULTICPUPANOLK)
+
+
+	if(DETECTTEST)
+		{
+			detectprocesstest(src);
+		}
+	else if(MULTICPUPANOLK)
 		{
 		if(Config::getinstance()->getpanocalibration())
 		{

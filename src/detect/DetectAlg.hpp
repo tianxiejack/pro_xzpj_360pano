@@ -22,6 +22,7 @@
 #include "mvdectInterface.hpp"
 #include"lkdetect.hpp"
 #include "IBGS.h"
+#include"classifydetect.hpp"
 using namespace cv;
 using namespace ibgs;
 
@@ -68,7 +69,7 @@ class DetectAlg
 		LKmove lkmove;
 		double LKprocessangle[MOVELKBLOCKNUM];
 		CMvDectInterface *m_pMovDetector;
-
+		ClassifyDetect *classifydetect;
 
 	private:
 			/*******************detect******************/
@@ -90,6 +91,7 @@ class DetectAlg
 		void getnumofpano360image(int startx,int endx,int *texturestart,int *textureend);
 		static void NotifyFunc(void *context, int chId);
 		static void NotifyFunclk(void *context, int chId);
+		static void NotifyFunccd(void *context, int chId);
 		void Multicpupanoprocess(Mat& src);
 		void MulticpuLKpanoprocess(Mat& src);
 
@@ -132,7 +134,7 @@ class DetectAlg
 		void setcurrentcapangle(double angle){currentcapangle=angle;};
 
 		void Multicpufilepanoprocess(Mat& src);
-		
+		void detectprocesstest(Mat src);
 		
 		MAIN_ProcThrDetectObj	mainProcThrdetectObj;
 		

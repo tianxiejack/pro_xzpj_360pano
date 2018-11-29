@@ -560,6 +560,7 @@ char formatgst[30]="BGR";
 
 int record_img_init(int width,int height,char *formatgst)
 {
+	/*
 	RecordHandle * recordHandle = (RecordHandle *)malloc(sizeof(RecordHandle));
 	memset(recordHandle, 0, sizeof(RecordHandle));
 	recordHandle->width = width;
@@ -579,7 +580,7 @@ int record_img_init(int width,int height,char *formatgst)
 	pData->omxh265enc = NULL;
 	pData->nvvidconv0 = NULL;
 	pData->fakesink1 = NULL;
-	
+	*/
 
 }
 int record_main_init()

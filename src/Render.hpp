@@ -218,6 +218,7 @@ public:
 	void Drawfusion();
 	void Drawmenu();
 	void Drawosdmenu();
+	void Drawzero();
 	
 
 	MENU *Menu;
@@ -261,6 +262,8 @@ public:
 	int selecttexture;
 	void setselecttexture(int mod){selecttexture=mod;};
 	int  getselecttexture(){return selecttexture;};
+
+	int selectareaok(Rect rect);
 	
 	unsigned int selectx;
 	unsigned int selecty;

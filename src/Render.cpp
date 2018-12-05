@@ -324,8 +324,6 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 	
 	//if(y>renderheight*4/7)
 	//	return;
-	
-	
 	if(getmenumode()==SELECTMODE)
 		MouseSelectpos();
 	if(getmenumode()==SELECTZEROMODE)
@@ -334,7 +332,7 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 		Mouse2Select();
 	if(getmenumode()==PANOMODE)
 		viewcameraprocess();
-
+if(Plantformpzt::getinstance()->getplantformcalibration())
 	Mousemenu();
 }
  void Render::specialkeyPressed (int key, int x, int y)
@@ -576,7 +574,6 @@ void Render::RenderScene(void)
 	movMultidetectrect();
 	Drawfusion();
 	Drawosd();
-
 	
 	// Perform the buffer swap to display back buffer
 	
@@ -1513,7 +1510,7 @@ void Render::Drawlines()
 	Glosdhandle.drawbegin();
 
 
-	if(getmenumode()==SELECTMODE||getmenumode()==SELECTZEROMODE)
+	if(getmenumode()==SELECTMODE)
 		Glosdhandle.drawrect(selectx,selecty,selectw,selecth);
 	/*
 	if(getmenumode()==PANOMODE)
@@ -1586,6 +1583,49 @@ void Render::DrawmovMultidetect()
 	
 	
 	
+
+}
+
+
+void Render::Drawzero()
+{
+	int status=0;
+	int cameraid=0;
+	glUseProgram(0);
+	Rect camrect;
+	int startx,starty,endx,endy;
+	int len=10;
+	for(int i=RENDER180;i<=RENDER360;i++)
+		{	
+
+			camrect.x=viewcamera[i].leftdownrect.x;
+			camrect.width=viewcamera[i].leftdownrect.width;
+			camrect.height=viewcamera[i].leftdownrect.height;
+			camrect.y=renderheight-(viewcamera[i].leftdownrect.y+viewcamera[i].leftdownrect.height);
+			if(mousey>camrect.y&&mousey<camrect.y+camrect.height)
+				{
+					status=1;
+					cameraid=i;
+					break;
+				}
+			else
+				status=0;
+		}
+	Glosdhandle.setcolorline(GLGREEN);
+	if(status==0)
+		return ;
+	Glosdhandle.drawbegin();
+
+	Glosdhandle.drawline(mousex,camrect.y,mousex,camrect.y+camrect.height);
+	//Glosdhandle.drawline(mousex,camrect.y,mousex,camrect.y+camrect.height);
+	startx=max(0,mousex-len);
+	endx=min(camrect.width,mousex+len);
+	starty=camrect.y+camrect.height/2;
+	endy=camrect.y+camrect.height/2;
+	Glosdhandle.drawline(startx,starty,endx,endy);
+
+	Glosdhandle.drawend();
+	mousex;mousey;
 
 }
 void Render::Drawmovdetect()
@@ -1863,8 +1903,6 @@ void Render::Drawfusion()
 }
 void Render::Drawosd()
 {
-
-
 	if(getmenumode()==PANOMODE)
 		{
 			if(MULTICPUPANO)
@@ -1872,24 +1910,18 @@ void Render::Drawosd()
 			else
 				Drawmovdetect();
 		}
-
+	else if(getmenumode()==SELECTZEROMODE)
+		{
+			Drawzero();
+		}
 	Drawosdcamera();
-	
 	if(DETECTTEST)
 		Drawmovdetect();
 	if(getmenumode()==SINGLEMODE)
 		Drawmov();
 	Drawmenu();
-	
 	Drawlines();
-
-	
-	
 	Drawosdmenu();
-
-	
-	
-
 
 }
 
@@ -3195,28 +3227,25 @@ void Render::viewcameraprocess()
 	if(MOUSEST==MOUSEUP&&BUTTON==MOUSELEFT)
 		{
 			leftuprect.width=abs(MOUSEx-mousex);
+			
 			leftuprect.height=abs(MOUSEy-mousey);
-
 			
 			leftup2leftdown(leftuprect,leftdownrect);
-
-
-
-
+			
 			for(int i=RENDER180;i<=RENDER360;i++)
-				{
-					
+				{	
 					if(leftdownrect.x>viewcamera[i].leftdownrect.x&&leftdownrect.x<viewcamera[i].leftdownrect.x+viewcamera[i].leftdownrect.width&&\
-						leftdownrect.y>viewcamera[i].leftdownrect.y&&leftdownrect.y<viewcamera[i].leftdownrect.y+viewcamera[i].leftdownrect.height)
+						leftdownrect.y>viewcamera[i].leftdownrect.y&&leftdownrect.y<viewcamera[i].leftdownrect.y+viewcamera[i].leftdownrect.height&&\
+						leftdownrect.y+leftuprect.height<viewcamera[i].leftdownrect.y+viewcamera[i].leftdownrect.height)
 						{
 							cameraselcect=1;
 							break;
 						}
 					else
 						cameraselcect=0;
-
 				}
 
+			
 			if(cameraselcect)
 			for(int i=RENDER180;i<=RENDER360;i++)
 				{
@@ -3289,6 +3318,7 @@ void Render::Mouse2Select()
 
 	 unsigned int x=0;unsigned int y=0;unsigned int w=0;unsigned int h=0;
 	 getPano360RenderPos(&x,&y,&w,&h);
+	 Rect rect;
 	// int lux=x+
 	if(MOUSEST==MOUSEPRESS&&BUTTON==MOUSELEFT)
 		{
@@ -3299,8 +3329,21 @@ void Render::Mouse2Select()
 		{
 			selectw=abs(MOUSEx-mousex);
 			selecth=abs(MOUSEy-mousey);
+
+			rect.x=mousex;
+			rect.y=mousey;
+			rect.width=selectw;
+			rect.height=selecth;
 			selectx=min(MOUSEx,mousex);
 			selecty=min(MOUSEy,mousey);
+
+			if(!selectareaok(rect))
+				{ 
+					selectx=0;
+					selecty=0;
+					selectw=0;
+					selecth=0;
+				}
 		}
 	
 
@@ -3325,6 +3368,7 @@ void Render::MouseSelectpos()
 	static int mouseypre=0;
 	static int mousewpre=0;
 	static int mousehpre=0;
+	Rect rect;
 	if(MOUSEST==MOUSEPRESS&&BUTTON==MOUSELEFT)
 		{
 			mousexpre=MOUSEx;
@@ -3334,8 +3378,14 @@ void Render::MouseSelectpos()
 		{
 			mousewpre=abs(MOUSEx-mousexpre);
 			mousehpre=abs(MOUSEy-mouseypre);
+			rect.x=mousexpre;
+			rect.y=mouseypre;
+			rect.width=mousewpre;
+			rect.height=mousehpre;
 			selectx=min(MOUSEx,mousexpre);
 			selecty=min(MOUSEy,mouseypre);
+			if(!selectareaok(rect))
+				return ;
 		}
 	
 	if(MOUSEST==MOUSEUP&&BUTTON==MOUSELEFT)
@@ -3351,7 +3401,7 @@ void Render::MouseSelectpos()
 					panposx=x*pano360texturew/(2*renderwidth)+Config::getinstance()->getpanoprocessshift()-(Config::getinstance()->getpanoprocesswidth())/2;
 					mouseangle=offet2anglepano(panposx);
 
-					mousetitleangle=1.0*(cent180y-y)*CameraFov/(cent180h)+getptzzerotitleangle();
+					mousetitleangle=1.0*(cent180y-y)*Config::getinstance()->getcam_fixcamereafov()/(cent180h)+getptzzerotitleangle();
 					
 					
 					//pano360texturew;
@@ -3362,7 +3412,7 @@ void Render::MouseSelectpos()
 					panposx=(x+renderwidth)*pano360texturew/(renderwidth*2)+Config::getinstance()->getpanoprocessshift()-(Config::getinstance()->getpanoprocesswidth())/2;
 					mouseangle=offet2anglepano(panposx);
 
-					mousetitleangle=1.0*(cent360y-y)*CameraFov/(cent360h)+getptzzerotitleangle();
+					mousetitleangle=1.0*(cent360y-y)*Config::getinstance()->getcam_fixcamereafov()/(cent360h)+getptzzerotitleangle();
 
 				}
 			mouseangle+=getptzzeroangle();
@@ -3391,6 +3441,40 @@ void Render::MouseSelectpos()
 
 }
 
+
+
+int Render::selectareaok(Rect rect)
+{
+	int status=0;
+
+	Rect camrect;
+	for(int i=RENDER180;i<=RENDER360;i++)
+		{	
+
+			camrect.x=viewcamera[i].leftdownrect.x;
+			camrect.width=viewcamera[i].leftdownrect.width;
+			camrect.height=viewcamera[i].leftdownrect.height;
+			camrect.y=renderheight-(viewcamera[i].leftdownrect.y+viewcamera[i].leftdownrect.height);
+			
+
+			
+			if(rect.x>camrect.x&&rect.x<camrect.x+camrect.width&&\
+				rect.x+rect.width<camrect.x+camrect.width&&\
+				rect.y>camrect.y&&rect.y<camrect.y+camrect.height&&\
+				rect.y+rect.height<camrect.y+camrect.height
+				)
+				{
+					status=1;
+					break;
+				}
+			else
+				status=0;
+		}
+	
+	return status;
+
+}
+
 void Render::Mousezeropos()
 {
 
@@ -3411,6 +3495,7 @@ void Render::Mousezeropos()
 	static int mouseypre=0;
 	static int mousewpre=0;
 	static int mousehpre=0;
+	Rect rect;
 	if(MOUSEST==MOUSEPRESS&&BUTTON==MOUSELEFT)
 		{
 			mousexpre=MOUSEx;
@@ -3420,9 +3505,22 @@ void Render::Mousezeropos()
 		{
 			mousewpre=abs(MOUSEx-mousexpre);
 			mousehpre=abs(MOUSEy-mouseypre);
+			rect.x=mousexpre;
+			rect.y=mouseypre;
+			rect.width=mousewpre;
+			rect.height=mousehpre;
 			selectx=min(MOUSEx,mousexpre);
 			selecty=min(MOUSEy,mouseypre);
-		}
+			
+
+			if(!selectareaok(rect))
+				return ;
+
+
+	}
+
+
+	
 	
 	if(MOUSEST==MOUSEUP&&BUTTON==MOUSELEFT)
 		{

@@ -4,14 +4,16 @@
   <cam_width>1920</cam_width>
   <cam_height>1080</cam_height>
   <cam_channel>3</cam_channel>
-  <cam_fx>4760</cam_fx>
-  <cam_fy>1780</cam_fy>
-  <cam_ox>960</cam_ox>
-  <cam_oy>540</cam_oy>
-  <cam_k1>0</cam_k1>
-  <cam_k2>0</cam_k2>
-  <cam_k3>0</cam_k3>
-  <cam_k4>0</cam_k4></camera>
+  <cam_fx>4760.</cam_fx>
+  <cam_fy>1800.</cam_fy>
+  <cam_ox>960.</cam_ox>
+  <cam_oy>540.</cam_oy>
+  <cam_k1>0.</cam_k1>
+  <cam_k2>0.</cam_k2>
+  <cam_k3>0.</cam_k3>
+  <cam_k4>0.</cam_k4>
+  <cam_readfromfile>0</cam_readfromfile>
+  <cam_fixcamereafov>0</cam_fixcamereafov></camera>
 <display>
   <display_width>1920</display_width>
   <display_height>1080</display_height>
@@ -19,17 +21,21 @@
 <panoalg>
   <panoprocesswidth>1920</panoprocesswidth>
   <panoprocessheight>1080</panoprocessheight>
-  <panozeroptz>0.</panozeroptz>
-  <panozeroptztitle>-7.4</panozeroptztitle>
-  <panoprocessshift>170</panoprocessshift>
-  <panoprocesstailcut>200</panoprocesstailcut>
+  <panozeroptz>1.6655411074330425e+02</panozeroptz>
+  <panozeroptztitle>-7.4000000000000004e+00</panozeroptztitle>
+  <panoprocessshift>0</panoprocessshift>
+  <panoprocesstailcut>192</panoprocesstailcut>
   <panocylinder>0</panocylinder>
   <panofusion>1</panofusion>
-  <angleinterval>5</angleinterval></panoalg>
+  <angleinterval>0.</angleinterval>
+  <panocalibration>1</panocalibration></panoalg>
 <mvdetect>
   <mvprocesswidth>1920</mvprocesswidth>
   <mvprocessheight>1080</mvprocessheight>
-  <mvdownup>2</mvdownup></mvdetect>
+  <mvdownup>2</mvdownup>
+  <minarea>50</minarea>
+  <maxarea>20000</maxarea>
+  <detectthread>10</detectthread></mvdetect>
 <ptz>
   <ptzwait>1</ptzwait>
   <ptzbroad>9600</ptzbroad>
@@ -37,5 +43,5 @@
   <ptzdp>0</ptzdp>
   <ptzpaninverse>0</ptzpaninverse>
   <ptztitleinverse>0</ptztitleinverse>
-  <ptzspeed>20</ptzspeed></ptz>
+  <ptzspeed>30</ptzspeed></ptz>
 </opencv_storage>

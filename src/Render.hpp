@@ -273,6 +273,17 @@ public:
 	std::vector<cv::Rect>	detect_vect;
 	
 
+	unsigned int zeroselect;
+
+	unsigned int poisitionreach;
+
+	double poisitionreachpan;
+	double poisitionreachtitle;
+
+
+	void setpoisitionreachangle(double pan,double title){poisitionreachpan=pan;poisitionreachtitle=title;};
+	int PoisitionReach();
+	
 
 	/******************display mod ***********************/
 

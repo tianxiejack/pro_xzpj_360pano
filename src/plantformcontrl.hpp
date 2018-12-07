@@ -86,7 +86,8 @@ class Plantformpzt
 		int callbackeable[PLANTFORMMAX];
 		double callbackpan[PLANTFORMMAX];
 		double callbacktitle[PLANTFORMMAX];
-		
+		double getpanangle(){return plantformpan;};
+		double gettitleangle(){return plantformtitle;};
 	private:
 		Plantformpzt();
 		~Plantformpzt();
@@ -125,8 +126,7 @@ class Plantformpzt
 		double panangle;
 		double titleangle;
 
-		double getpanangle(){return plantformpan;};
-		double gettitleangle(){return plantformtitle;};
+
 		OSA_SemHndl	procNotifySem;
 
 		int calibration ;

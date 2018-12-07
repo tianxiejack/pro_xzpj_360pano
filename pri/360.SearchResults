@@ -1,12 +1,28 @@
----- DETECTTEST Matches (11 in 5 files) ----
-Config.h (z:\home\wj\cuda-workspace\360pano\src):#define DETECTTEST (0)
-DetectAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\detect):	if(DETECTTEST)
-ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):		if(DETECTTEST)
-ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):			printf("***********DETECTTEST*********\n");
-ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(DETECTTEST)
-ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):					if(DETECTTEST==0)
-Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(DETECTTEST)
-Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(DETECTTEST)
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	//#define DETECTTEST (1)
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(DETECTTEST)
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(DETECTTEST)
+---- timeoutflag Matches (34 in 2 files) ----
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):	timeoutflag[PLANTFORMINITPAN]=-1;
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):	timeoutflag[PLANTFORMINITTITLE]=-1;
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):						if(timeoutflag[PLANTFORMGETTITLE]==1||timeoutflag[PLANTFORMGETPAN]==1)
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):								if(timeoutflag[PLANTFORMGETTITLE]==1)
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):									timeoutflag[PLANTFORMGETTITLE]=0;
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):								if(timeoutflag[PLANTFORMGETPAN]==1)
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):									timeoutflag[PLANTFORMGETPAN]=0;
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):								printf("timeoutflag[PLANTFORMGETTITLE]=%d  timeoutflag[PLANTFORMGETPAN]=%d\n",timeoutflag[PLANTFORMGETTITLE],timeoutflag[PLANTFORMGETPAN]);
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):					if(timeoutflag[PLANTFORMGETTITLE]==1||timeoutflag[PLANTFORMGETPAN]==1)
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):		if(timeoutflag[PLANTFORMGETPAN])
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):		if(timeoutflag[PLANTFORMGETTITLE])
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):		if(timeoutflag[PLANTFORMINITPAN]==1)
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):						timeoutflag[PLANTFORMINITPAN]=0;
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):		if(timeoutflag[PLANTFORMINITTITLE]==1)
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):						timeoutflag[PLANTFORMINITTITLE]=0;
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):		//if(timeoutflag[PLANTFORMGETCALLBACK]==1)
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):								//timeoutflag[PLANTFORMGETCALLBACK]=0;
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):		if(timeoutflag[PLANTFORMINITTITLE]==0&&timeoutflag[PLANTFORMINITPAN]==0)
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):				if((timeoutflag[PLANTFORMGETTITLE]==0)&&(timeoutflag[PLANTFORMGETPAN]==0))
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):	timeoutflag[PLANTFORMINITPAN]=1;
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):	timeoutflag[PLANTFORMINITTITLE]=1;
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):	timeoutflag[PLANTFORMGETCALLBACK]=1;
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):	timeoutflag[PLANTFORMGETPAN]=0;
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):	timeoutflag[PLANTFORMGETPAN]=0;
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):	timeoutflag[PLANTFORMGETTITLE]=0;
+Plantformcontrl.cpp (z:\home\wj\cuda-workspace\360pano\src):	timeoutflag[PLANTFORMGETTITLE]=0;
+Plantformcontrl.hpp (z:\home\wj\cuda-workspace\360pano\src):		int timeoutflag[PLANTFORMMAX];

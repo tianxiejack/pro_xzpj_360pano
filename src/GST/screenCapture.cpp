@@ -519,12 +519,8 @@ static void * thrdhndl_push_buffer(void* arg)
 		OSA_BufInfo* bufInfo =(OSA_BufInfo*)queue->getfull(Queue::DISPALYTORTP, 0, OSA_TIMEOUT_FOREVER);
 		
 		if(bufInfo != NULL){
-
 			src=Mat(pData->height,pData->width,CV_8UC3,bufInfo->virtAddr);
-
-
 			remap(src, dst, pData->Screenmapx, pData->Screenmapy, CV_INTER_LINEAR, BORDER_CONSTANT, Scalar(0,0,0) );
-
 			#if 1
 			//GstBuffer *buffer = (GstBuffer *)bufInfo->physAddr;
 			GstBuffer *buffer =pData->buffer;
@@ -714,7 +710,6 @@ int record_main_init()
 		{
 			pthread_create(&pData->threadPushBuffer, NULL, thrdhndl_push_buffer, (void*)pData);
 			OSA_assert(pData->threadPushBuffer != 0);
-
 		}
 
 	screenEnable(1);

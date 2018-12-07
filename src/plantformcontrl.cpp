@@ -234,6 +234,8 @@ void Plantformpzt::main_Recv_func()
 						break;
 				}
 				// deal data part
+
+				
 				//printf("********LINE=%d*****nWait=%d******************\n",__LINE__,nWait);
 				if(nWait >= 0)
 				{
@@ -642,6 +644,9 @@ void Plantformpzt::setpanopanpos(double value)
 	
 	if(getplantformcalibration()==0)
 		return ;
+
+	//printf("*****************************\n");
+	//printf("************value=%f*****************\n",value);
 	unsigned short panvalue=value*100;
 	PlantformContrl->MakeSetPanPos(&PELCO_D, panvalue,address);
 	

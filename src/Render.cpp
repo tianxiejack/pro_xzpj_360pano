@@ -607,6 +607,9 @@ void Render::RenderScene(void)
 void Render::callbackpanomod(void *contex)
 {
 
+	printf("**********************************\n");
+	printf("******callbackpanomod***************\n");
+	printf("**********************************\n");
 	setforcezeroprocess(1);
 	Config::getinstance()->setintergralenable(1);
 	setpanoflagenable(1);
@@ -655,6 +658,8 @@ void Render::panomod()
 			Plantformpzt::getinstance()->setpanotitlepos(zeroangletitle);
 			Plantformpzt::getinstance()->Enbalecallback(Plantformpzt::RENDERPANO,zeroanglepan,zeroangletitle);
 			enable=0;
+
+			//printf("panomod SELECTMODE\n");
 			
 		} 
 	if(getmenumode()==SELECTZEROMODE)
@@ -664,6 +669,7 @@ void Render::panomod()
 					setstichreset(1);
 					Config::getinstance()->SaveConfig();
 					zeroselect=0;
+					printf("panomod SELECTZEROMODE zeroselect=%d\n",zeroselect);
 				}
 			else
 				{
@@ -675,8 +681,13 @@ void Render::panomod()
 					if(zeroangletitle<0)
 						zeroangletitle+=360;
 					Plantformpzt::getinstance()->setpanotitlepos(zeroangletitle);
+					Plantformpzt::getinstance()->getpanopanpos();
+					Plantformpzt::getinstance()->getpanotitlepos();
+					//printf("******zeroanglepan=%f*************zeroangletitle=%f******\n",zeroanglepan,zeroangletitle);
 					Plantformpzt::getinstance()->Enbalecallback(Plantformpzt::RENDERPANO,zeroanglepan,zeroangletitle);
 					enable=0;
+
+					//printf("panomod SELECTZEROMODE zeroselect=%d\n",zeroselect);
 
 
 				}
@@ -1484,12 +1495,6 @@ void Render::Drawosdmenu()
 				}
 		}
 	Glosdhandle.drawunicodeend();
-
-
-
-
-
-
 
 	/***********PANEL DRAW*******************/
 	glEnable(GL_BLEND);
@@ -3488,6 +3493,9 @@ void Render::MouseSelectpos()
 			setscanpanflag(0);
 			Plantformpzt::getinstance()->setpanopanpos(mouseangle);
 			Plantformpzt::getinstance()->setpanotitlepos(mousetitleangle);
+			Plantformpzt::getinstance()->setpanopanforever(mouseangle);
+			Plantformpzt::getinstance()->setpanotitleforever(mousetitleangle);
+			
 			setpoisitionreachangle(mouseangle,mousetitleangle);
 			OSA_printf("the pan=%f tile=%f \n",mouseangle,mousetitleangle);
 			poisitionreach=1;
@@ -3570,12 +3578,8 @@ void Render::Mousezeropos()
 			rect.height=mousehpre;
 			selectx=min(MOUSEx,mousexpre);
 			selecty=min(MOUSEy,mouseypre);
-			
-
 			if(!selectareaok(rect))
 				return ;
-
-
 	}
 
 
@@ -3590,7 +3594,7 @@ void Render::Mousezeropos()
 				return ;
 			if(renderheight-mov180viewy>MOUSEy)
 				{
-					panposx=x*pano360texturew/(2*renderwidth)+Config::getinstance()->getpanoprocessshift()-(Config::getinstance()->getpanoprocesswidth())/2;
+					panposx=x*pano360texturew/(2*renderwidth)+Config::getinstance()->getpanoprocessshift();//-(Config::getinstance()->getpanoprocesswidth())/2;
 					mouseangle=offet2anglepano(panposx);
 
 					mousetitleangle=1.0*(cent180y-y)*CameraFov/(cent180h)+getptzzerotitleangle();
@@ -3623,9 +3627,13 @@ void Render::Mousezeropos()
 			setscanpanflag(0);
 			double  title=getptzzerotitleangle();
 			Plantformpzt::getinstance()->setpanopanpos(mouseangle);
-
 			Plantformpzt::getinstance()->setpanotitlepos(title);
+			
+			Plantformpzt::getinstance()->setpanopanforever(mouseangle);
+			Plantformpzt::getinstance()->setpanotitleforever(title);
+			
 			Config::getinstance()->setpanozeroptz(mouseangle);
+
 
 			
 			setpoisitionreachangle(mouseangle,title);

@@ -64,6 +64,8 @@ class Plantformpzt
 		PLANTFORMINITTITLE,
 		PLANTFORMGETANGEL,
 		PLANTFORMGETCALLBACK,
+		PLANTFORMPANFOREVER,
+		PLANTFORMTITLEFOREVER,
 		PLANTFORMMAX,
 
 
@@ -121,7 +123,8 @@ class Plantformpzt
 		double plantformpan;
 		double plantformtitle;
 
-
+		double plantformpanforever;
+		double plantformtitleforever;
 
 		double panangle;
 		double titleangle;
@@ -195,6 +198,8 @@ class Plantformpzt
 		void setplantformcalibration(int flag);
 		int  getplantformcalibration();
 		void setpanoantiscan();
+		void setpanopanforever(double value);
+		void setpanotitleforever(double value);
 		unsigned char chechsum(unsigned char *pelcodbuf);
 };
 #endif /* PLANTFORMCONTRL_HPP_ */

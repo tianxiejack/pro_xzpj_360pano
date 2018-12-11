@@ -11,7 +11,7 @@ static IPelcoBaseFormat *PlantformContrl;
 
 #define UART422NAME "/dev/ttyTHS1"
 Plantformpzt::Plantformpzt():fd(0),mainloop(1),address(1),ptzpd(0),panangle(0),titleangle(0),calibration(0),plantformpan(720),plantformtitle(720),
-plantinitflag(0),speedpan(30),speedtitle(30),titlpanangle(-7.3)
+plantinitflag(0),speedpan(30),speedtitle(30),titlpanangle(-7.3),plantformpanforever(0),plantformtitleforever(0)
 {
 	
 	memset(&platformcom,0,sizeof(platformcom));
@@ -420,6 +420,50 @@ void Plantformpzt::main_contrl_func()
 				
 
 			}
+////////////////////////
+		if(timeoutflag[PLANTFORMPANFOREVER]==1)
+			{
+				double angle=0;
+				getpanopanpos();
+				angle=getpanangle();
+				double angleoffetpan=angle-plantformpanforever;
+				if(angleoffetpan>300)
+					angleoffetpan=angleoffetpan-360;
+				if(angleoffetpan<-300)
+					angleoffetpan=angleoffetpan+360;
+				
+				if(abs(angleoffetpan)<0.1)
+					{
+						timeoutflag[PLANTFORMPANFOREVER]=0;			
+					}
+				setpanopanpos(plantformpanforever);
+
+				//printf("***********PLANTFORMPANFOREVER******************\n");
+
+			}
+		if(timeoutflag[PLANTFORMTITLEFOREVER]==1)
+			{
+				double angle=0;
+				getpanotitlepos();
+				angle=gettitleangle();
+				double angleoffettitle=angle-plantformtitleforever;
+				if(angleoffettitle>300)
+					angleoffettitle=angleoffettitle-360;
+				if(angleoffettitle<-300)
+					angleoffettitle=angleoffettitle+360;
+				if(abs(angleoffettitle)<0.1)
+					{
+						timeoutflag[PLANTFORMTITLEFOREVER]=0;	
+						
+					}
+				setpanotitlepos(plantformtitleforever);
+
+				//printf("***********PLANTFORMTITLEFOREVER******************\n");
+			}
+
+
+
+/////////////////////////////
 
 
 		//if(timeoutflag[PLANTFORMGETCALLBACK]==1)
@@ -441,6 +485,11 @@ void Plantformpzt::main_contrl_func()
 							angleoffetpan=angleoffetpan-360;
 						if(angleoffetpan<-300)
 							angleoffetpan=angleoffetpan+360;
+						
+						if(abs(angleoffetpan)<0.1)
+							setpanopanpos(callbackpan[RENDERPANO]);
+						if(abs(angleoffettitle)<0.1)
+							setpanotitlepos(callbacktitle[RENDERPANO]);
 						
 						if(abs(angleoffetpan)<0.1&&abs(angleoffettitle)<0.1)
 							{
@@ -586,10 +635,10 @@ void Plantformpzt::setpanoscan()
 
 
 	unsigned char *pelcodbuf=( unsigned char *) &PELCO_D;
-
+	OSA_waitMsecs(50);
 	//len=Uart.UartSend(fd,( unsigned char *) buf, strlen(buf));
 	len=Uart.UartSend(fd,pelcodbuf,SENDLEN);
-	OSA_waitMsecs(10);
+	OSA_waitMsecs(50);
 	//printf("********************ok*****************send len=%d\n",len);
 }
 
@@ -646,7 +695,7 @@ void Plantformpzt::setpanopanpos(double value)
 		return ;
 
 	//printf("*****************************\n");
-	//printf("************value=%f*****************\n",value);
+	//printf("******%s******value=%f*****************\n",__func__,value);
 	unsigned short panvalue=value*100;
 	PlantformContrl->MakeSetPanPos(&PELCO_D, panvalue,address);
 	
@@ -672,7 +721,7 @@ void Plantformpzt::setpanotitlepos(double value)
 	if(value<0)
 		value=value+360;
 
-
+//printf("******%s******value=%f*****************\n",__func__,value);
 	if(getplantformcalibration()==0)
 		return ;
 	unsigned short panvalue=value*100;
@@ -680,6 +729,49 @@ void Plantformpzt::setpanotitlepos(double value)
 	
 	Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
 	OSA_waitMsecs(50);
+	
+
+}
+
+
+void Plantformpzt::setpanopanforever(double value)
+{
+	if(Config::getinstance()->getptzpaninverse())
+		{
+			value=-value;
+		}
+	if(value>360)
+		value=value-360;
+	if(value<0)
+		value=value+360;
+	
+	if(getplantformcalibration()==0)
+		return ;
+
+	plantformpanforever=value;
+	timeoutflag[PLANTFORMPANFOREVER]=1;
+
+
+}
+
+void Plantformpzt::setpanotitleforever(double value)
+{
+
+	if(Config::getinstance()->getptzpaninverse())
+		{
+			value=-value;
+		}
+	if(value>360)
+		value=value-360;
+	if(value<0)
+		value=value+360;
+
+
+	if(getplantformcalibration()==0)
+		return ;
+	
+	plantformtitleforever=value;
+	timeoutflag[PLANTFORMTITLEFOREVER]=1;
 	
 
 }
@@ -704,7 +796,7 @@ void Plantformpzt::initptzpos(double pan,double title)
 		title=title-360;
 	if(title<0)
 		title=title+360;
-
+ //  printf("******%s******value=%f*****************\n",__func__,pan);
 	
 	unsigned short panvalue=title*100;
 	PlantformContrl->MakeSetTilPos(&PELCO_D, panvalue,address);
@@ -778,7 +870,7 @@ void Plantformpzt::getpanopanpos()
 	pelcodbuf[5]=0x00;
 	pelcodbuf[6]=0x52;
 	Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
-	printf("*******%s*******\n",__func__);
+	//printf("*******%s*******\n",__func__);
 	OSA_waitMsecs(10);
 
 }
@@ -796,7 +888,7 @@ void Plantformpzt::getpanotitlepos()
 	pelcodbuf[5]=0x00;
 	pelcodbuf[6]=0x54;
 	Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
-	printf("*******%s*******\n",__func__);
+	//printf("*******%s*******\n",__func__);
 	OSA_waitMsecs(10);
 
 }

@@ -652,7 +652,7 @@ void Plantformpzt::setpanopanpos(double value)
 	
 	Uart.UartSend(fd,( unsigned char *)& PELCO_D, SENDLEN);
 	
-	OSA_waitMsecs(10);
+	OSA_waitMsecs(50);
 	
 	//printf("getpanopan=%f\n",getpanopan());
 
@@ -679,7 +679,7 @@ void Plantformpzt::setpanotitlepos(double value)
 	PlantformContrl->MakeSetTilPos(&PELCO_D, panvalue,address);
 	
 	Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
-	OSA_waitMsecs(10);
+	OSA_waitMsecs(50);
 	
 
 }

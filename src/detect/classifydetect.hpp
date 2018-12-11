@@ -55,8 +55,8 @@ public:
 	cv::CascadeClassifier cascade;
 	std::vector<cv::Rect> objectsrect;
 
-	gpu::GpuMat gpu_img;
-	gpu::HOGDescriptor gpu_hog;
+	//gpu::GpuMat gpu_img;
+	//gpu::HOGDescriptor gpu_hog;
 	MySVM svm;
 	HOGDescriptor myHOG;
 	int DescriptorDim;

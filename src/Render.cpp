@@ -328,11 +328,15 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 	//if()
 
 	if(getmenumode()!=SELECTZEROMODE)
-	if(MOUSEST==MOUSEPRESS&&BUTTON==MOUSELEFT)
 		{
-			mousex=MOUSEx;
-			mousey=MOUSEy;
+			if(MOUSEST==MOUSEPRESS&&BUTTON==MOUSELEFT)
+			{
+				mousex=MOUSEx;
+				mousey=MOUSEy;
+			}
 		}
+		
+			
 	if(getmenumode()==SELECTMODE||getmenumode()==SELECTZEROMODE)
 	if(PoisitionReach()==0)
 		return ;
@@ -3617,10 +3621,13 @@ void Render::Mousezeropos()
 				mousetitleangle=mousetitleangle+360;
 			//printf("the angle =%f \n",mouseangle);
 			setscanpanflag(0);
+			double  title=getptzzerotitleangle();
 			Plantformpzt::getinstance()->setpanopanpos(mouseangle);
+
+			Plantformpzt::getinstance()->setpanotitlepos(title);
 			Config::getinstance()->setpanozeroptz(mouseangle);
 
-			double  title=getptzzerotitleangle();
+			
 			setpoisitionreachangle(mouseangle,title);
 			zeroselect=1;
 			poisitionreach=1;		

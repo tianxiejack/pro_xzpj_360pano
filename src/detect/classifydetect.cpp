@@ -114,12 +114,14 @@ if(HOGSVM)
 			myDetector.push_back(svm.get_rho());
 			//cout<<"\u68c0\u6d4b\u5b50\u7ef4\u6570\uff1a"<<myDetector.size()<<endl;
 		}
+	/*
 	if(GPUHOG)
 		{
 		gpu_hog=gpu::HOGDescriptor(Size(64, 128), Size(16, 16), Size(8, 8), Size(8, 8),9);
 		gpu_hog.setSVMDetector(myDetector);
 		}
 	else
+	*/
 	myHOG.setSVMDetector(myDetector);
 
 }
@@ -146,7 +148,7 @@ void ClassifyDetect::detect(Mat frame,int chid)
 	//printf("*************%s*****************\n",__func__);
 	//return ;
 	double exec_time = (double)getTickCount();
-		
+	/*	
 		
 	if(HOGSVM)
 		{
@@ -162,12 +164,13 @@ void ClassifyDetect::detect(Mat frame,int chid)
 		}
 	else
 		cascade.detectMultiScale( frame, objectsrect, 1.1, 1, 0|CV_HAAR_SCALE_IMAGE, Size(30, 30) );
+		
 	if(callback!=NULL)
 		callback(cdcontext,chid);
 
 	exec_time = ((double)getTickCount() - exec_time)*1000./getTickFrequency();
 	printf("ClassifyDetect time =%f\n",exec_time);
-
+	*/
 }
 
 

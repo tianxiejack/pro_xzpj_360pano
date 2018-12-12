@@ -8,7 +8,7 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
-#define VERSION_STRING		       "v1.00"
+#define VERSION_STRING		       "v1.03"
 
 
 

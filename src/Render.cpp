@@ -117,7 +117,7 @@ Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),
 	CameraFov(0),maxtexture(0),pano360texturenum(0),pano360texturewidth(0),pano360textureheight(0),selecttexture(0),shotcutnum(0),
 	movviewx(0),movviewy(0),movvieww(0),movviewh(0),menumode(0),tailcut(0),radarinner(3.0),radaroutter(10),viewfov(90),viewfocus(10),
 	osdmenushow(0),osdmenushowpre(0),screenpiex(NULL),screenenable(1),recordscreen(0),zeroselect(0),poisitionreach(0),poisitionreachpan(0),
-	poisitionreachtitle(0)
+	poisitionreachtitle(0),criticalmode(0)
 	{
 		displayMode=SINGLE_VIDEO_VIEW_MODE;
 		
@@ -171,9 +171,18 @@ Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),
 			{
 				for(int j=0;j<MAXCAMER;j++)
 					viewcamera[j].panselecttriangleBatch[i]=new GLBatch();
-				panselecttriangleBatchnew[i]=new GLBatch();
+				
+			}
+		for(int i=0;i<SELECTMAX;i++)
+			{
+				for(int j=0;j<MAXCAMER;j++)
+					panselecttriangleBatchnew[j][i]=new GLBatch();
 			}
 
+
+		for(int j=0;j<MAXCAMER;j++)
+			panselecttriangleBatchnewenable[j]=0;
+		
 
 		pthis=this;
 		//viewcamera[RENDERCAMERA1].updownselcectrect=
@@ -338,10 +347,12 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 			}
 		}
 		
-			
 	if(getmenumode()==SELECTMODE||getmenumode()==SELECTZEROMODE)
 	if(PoisitionReach()==0)
 		return ;
+
+	if(getcriticalmode())
+		return;
 	
 	poisitionreach=0;
 	if(getmenumode()==SELECTMODE)
@@ -608,7 +619,7 @@ void Render::RenderScene(void)
 
 void Render::callbackpanomod(void *contex)
 {
-
+	pthis->setcriticalmode(0);
 	printf("**********************************\n");
 	printf("******callbackpanomod***************\n");
 	printf("**********************************\n");
@@ -650,6 +661,7 @@ void Render::panomod()
 		
 	if(getmenumode()==SELECTMODE)
 		{
+			setcriticalmode(1);
 			double zeroanglepan=getptzzeroangle()-1;
 			if(zeroanglepan<0)
 				zeroanglepan+=360;
@@ -666,6 +678,7 @@ void Render::panomod()
 		} 
 	if(getmenumode()==SELECTZEROMODE)
 		{
+			setcriticalmode(1);
 			if(zeroselect)
 				{
 					setstichreset(1);
@@ -685,6 +698,7 @@ void Render::panomod()
 					Plantformpzt::getinstance()->setpanotitlepos(zeroangletitle);
 					Plantformpzt::getinstance()->getpanopanpos();
 					Plantformpzt::getinstance()->getpanotitlepos();
+					
 					//printf("******zeroanglepan=%f*************zeroangletitle=%f******\n",zeroanglepan,zeroangletitle);
 					Plantformpzt::getinstance()->Enbalecallback(Plantformpzt::RENDERPANO,zeroanglepan,zeroangletitle);
 					enable=0;
@@ -696,6 +710,7 @@ void Render::panomod()
 		}
 	if(enable)
 		{
+			setcriticalmode(0);
 			Config::getinstance()->setintergralenable(1);
 			setpanoflagenable(1);
 			setfusionenalge(Config::getinstance()->getpanofusion());
@@ -2217,11 +2232,7 @@ void Render::pano360View(int x,int y,int width,int height)
 		{
 			glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE1]);
 			radar90quarter.Draw();
-
 		}
-	
-	
-
 
 	//glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE1]);
 	if(pano360texturenum==1)
@@ -2306,29 +2317,34 @@ void Render::pano360View(int x,int y,int width,int height)
 	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, identy, 0);
 	if(getmenumode()==PANOMODE)
 		{
-			if(viewcamera[RENDERCAMERA1].blindtextnum==1)
+			if(panselecttriangleBatchnewenable[RENDERCAMERA1])
 				{
-					int id=viewcamera[RENDERCAMERA1].blindtextid[0];
-					glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE+id]);
-					if(printfount%100==0)
+					if(viewcamera[RENDERCAMERA1].blindtextnum==1)
 						{
-							printf("lx=%d ly=%d w=%d h=%d\n",lx,ly,w,h);
-							printf("*******bind=%d*******\n",id);
-						}
-					
-					//viewcamera[RENDERCAMERA1].panselecttriangleBatch[0]->Draw();
-					panselecttriangleBatchnew[0]->Draw();
-				}
-			else if(viewcamera[RENDERCAMERA1].blindtextnum==2)
-				{
-					int id=0;
-					for(int i=0;i<viewcamera[RENDERCAMERA1].blindtextnum;i++)
-						{	
-							id=viewcamera[RENDERCAMERA1].blindtextid[i];
+							int id=viewcamera[RENDERCAMERA1].blindtextid[0];
 							glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE+id]);
-							viewcamera[RENDERCAMERA1].panselecttriangleBatch[i]->Draw();
+							
+							if(printfount%100==0)
+								{
+									printf("lx=%d ly=%d w=%d h=%d\n",lx,ly,w,h);
+									printf("*******bind=%d*******\n",id);
+								}
+							
+							//viewcamera[RENDERCAMERA1].panselecttriangleBatch[0]->Draw();
+							panselecttriangleBatchnew[RENDERCAMERA1][0]->Draw();
 						}
+					else if(viewcamera[RENDERCAMERA1].blindtextnum==2)
+						{
+							int id=0;
+							for(int i=0;i<viewcamera[RENDERCAMERA1].blindtextnum;i++)
+								{	
+									id=viewcamera[RENDERCAMERA1].blindtextid[i];
+									glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE+id]);
+									//viewcamera[RENDERCAMERA1].panselecttriangleBatch[i]->Draw();
+									panselecttriangleBatchnew[RENDERCAMERA1][i]->Draw();
+								}
 
+						}
 				}
 
 		}
@@ -2360,32 +2376,34 @@ void Render::pano360View(int x,int y,int width,int height)
 	m3dLoadIdentity44(identy);
 	//shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, transformPipeline.GetModelViewProjectionMatrix(), 0);
 	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, identy, 0);
-	if(viewcamera[RENDERCAMERA3].blindtextnum==1)
-				{
-					int id=viewcamera[RENDERCAMERA3].blindtextid[0];
-					glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE+id]);
-					viewcamera[RENDERCAMERA3].panselecttriangleBatch[0]->Draw();
-				}
-	else if(viewcamera[RENDERCAMERA3].blindtextnum==2)
-		{
-			int id=0;
-			for(int i=0;i<viewcamera[RENDERCAMERA3].blindtextnum;i++)
-				{	
-					id=viewcamera[RENDERCAMERA3].blindtextid[i];
-					glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE+id]);
-					viewcamera[RENDERCAMERA3].panselecttriangleBatch[i]->Draw();
-				}
 
+	if(panselecttriangleBatchnewenable[RENDERCAMERA3])
+				{
+					if(viewcamera[RENDERCAMERA3].blindtextnum==1)
+								{
+									int id=viewcamera[RENDERCAMERA3].blindtextid[0];
+									glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE+id]);
+									//viewcamera[RENDERCAMERA3].panselecttriangleBatch[0]->Draw();
+									panselecttriangleBatchnew[RENDERCAMERA3][0]->Draw();
+								}
+					else if(viewcamera[RENDERCAMERA3].blindtextnum==2)
+						{
+							int id=0;
+							for(int i=0;i<viewcamera[RENDERCAMERA3].blindtextnum;i++)
+								{	
+									id=viewcamera[RENDERCAMERA3].blindtextid[i];
+									glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE+id]);
+									//viewcamera[RENDERCAMERA3].panselecttriangleBatch[i]->Draw();
+									panselecttriangleBatchnew[RENDERCAMERA3][i]->Draw();
+									
+								}
+
+						}
 		}
 	//panselecttriangleBatch[RENDERCAMERA3].Draw();
 	//pansrctriangleBatch.Draw();
 	
 	glBindTexture(GL_TEXTURE_2D, 0);
-
-	
-
-
-
 	lx=0;
 	ly=height*2/6;
 	w=width/2-extrablackw/2;
@@ -2407,22 +2425,28 @@ void Render::pano360View(int x,int y,int width,int height)
 	//shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, transformPipeline.GetModelViewProjectionMatrix(), 0);
 	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, identy, 0);
 	//panselecttriangleBatch[RENDERCAMERA2].Draw();
-		if(viewcamera[RENDERCAMERA2].blindtextnum==1)
-				{
-					int id=viewcamera[RENDERCAMERA2].blindtextid[0];
-					glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE+id]);
-					viewcamera[RENDERCAMERA2].panselecttriangleBatch[0]->Draw();
-				}
-	else if(viewcamera[RENDERCAMERA2].blindtextnum==2)
-		{
-			int id=0;
-			for(int i=0;i<viewcamera[RENDERCAMERA2].blindtextnum;i++)
-				{	
-					id=viewcamera[RENDERCAMERA2].blindtextid[i];
-					glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE+id]);
-					viewcamera[RENDERCAMERA2].panselecttriangleBatch[i]->Draw();
-				}
 
+	if(panselecttriangleBatchnewenable[RENDERCAMERA2])
+				{
+					if(viewcamera[RENDERCAMERA2].blindtextnum==1)
+							{
+								int id=viewcamera[RENDERCAMERA2].blindtextid[0];
+								glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE+id]);
+								//viewcamera[RENDERCAMERA2].panselecttriangleBatch[0]->Draw();
+								panselecttriangleBatchnew[RENDERCAMERA2][0]->Draw();
+							}
+				else if(viewcamera[RENDERCAMERA2].blindtextnum==2)
+					{
+						int id=0;
+						for(int i=0;i<viewcamera[RENDERCAMERA2].blindtextnum;i++)
+							{	
+								id=viewcamera[RENDERCAMERA2].blindtextid[i];
+								glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE+id]);
+								//viewcamera[RENDERCAMERA2].panselecttriangleBatch[i]->Draw();
+								panselecttriangleBatchnew[RENDERCAMERA2][i]->Draw();
+							}
+
+					}
 		}
 
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -2558,10 +2582,14 @@ void Render::panotestViewInit(void)
 
 	for(int i=0;i<SELECTMAX;i++)
 		{
-			panselecttriangleBatchnew[i]->Begin(GL_TRIANGLE_STRIP, 4, 1);
-			panselecttriangleBatchnew[i]->CopyVertexData3f(vVerts);
-			panselecttriangleBatchnew[i]->CopyTexCoordData2f(vTexselectCoords, 0);
-			panselecttriangleBatchnew[i]->End();
+			for(int index=0;index<MAXCAMER;index++)
+				{
+					panselecttriangleBatchnew[index][i]->Begin(GL_TRIANGLE_STRIP, 4, 1);
+					panselecttriangleBatchnew[index][i]->CopyVertexData3f(vVerts);
+					panselecttriangleBatchnew[index][i]->CopyTexCoordData2f(vTexselectCoords, 0);
+					panselecttriangleBatchnew[index][i]->End();
+					printf("the panselecttriangleBatchnew i=%d \n",i);
+				}
 		}
 	
 
@@ -3061,6 +3089,11 @@ void Render::selectupdate()
 			rect=viewcamera[i].updownselcectrect;
 			//if(index==RENDER360)
 			rect.y=rect.y-(renderheight-viewcamera[index].leftdownrect.y-viewcamera[index].leftdownrect.height);
+
+			if(viewcamera[i].rectback.x==rect.x&&viewcamera[i].rectback.y==rect.y&&viewcamera[i].rectback.width==rect.width&&viewcamera[i].rectback.height==rect.height)
+				continue;
+			viewcamera[i].rectback=rect;
+			//memcpy(&viewcamera[index].rectback,)
 			//rect.y=rect.y-viewcamera[RENDER180].leftdownrect.y;
 			
 			if(i==RENDERCAMERA1||i==RENDERCAMERA2)
@@ -3185,8 +3218,8 @@ void Render::selectupdate()
 					viewcamera[i].panselecttriangleBatch[0]->CopyTexCoordData2f(vTexselectCoords, 0);
 					viewcamera[i].panselecttriangleBatch[0]->CopyVertexData3f(vVerts);
 
-					panselecttriangleBatchnew[0]->CopyTexCoordData2f(vTexselectCoords, 0);
-					panselecttriangleBatchnew[0]->CopyVertexData3f(vVerts);
+					panselecttriangleBatchnew[i][0]->CopyTexCoordData2f(vTexselectCoords, 0);
+					panselecttriangleBatchnew[i][0]->CopyVertexData3f(vVerts);
 				}
 			else if(viewcamera[i].blindtextnum==2)
 				{
@@ -3195,6 +3228,16 @@ void Render::selectupdate()
 
 					viewcamera[i].panselecttriangleBatch[0]->CopyVertexData3f(vVerts);
 					viewcamera[i].panselecttriangleBatch[1]->CopyVertexData3f(vVertsback);
+
+
+					panselecttriangleBatchnew[i][0]->CopyTexCoordData2f(vTexselectCoords, 0);
+					panselecttriangleBatchnew[i][1]->CopyTexCoordData2f(vTexselectCoordsbak, 0);
+					
+					panselecttriangleBatchnew[i][0]->CopyVertexData3f(vVerts);
+					panselecttriangleBatchnew[i][1]->CopyVertexData3f(vVertsback);
+
+
+					
 				}
 		}
 
@@ -3226,7 +3269,7 @@ void Render::selectupdate()
 	
 	
 
-	panselectrectBatch.CopyVertexData3f(vrectBatch);
+	//panselectrectBatch.CopyVertexData3f(vrectBatch);
 	 
 	
 
@@ -3282,7 +3325,9 @@ void Render::Mousemenu()
 				if((mousex>=Menu->submenu[i].x)&&(mousex<=Menu->submenu[i].x+Menu->submenu[i].w)&&\
 					(mousey>=Menu->submenu[i].y)&&(mousey<=Menu->submenu[i].y+Menu->submenu[i].h))
 					{
-						Menu->menuselect(i,Menu->submenu[i].active^1);
+						//Menu->menuselect(i,Menu->submenu[i].active^1);
+						if(Menu->submenu[i].active==0)
+							Menu->menuselect(i,Menu->submenu[i].active^1);
 
 					}
 
@@ -3307,6 +3352,12 @@ void Render::viewcameraprocess()
 			leftuprect.width=abs(MOUSEx-mousex);
 			
 			leftuprect.height=abs(MOUSEy-mousey);
+
+
+
+			if(!selectareaok(leftuprect))
+				 ;
+			
 			
 			leftup2leftdown(leftuprect,leftdownrect);
 
@@ -3316,7 +3367,7 @@ void Render::viewcameraprocess()
 				{	
 					if(leftdownrect.x>viewcamera[i].leftdownrect.x&&leftdownrect.x<viewcamera[i].leftdownrect.x+viewcamera[i].leftdownrect.width&&\
 						leftdownrect.y>viewcamera[i].leftdownrect.y&&leftdownrect.y<viewcamera[i].leftdownrect.y+viewcamera[i].leftdownrect.height&&\
-						leftdownrect.y+leftuprect.height<viewcamera[i].leftdownrect.y+viewcamera[i].leftdownrect.height)
+						leftdownrect.y+leftuprect.height<=viewcamera[i].leftdownrect.y+viewcamera[i].leftdownrect.height)
 						{
 							cameraselcect=1;
 							break;
@@ -3345,7 +3396,8 @@ void Render::viewcameraprocess()
 										
 										viewcamera[j].panotextureindex=i;	
 										viewcamera[j].updownselcectrect=leftuprect;
-
+										panselecttriangleBatchnewenable[j]=1;
+										
 										cout<<"***end*****"<<leftdownrect<<"*******i="<<j<<"********"<<endl;
 										
 									}
@@ -3370,9 +3422,7 @@ void Render::viewcameraprocess()
 					if(leftdownrect.x>viewcamera[i].leftdownrect.x&&leftdownrect.x<viewcamera[i].leftdownrect.x+viewcamera[i].leftdownrect.width&&\
 						leftdownrect.y>viewcamera[i].leftdownrect.y&&leftdownrect.y<viewcamera[i].leftdownrect.y+viewcamera[i].leftdownrect.height)
 						{
-							//printf("the RENDERCAMERA=%d\n",i);
-							
-							
+							//printf("the RENDERCAMERA=%d\n",i);	
 							cameraselcect=1;
 							break;
 						}
@@ -3429,6 +3479,10 @@ void Render::Mouse2Select()
 					selectw=0;
 					selecth=0;
 				}
+			selectx=rect.x;
+			selecty=rect.y;
+			selectw=rect.width;
+			selecth=rect.height;
 		}
 	
 
@@ -3441,6 +3495,7 @@ int Render::PoisitionReach()
 	double pan=0,title=0;
 	if(poisitionreach)
 		{
+			/*
 			Plantformpzt::getinstance()->getpanopanpos();
 			Plantformpzt::getinstance()->getpanotitlepos();
 			
@@ -3450,7 +3505,11 @@ int Render::PoisitionReach()
 				status=1;
 			else
 				status=0;
-
+			*/
+			if((Plantformpzt::getinstance()->getpanopanforeverstatus()==0)&&(Plantformpzt::getinstance()->getpanotitleforeverstatus()==0))
+				status=1;
+			else
+				status=0;
 			OSA_printf("the pan=%f title=%f   poisitionreachpan=%f poisitionreachtitle=%f \n",pan,title,poisitionreachpan,poisitionreachtitle);
 		}
 	else
@@ -3498,6 +3557,10 @@ void Render::MouseSelectpos()
 			selecty=min(MOUSEy,mouseypre);
 			if(!selectareaok(rect))
 				return ;
+			selectx=rect.x;
+			selecty=rect.y;
+			selectw=rect.width;
+			selecth=rect.height;
 		}
 	
 	if(MOUSEST==MOUSEUP&&BUTTON==MOUSELEFT)
@@ -3505,12 +3568,12 @@ void Render::MouseSelectpos()
 			x=selectx+mousewpre/2;
 			y=selecty+mousehpre/2;
 
-			if(renderheight-mov360viewy<MOUSEy)
-				return ;
-			if(renderheight-mov180viewy>MOUSEy)
+			//if(renderheight-mov360viewy<MOUSEy)
+			//	return ;
+			if(renderheight-mov180viewy>=selecty)
 				{
 					//panposx=x*pano360texturew/(2*renderwidth)-(Config::getinstance()->getpanoprocesswidth()-PANOSRCSHIFT)/2;
-					panposx=x*pano360texturew/(2*renderwidth)+Config::getinstance()->getpanoprocessshift()-(Config::getinstance()->getpanoprocesswidth())/2;
+					panposx=x*pano360texturew/(2*renderwidth)+Config::getinstance()->getpanoprocessshift()-(Config::getinstance()->getpanoprocesswidth()+Config::getinstance()->getpanoprocesstailcut())/2;
 					mouseangle=offet2anglepano(panposx);
 					mousetitleangle=1.0*(cent180y-y)*Config::getinstance()->getcam_fixcamereafov()/(cent180h)+getptzzerotitleangle();
 					//pano360texturew;
@@ -3557,7 +3620,7 @@ void Render::MouseSelectpos()
 
 
 
-int Render::selectareaok(Rect rect)
+int Render::selectareaok(Rect &rect)
 {
 	int status=0;
 
@@ -3574,10 +3637,13 @@ int Render::selectareaok(Rect rect)
 			
 			if(rect.x>camrect.x&&rect.x<camrect.x+camrect.width&&\
 				rect.x+rect.width<camrect.x+camrect.width&&\
-				rect.y>camrect.y&&rect.y<camrect.y+camrect.height&&\
-				rect.y+rect.height<camrect.y+camrect.height
+				rect.y>camrect.y&&rect.y<camrect.y+camrect.height
+				//rect.y+rect.height<camrect.y+camrect.height
 				)
 				{
+
+					if(rect.y+rect.height>camrect.y+camrect.height)
+						rect.height=camrect.y+camrect.height-rect.y-1;
 					status=1;
 					break;
 				}
@@ -3627,6 +3693,10 @@ void Render::Mousezeropos()
 			selecty=min(MOUSEy,mouseypre);
 			if(!selectareaok(rect))
 				return ;
+			selectx=rect.x;
+			selecty=rect.y;
+			selectw=rect.width;
+			selecth=rect.height;
 	}
 
 
@@ -3637,9 +3707,9 @@ void Render::Mousezeropos()
 			x=mousexpre;
 			y=mouseypre;
 
-			if(renderheight-mov360viewy<MOUSEy)
-				return ;
-			if(renderheight-mov180viewy>MOUSEy)
+			//if(renderheight-mov360viewy<MOUSEy)
+			//	return ;
+			if(renderheight-mov180viewy>=selecty)
 				{
 					panposx=x*pano360texturew/(2*renderwidth)+Config::getinstance()->getpanoprocessshift();//-(Config::getinstance()->getpanoprocesswidth())/2;
 					mouseangle=offet2anglepano(panposx);

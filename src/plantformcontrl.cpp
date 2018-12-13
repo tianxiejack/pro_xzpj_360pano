@@ -409,7 +409,9 @@ void Plantformpzt::main_contrl_func()
 				printf("angle=%f anglepan=%f\n",angle,anglepan);
 				
 				OSA_waitMsecs(1000);
-				initptzpos(anglepan,angletitle);
+				//initptzpos(anglepan,angletitle);
+
+				setpanopanpos(anglepan);
 				getpanopanpos();
 
 			}
@@ -432,7 +434,8 @@ void Plantformpzt::main_contrl_func()
 				printf("angle=%f angletitle=%f\n",angle,angletitle);
 				
 				OSA_waitMsecs(1000);
-				initptzpos(anglepan,angletitle);
+				//initptzpos(anglepan,angletitle);
+				setpanotitlepos(angletitle);
 				getpanotitlepos();
 				
 
@@ -503,9 +506,9 @@ void Plantformpzt::main_contrl_func()
 						if(angleoffetpan<-300)
 							angleoffetpan=angleoffetpan+360;
 						
-						if(abs(angleoffetpan)<0.1)
+						if(abs(angleoffetpan)>0.1)
 							setpanopanpos(callbackpan[RENDERPANO]);
-						if(abs(angleoffettitle)<0.1)
+						else if(abs(angleoffettitle)>0.1)
 							setpanotitlepos(callbacktitle[RENDERPANO]);
 						
 						if(abs(angleoffetpan)<0.1&&abs(angleoffettitle)<0.1)
@@ -811,7 +814,19 @@ void Plantformpzt::setpanotitlepos(double value)
 
 }
 
+int Plantformpzt::getpanopanforeverstatus()
+{
 
+	return timeoutflag[PLANTFORMPANFOREVER];
+
+}
+
+int Plantformpzt::getpanotitleforeverstatus()
+{
+
+	return timeoutflag[PLANTFORMTITLEFOREVER];
+
+}
 void Plantformpzt::setpanopanforever(double value)
 {
 	if(Config::getinstance()->getptzpaninverse())

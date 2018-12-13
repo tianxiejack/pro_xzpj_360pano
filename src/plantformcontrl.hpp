@@ -90,6 +90,9 @@ class Plantformpzt
 		double callbacktitle[PLANTFORMMAX];
 		double getpanangle(){return plantformpan;};
 		double gettitleangle(){return plantformtitle;};
+
+		int getpanopanforeverstatus();
+		int getpanotitleforeverstatus();
 	private:
 		Plantformpzt();
 		~Plantformpzt();

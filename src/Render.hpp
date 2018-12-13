@@ -47,6 +47,8 @@ typedef struct{
 	Rect leftdownrect;
 
 	Rect updownselcectrect;
+
+	Rect rectback;
 	int active;
 	
 	int panotextureindex;
@@ -76,7 +78,7 @@ class Render{
 #define MAXPICMUN 60
 
 #define MAXSEAM 2
-
+#define SELECTMAX (10)
 #define MAXPANOFRAME 2
 public:
 	Render();
@@ -239,6 +241,9 @@ public:
 
 
 	int menumode;
+	int criticalmode;
+	void setcriticalmode(int set){criticalmode=set;};
+	int getcriticalmode(){return criticalmode;};
 	std::vector<cv::Rect>	detect_vect180;
 	std::vector<cv::Rect>	detect_vect360;
 
@@ -263,7 +268,7 @@ public:
 	void setselecttexture(int mod){selecttexture=mod;};
 	int  getselecttexture(){return selecttexture;};
 
-	int selectareaok(Rect rect);
+	int selectareaok(Rect & rect);
 	
 	unsigned int selectx;
 	unsigned int selecty;
@@ -427,8 +432,8 @@ public:
 	Mat Capture;
 	Mat ProcessCapture;
 
-	GLBatch	*panselecttriangleBatchnew[MAXTURESELECT];
-	
+	GLBatch	*panselecttriangleBatchnew[MAXCAMER][SELECTMAX];
+	int panselecttriangleBatchnewenable[MAXCAMER];
 
 
 	
@@ -453,7 +458,7 @@ public:
 
 	GLBatch	pan360triangleBatch;
 	GLBatch	pansrctriangleBatch;
-	#define SELECTMAX (10)
+	
 	GLBatch	panselecttriangleBatch[SELECTMAX];
 	void gltMakeradar(GLTriangleBatch& diskBatch, GLfloat innerRadius, GLfloat outerRadius, GLint nSlices, GLint nStack,double anglestart,double angleend);
 	void gltMakeradar(GLTriangleBatch& diskBatch, GLfloat innerRadius, GLfloat outerRadius, GLint nSlices, GLint nStacks,double anglestart,double angleend,int mod);

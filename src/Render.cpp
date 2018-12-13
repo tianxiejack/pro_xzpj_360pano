@@ -171,8 +171,10 @@ Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),
 			{
 				for(int j=0;j<MAXCAMER;j++)
 					viewcamera[j].panselecttriangleBatch[i]=new GLBatch();
-				
+				panselecttriangleBatchnew[i]=new GLBatch();
 			}
+
+
 		pthis=this;
 		//viewcamera[RENDERCAMERA1].updownselcectrect=
 
@@ -2248,6 +2250,8 @@ void Render::pano360View(int x,int y,int width,int height)
 			glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE3]);
 			radar270quarter.Draw();
 		}
+
+	glBindTexture(GL_TEXTURE_2D, 0);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	
 
@@ -2264,7 +2268,8 @@ void Render::pano360View(int x,int y,int width,int height)
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	/**************************select display***********************************************/
-
+	static int printfount=0;
+	printfount++;
 	selectupdate();
 	
 	movviewx=width/2+extrablackw;
@@ -2305,7 +2310,14 @@ void Render::pano360View(int x,int y,int width,int height)
 				{
 					int id=viewcamera[RENDERCAMERA1].blindtextid[0];
 					glBindTexture(GL_TEXTURE_2D, textureID[PANOTEXTURE+id]);
-					viewcamera[RENDERCAMERA1].panselecttriangleBatch[0]->Draw();
+					if(printfount%100==0)
+						{
+							printf("lx=%d ly=%d w=%d h=%d\n",lx,ly,w,h);
+							printf("*******bind=%d*******\n",id);
+						}
+					
+					//viewcamera[RENDERCAMERA1].panselecttriangleBatch[0]->Draw();
+					panselecttriangleBatchnew[0]->Draw();
 				}
 			else if(viewcamera[RENDERCAMERA1].blindtextnum==2)
 				{
@@ -2326,7 +2338,7 @@ void Render::pano360View(int x,int y,int width,int height)
 
 
 
-
+	glBindTexture(GL_TEXTURE_2D, 0);
 	
 	lx=width/2+extrablackw/2;
 	ly=height*2/6;
@@ -2544,7 +2556,13 @@ void Render::panotestViewInit(void)
 			panselecttriangleBatch[i].End();
 		}
 
-
+	for(int i=0;i<SELECTMAX;i++)
+		{
+			panselecttriangleBatchnew[i]->Begin(GL_TRIANGLE_STRIP, 4, 1);
+			panselecttriangleBatchnew[i]->CopyVertexData3f(vVerts);
+			panselecttriangleBatchnew[i]->CopyTexCoordData2f(vTexselectCoords, 0);
+			panselecttriangleBatchnew[i]->End();
+		}
 	
 
 	for(int i=0;i<MAXTURESELECT;i++)
@@ -2942,7 +2960,8 @@ void Render::BestSeam(Mat& src,Mat & dst,int seampostion)
 
 void Render::selectupdate()
 {	
-
+	static int printcount=0;
+	printcount++;
 	GLfloat vVerts[] = { -1.0f, 1.0f, 0.0f, 
 		                  	    1.0f, 1.0f, 0.0f,
 					    -1.0f, -1.0f, 0.0f,
@@ -3043,6 +3062,13 @@ void Render::selectupdate()
 			//if(index==RENDER360)
 			rect.y=rect.y-(renderheight-viewcamera[index].leftdownrect.y-viewcamera[index].leftdownrect.height);
 			//rect.y=rect.y-viewcamera[RENDER180].leftdownrect.y;
+			
+			if(i==RENDERCAMERA1||i==RENDERCAMERA2)
+				{
+					if(printcount%100==0)
+						printf("i=%d x=%d y=%d w=%d h=%d tempw=%d tempH=%d\n",i,rect.x,rect.y,rect.width,rect.height,tempw,tempH);
+
+				}
 
 			 if(pano360texturenum==4)
 				{
@@ -3103,6 +3129,8 @@ void Render::selectupdate()
 					
 				}
 
+		
+
 			if(viewcamera[i].blindtextnum==2)
 				{
 
@@ -3145,8 +3173,20 @@ void Render::selectupdate()
 			//panselectrectBatch.Begin(GLenum primitive, GLuint nVerts, GLuint nTextureUnits)
 			if(viewcamera[i].blindtextnum==1)
 				{
+					if(i==RENDERCAMERA1||i==RENDERCAMERA2)
+					{
+						if(printcount%100==0)
+							{
+							printf("o=%f 1=%f 2=%f 3=%f 4=%f 5=%f 6=%f 7=%f\n",vTexselectCoords[0],vTexselectCoords[1],vTexselectCoords[2],vTexselectCoords[3],vTexselectCoords[4],\
+							vTexselectCoords[5],vTexselectCoords[6],vTexselectCoords[7]);
+							}
+
+					}
 					viewcamera[i].panselecttriangleBatch[0]->CopyTexCoordData2f(vTexselectCoords, 0);
 					viewcamera[i].panselecttriangleBatch[0]->CopyVertexData3f(vVerts);
+
+					panselecttriangleBatchnew[0]->CopyTexCoordData2f(vTexselectCoords, 0);
+					panselecttriangleBatchnew[0]->CopyVertexData3f(vVerts);
 				}
 			else if(viewcamera[i].blindtextnum==2)
 				{
@@ -3269,6 +3309,8 @@ void Render::viewcameraprocess()
 			leftuprect.height=abs(MOUSEy-mousey);
 			
 			leftup2leftdown(leftuprect,leftdownrect);
+
+			cout<<"***start*****"<<leftuprect<<endl;
 			
 			for(int i=RENDER180;i<=RENDER360;i++)
 				{	
@@ -3303,6 +3345,8 @@ void Render::viewcameraprocess()
 										
 										viewcamera[j].panotextureindex=i;	
 										viewcamera[j].updownselcectrect=leftuprect;
+
+										cout<<"***end*****"<<leftdownrect<<"*******i="<<j<<"********"<<endl;
 										
 									}
 							}
@@ -3327,6 +3371,8 @@ void Render::viewcameraprocess()
 						leftdownrect.y>viewcamera[i].leftdownrect.y&&leftdownrect.y<viewcamera[i].leftdownrect.y+viewcamera[i].leftdownrect.height)
 						{
 							//printf("the RENDERCAMERA=%d\n",i);
+							
+							
 							cameraselcect=1;
 							break;
 						}
@@ -3340,7 +3386,8 @@ void Render::viewcameraprocess()
 							if(leftdownrect.x>viewcamera[i].leftdownrect.x&&leftdownrect.x<viewcamera[i].leftdownrect.x+viewcamera[i].leftdownrect.width&&\
 								leftdownrect.y>viewcamera[i].leftdownrect.y&&leftdownrect.y<viewcamera[i].leftdownrect.y+viewcamera[i].leftdownrect.height)
 								{
-								//printf("the viewcamera=%d\n",i);
+								printf("the viewcamera=%d\n",i);
+								//cout<<"***end*****"<<leftdownrect<<endl;
 								viewcamera[i].active=1;
 								}
 							else

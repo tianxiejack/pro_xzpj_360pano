@@ -426,6 +426,8 @@ public:
 
 	Mat Capture;
 	Mat ProcessCapture;
+
+	GLBatch	*panselecttriangleBatchnew[MAXTURESELECT];
 	
 
 

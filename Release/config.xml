@@ -21,13 +21,13 @@
 <panoalg>
   <panoprocesswidth>1920</panoprocesswidth>
   <panoprocessheight>1080</panoprocessheight>
-  <panozeroptz>1.5559171728326874e+01</panozeroptz>
-  <panozeroptztitle>-7.4000000000000004e+00</panozeroptztitle>
+  <panozeroptz>1.1301735830058141e+02</panozeroptz>
+  <panozeroptztitle>0.</panozeroptztitle>
   <panoprocessshift>0</panoprocessshift>
   <panoprocesstailcut>192</panoprocesstailcut>
   <panocylinder>0</panocylinder>
   <panofusion>1</panofusion>
-  <angleinterval>0.</angleinterval>
+  <angleinterval>1.</angleinterval>
   <panocalibration>1</panocalibration></panoalg>
 <mvdetect>
   <mvprocesswidth>1920</mvprocesswidth>

@@ -75,7 +75,7 @@ void proptotocal(Mat& frame)
 		nintcount++;
 
 	
-	
+	//OSA_printf("THE num PACKET=%d numpacket%d\n",numpacket,nintcount);
 	/////////////////
 	//numpacket=1;
 	
@@ -165,7 +165,7 @@ void proptotocal(Mat& frame)
 			if(abs(timeinterval)>33*1000)
 				{
 					pretimestamp=niaxis->gyro_timestamp;
-					//printf("*****timeinterval=%f************error \n",timeinterval);
+					printf("*****timeinterval=%f************error \n",timeinterval);
 					continue;
 				}
 		
@@ -175,13 +175,13 @@ void proptotocal(Mat& frame)
 			gyrofram.packetnum++;
 
 
-		/*	
+			/*
 			OSA_printf("_________________________________________________________________\n");
 			OSA_printf("THE time=%u\n",niaxis->gyro_timestamp);
 			OSA_printf("ax=%d ay=%d az=%d gx=%d gy=%d gz=%d mx=%d my=%d mz=%d \n",niaxis->gyro_ax,niaxis->gyro_ay,niaxis->gyro_az,niaxis->gyro_gx,niaxis->gyro_gy,niaxis->gyro_gz,niaxis->gyro_mx,niaxis->gyro_my,niaxis->gyro_mz);
 			OSA_printf("_________________________________________________________________\n");
-			
-		*/	
+			*/
+		
 		}
 	
 	
@@ -318,9 +318,15 @@ int getGyroprocess(Mat& frame,GYRO_DATA_T *gyro)
 
 
 	if(getgyrostart()==0)
+		{
+			//printf("the getgyrostart error\n ");
 		return 0;
+		}
 	if(GyroCalibration()==0)
+		{
+			printf("the GyroCalibration error\n ");
 		return 0;
+		}
 	GyrogetRPY();
 	//CalibrateToZero(&gyrofram);
 

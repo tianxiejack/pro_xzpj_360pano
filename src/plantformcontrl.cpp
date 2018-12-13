@@ -1,7 +1,7 @@
 #include "plantformcontrl.hpp"
 #include <sys/time.h>
 #include <errno.h>
-
+#include "gpio_rdwr.h"
 #include"demo_global_def.h"
 
 #define MAX_RECV_BUF_LEN 256
@@ -10,6 +10,16 @@ Plantformpzt *Plantformpzt::instance=NULL;
 static IPelcoBaseFormat *PlantformContrl;
 
 #define UART422NAME "/dev/ttyTHS1"
+
+
+#define HALFUSE 0
+
+#define GPIP485S 186
+#define GPIP485R 65
+
+#define UART485SEND 1
+#define UART485RECV 0
+#define SENDDELAY (0)
 Plantformpzt::Plantformpzt():fd(0),mainloop(1),address(1),ptzpd(0),panangle(0),titleangle(0),calibration(0),plantformpan(720),plantformtitle(720),
 plantinitflag(0),speedpan(30),speedtitle(30),titlpanangle(-7.3),plantformpanforever(0),plantformtitleforever(0)
 {
@@ -24,7 +34,9 @@ plantinitflag(0),speedpan(30),speedtitle(30),titlpanangle(-7.3),plantformpanfore
 }
 Plantformpzt::~Plantformpzt()
 {
-
+	GPIO_close(GPIP485S);
+	
+	GPIO_close(GPIP485R);
 
 }
 
@@ -40,9 +52,15 @@ Plantformpzt* Plantformpzt::getinstance()
 void Plantformpzt::create()
 {
 	memset(timeout,0,sizeof(timeout));
+	if(HALFUSE)
+		{
+			GPIO_create(GPIP485S,GPIO_DIRECTION_OUT);
+			GPIO_create(GPIP485R,GPIO_DIRECTION_OUT);
+			GPIO_set(GPIP485S,UART485RECV);
+			GPIO_set(GPIP485R,UART485RECV);
+		}
 	platformcom.recvBuf=recvbuf;
 	platformcom.recvBuf=sendbuf;
-
 	titlpanangle=Config::getinstance()->getpanozeroptztitle();
 	speedtitle=speedpan=Config::getinstance()->getptzspeed();
 	timeoutflag[PLANTFORMINITPAN]=-1;
@@ -50,6 +68,7 @@ void Plantformpzt::create()
 	plantformcontrlinit();
 	MAIN_threadRecvCreate();
 	MAIN_contrlthreadCreate();
+	
 
 }
 
@@ -67,14 +86,9 @@ int Plantformpzt::MAIN_threadRecvCreate(void)
 	int iRet = OSA_SOK;
 	iRet = OSA_semCreate(&mainRecvThrObj.procNotifySem ,1,0) ;
 	OSA_assert(iRet == OSA_SOK);
-
-
 	mainRecvThrObj.exitProcThread = false;
-
 	mainRecvThrObj.initFlag = true;
-
 	mainRecvThrObj.pParent = (void*)this;
-
 	iRet = OSA_thrCreate(&mainRecvThrObj.thrHandleProc, mainRecvTsk, 0, 0, &mainRecvThrObj);
 	
 
@@ -392,7 +406,8 @@ void Plantformpzt::main_contrl_func()
 						timeoutflag[PLANTFORMINITPAN]=0;
 						continue;
 					}
-				//printf("angle=%f anglepan=%f\n",angle,anglepan);
+				printf("angle=%f anglepan=%f\n",angle,anglepan);
+				
 				OSA_waitMsecs(1000);
 				initptzpos(anglepan,angletitle);
 				getpanopanpos();
@@ -413,7 +428,9 @@ void Plantformpzt::main_contrl_func()
 						timeoutflag[PLANTFORMINITTITLE]=0;
 						continue;
 					}
-				//printf("angle=%f angletitle=%f\n",angle,angletitle);
+				
+				printf("angle=%f angletitle=%f\n",angle,angletitle);
+				
 				OSA_waitMsecs(1000);
 				initptzpos(anglepan,angletitle);
 				getpanotitlepos();
@@ -637,7 +654,20 @@ void Plantformpzt::setpanoscan()
 	unsigned char *pelcodbuf=( unsigned char *) &PELCO_D;
 	OSA_waitMsecs(50);
 	//len=Uart.UartSend(fd,( unsigned char *) buf, strlen(buf));
-	len=Uart.UartSend(fd,pelcodbuf,SENDLEN);
+	if(HALFUSE)
+		{
+			GPIO_set(GPIP485S,UART485SEND);
+			GPIO_set(GPIP485R,UART485SEND);
+			len=Uart.UartSend(fd,pelcodbuf,SENDLEN);
+			OSA_waitMsecs(SENDDELAY);
+			GPIO_set(GPIP485S,UART485RECV);
+			GPIO_set(GPIP485R,UART485RECV);
+		}
+	else
+		{
+			len=Uart.UartSend(fd,pelcodbuf,SENDLEN);
+
+		}
 	OSA_waitMsecs(50);
 	//printf("********************ok*****************send len=%d\n",len);
 }
@@ -651,7 +681,20 @@ void Plantformpzt::setpanoantiscan()
 	unsigned char *pelcodbuf=( unsigned char *) &PELCO_D;
 
 	//len=Uart.UartSend(fd,( unsigned char *) buf, strlen(buf));
-	len=Uart.UartSend(fd,pelcodbuf,SENDLEN);
+	if(HALFUSE)
+		{
+			GPIO_set(GPIP485S,UART485SEND);
+			GPIO_set(GPIP485R,UART485SEND);
+			len=Uart.UartSend(fd,pelcodbuf,SENDLEN);
+			OSA_waitMsecs(SENDDELAY);
+			GPIO_set(GPIP485S,UART485RECV);
+			GPIO_set(GPIP485R,UART485RECV);
+		}
+	else
+		{
+			len=Uart.UartSend(fd,pelcodbuf,SENDLEN);
+
+		}
 	OSA_waitMsecs(10);
 	//printf("********************ok*****************send len=%d\n",len);
 }
@@ -659,8 +702,20 @@ void Plantformpzt::setpanoscanstop()
 {
 
 	PlantformContrl->MakeMove(&PELCO_D, PTZ_MOVE_Stop,0x10,true, address);
-	
-	Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+	if(HALFUSE)
+		{
+			GPIO_set(GPIP485S,UART485SEND);
+			GPIO_set(GPIP485R,UART485SEND);
+			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+			OSA_waitMsecs(SENDDELAY);
+			GPIO_set(GPIP485S,UART485RECV);
+			GPIO_set(GPIP485R,UART485RECV);
+		}
+	else
+		{
+			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+
+		}
 	OSA_waitMsecs(10);
 }
 
@@ -698,8 +753,20 @@ void Plantformpzt::setpanopanpos(double value)
 	//printf("******%s******value=%f*****************\n",__func__,value);
 	unsigned short panvalue=value*100;
 	PlantformContrl->MakeSetPanPos(&PELCO_D, panvalue,address);
-	
-	Uart.UartSend(fd,( unsigned char *)& PELCO_D, SENDLEN);
+	if(HALFUSE)
+		{
+			GPIO_set(GPIP485S,UART485SEND);
+			GPIO_set(GPIP485R,UART485SEND);
+			Uart.UartSend(fd,( unsigned char *)& PELCO_D, SENDLEN);
+			OSA_waitMsecs(SENDDELAY);
+			GPIO_set(GPIP485S,UART485RECV);
+			GPIO_set(GPIP485R,UART485RECV);
+		}
+	else
+		{
+
+			Uart.UartSend(fd,( unsigned char *)& PELCO_D, SENDLEN);
+		}
 	
 	OSA_waitMsecs(50);
 	
@@ -726,8 +793,19 @@ void Plantformpzt::setpanotitlepos(double value)
 		return ;
 	unsigned short panvalue=value*100;
 	PlantformContrl->MakeSetTilPos(&PELCO_D, panvalue,address);
-	
-	Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+	if(HALFUSE)
+		{
+			GPIO_set(GPIP485S,UART485SEND);
+			GPIO_set(GPIP485R,UART485SEND);
+			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+			OSA_waitMsecs(SENDDELAY);
+			GPIO_set(GPIP485S,UART485RECV);
+			GPIO_set(GPIP485R,UART485RECV);
+		}
+	else
+		{
+			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+		}
 	OSA_waitMsecs(50);
 	
 
@@ -800,14 +878,37 @@ void Plantformpzt::initptzpos(double pan,double title)
 	
 	unsigned short panvalue=title*100;
 	PlantformContrl->MakeSetTilPos(&PELCO_D, panvalue,address);
-	
-	Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+	if(HALFUSE)
+		{
+			GPIO_set(GPIP485S,UART485SEND);
+			GPIO_set(GPIP485R,UART485SEND);
+			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+			OSA_waitMsecs(SENDDELAY);
+			GPIO_set(GPIP485S,UART485RECV);
+			GPIO_set(GPIP485R,UART485RECV);
+		}
+	else
+		{
+			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+		}
 
 	OSA_waitMsecs(10);
 	panvalue=pan*100;
 	PlantformContrl->MakeSetPanPos(&PELCO_D, panvalue,address);
-	
-	Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+	if(HALFUSE)
+		{
+			GPIO_set(GPIP485S,UART485SEND);
+			GPIO_set(GPIP485R,UART485SEND);
+			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+			OSA_waitMsecs(SENDDELAY);
+			GPIO_set(GPIP485S,UART485RECV);
+			GPIO_set(GPIP485R,UART485RECV);
+		}
+	else
+		{
+			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+
+		}
 	OSA_waitMsecs(10);
 
 
@@ -827,7 +928,20 @@ double Plantformpzt::getpanopan()
 	pelcodbuf[4]=0x00;
 	pelcodbuf[5]=0x00;
 	pelcodbuf[6]=0x52;
-	Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+	if(HALFUSE)
+		{
+			GPIO_set(GPIP485S,UART485SEND);
+			GPIO_set(GPIP485R,UART485SEND);
+			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+			OSA_waitMsecs(SENDDELAY);
+			GPIO_set(GPIP485S,UART485RECV);
+			GPIO_set(GPIP485R,UART485RECV);
+		}
+	else
+		{
+			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+
+		}
 	timeoutflag[PLANTFORMGETPAN]=0;
 	printf("*******%s*******\n",__func__);
 	//if(Config::getinstance()->getptzwait())
@@ -848,7 +962,20 @@ double Plantformpzt::getpanotitle()
 	pelcodbuf[4]=0x00;
 	pelcodbuf[5]=0x00;
 	pelcodbuf[6]=0x54;
-	Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+	if(HALFUSE)
+		{
+			GPIO_set(GPIP485S,UART485SEND);
+			GPIO_set(GPIP485R,UART485SEND);
+			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+			OSA_waitMsecs(SENDDELAY);
+			GPIO_set(GPIP485S,UART485RECV);
+			GPIO_set(GPIP485R,UART485RECV);
+		}
+	else
+		{
+			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+
+		}
 	timeoutflag[PLANTFORMGETTITLE]=0;
 	printf("*******%s*******\n",__func__);
 	//if(Config::getinstance()->getptzwait())
@@ -869,7 +996,20 @@ void Plantformpzt::getpanopanpos()
 	pelcodbuf[4]=0x00;
 	pelcodbuf[5]=0x00;
 	pelcodbuf[6]=0x52;
-	Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+	if(HALFUSE)
+		{
+			GPIO_set(GPIP485S,UART485SEND);
+			GPIO_set(GPIP485R,UART485SEND);
+			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+			OSA_waitMsecs(SENDDELAY);
+			GPIO_set(GPIP485S,UART485RECV);
+			GPIO_set(GPIP485R,UART485RECV);
+		}
+	else
+		{
+			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+
+		}
 	//printf("*******%s*******\n",__func__);
 	OSA_waitMsecs(10);
 
@@ -887,7 +1027,20 @@ void Plantformpzt::getpanotitlepos()
 	pelcodbuf[4]=0x00;
 	pelcodbuf[5]=0x00;
 	pelcodbuf[6]=0x54;
-	Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+	if(HALFUSE)
+		{
+		
+			GPIO_set(GPIP485S,UART485SEND);
+			GPIO_set(GPIP485R,UART485SEND);
+			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+			OSA_waitMsecs(SENDDELAY);
+			GPIO_set(GPIP485S,UART485RECV);
+			GPIO_set(GPIP485R,UART485RECV);
+		}
+	else
+		{
+			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+		}
 	//printf("*******%s*******\n",__func__);
 	OSA_waitMsecs(10);
 

@@ -23,7 +23,7 @@
 
 ImageProcess *ImageProcess::Pthis;
 
-ImageProcess::ImageProcess():pinpang(0),currentcount(0),AngleStich(-ANGLEINTREVAL),seamid(0),SeamEable(0),Seampostion(0),
+ImageProcess:: ImageProcess():pinpang(0),currentcount(0),AngleStich(-ANGLEINTREVAL),seamid(0),SeamEable(0),Seampostion(0),
 			preflag(0),preangle(0),currentangle(0),xoffsetfeat(0),yoffsetfeat(0),camerazeroossfet(0),zeroflag(0),zeroangle(0),zerocalibflag(1),
 			zeroflameupdate(1),gyroangle(0),pp(0),blocknum(0),zeroprocessflag(0),zerocalibing(0),calibrationzeroangle(0),zerodropflame(0),
 			zerodroreset(0),currentcapangle(0),zeroptzangle(0),tailcut(0),movblocknumpre(0),newframe(0)
@@ -360,8 +360,7 @@ void ImageProcess::OptiSeam()
 		{	
 			//printf("the seam=%d\n",getSeamPos());
 			//dst=fusionframe;
-			FusionSeam(src,dst,getSeamPos());
-			
+			FusionSeam(src,dst,getSeamPos());	
 		}
 
 }

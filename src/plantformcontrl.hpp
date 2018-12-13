@@ -66,6 +66,7 @@ class Plantformpzt
 		PLANTFORMGETCALLBACK,
 		PLANTFORMPANFOREVER,
 		PLANTFORMTITLEFOREVER,
+		PLANTSCAN,
 		PLANTFORMMAX,
 
 
@@ -111,6 +112,7 @@ class Plantformpzt
 		ComObj platformcom;
 		unsigned char recvbuf[2000];
 		unsigned char sendbuf[300];
+		int scanflag;
 
 		int fd;
 		#define TIMEOUTCOUNT (5)

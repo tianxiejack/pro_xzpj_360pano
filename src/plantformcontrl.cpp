@@ -21,7 +21,7 @@ static IPelcoBaseFormat *PlantformContrl;
 #define UART485RECV 0
 #define SENDDELAY (0)
 Plantformpzt::Plantformpzt():fd(0),mainloop(1),address(1),ptzpd(0),panangle(0),titleangle(0),calibration(0),plantformpan(720),plantformtitle(720),
-plantinitflag(0),speedpan(30),speedtitle(30),titlpanangle(-7.3),plantformpanforever(0),plantformtitleforever(0)
+plantinitflag(0),speedpan(30),speedtitle(30),titlpanangle(-7.3),plantformpanforever(0),plantformtitleforever(0),scanflag(0)
 {
 	
 	memset(&platformcom,0,sizeof(platformcom));
@@ -540,7 +540,16 @@ void Plantformpzt::main_contrl_func()
 						getpanopanpos();
 					}
 			}
-
+		timeout[PLANTSCAN]++;
+		if(timeout[PLANTFORMGETPAN]%5==0)
+			{
+				if(scanflag)
+					{
+						if(timeout[PLANTFORMGETPAN]==50)
+							scanflag=0;
+						setpanoscan();
+					}
+			}
 		
 		
 		
@@ -671,6 +680,7 @@ void Plantformpzt::setpanoscan()
 			len=Uart.UartSend(fd,pelcodbuf,SENDLEN);
 
 		}
+	scanflag=1;
 	OSA_waitMsecs(50);
 	//printf("********************ok*****************send len=%d\n",len);
 }
@@ -719,6 +729,7 @@ void Plantformpzt::setpanoscanstop()
 			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
 
 		}
+	scanflag=0;
 	OSA_waitMsecs(10);
 }
 

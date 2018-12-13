@@ -3565,8 +3565,8 @@ void Render::MouseSelectpos()
 	
 	if(MOUSEST==MOUSEUP&&BUTTON==MOUSELEFT)
 		{
-			x=selectx+mousewpre/2;
-			y=selecty+mousehpre/2;
+			x=selectx+selectw/2;
+			y=selecty+selecth/2;
 
 			//if(renderheight-mov360viewy<MOUSEy)
 			//	return ;
@@ -3637,13 +3637,13 @@ int Render::selectareaok(Rect &rect)
 			
 			if(rect.x>camrect.x&&rect.x<camrect.x+camrect.width&&\
 				rect.x+rect.width<camrect.x+camrect.width&&\
-				rect.y>camrect.y&&rect.y<camrect.y+camrect.height
+				rect.y>camrect.y&&rect.y<camrect.y+camrect.height-PANOEXTRAH/2*viewcamera[i].leftdownrect.height/renderheight
 				//rect.y+rect.height<camrect.y+camrect.height
 				)
 				{
 
 					if(rect.y+rect.height>camrect.y+camrect.height)
-						rect.height=camrect.y+camrect.height-rect.y-1;
+						rect.height=camrect.y+camrect.height-rect.y-PANOEXTRAH/2*viewcamera[i].leftdownrect.height/renderheight;
 					status=1;
 					break;
 				}

@@ -640,7 +640,9 @@ void Render::RenderScene(void)
 
 void Render::callbackpanomod(void *contex)
 {
-	OSA_mutexLock(&pthis->modelock);
+
+	OSA_mutexLock(&pthis->renderlock);
+	//OSA_mutexLock(&pthis->modelock);
 	pthis->setcriticalmode(0);
 	printf("**********************************\n");
 	printf("******callbackpanomod***************\n");
@@ -654,7 +656,8 @@ void Render::callbackpanomod(void *contex)
 	pthis->displayMode=PANO_360_MODE;
 	pthis->setmenumode(PANOMODE);
 
-	OSA_mutexUnlock(&pthis->modelock);
+	//OSA_mutexUnlock(&pthis->modelock);
+	OSA_mutexUnlock(&pthis->renderlock);
 
 }
 void Render::selectmod()
@@ -662,8 +665,9 @@ void Render::selectmod()
 	OSA_mutexLock(&modelock);
 	displayMode=PANO_360_MODE;
 	Config::getinstance()->setintergralenable(0);
-	setmenumode(SELECTMODE);
 	Plantformpzt::getinstance()->setpanoscanstop();
+	setmenumode(SELECTMODE);
+	
 	setscanpanflag(0);
 
 	OSA_mutexUnlock(&modelock);
@@ -675,8 +679,9 @@ void Render::zeromod()
 	
 	displayMode=PANO_360_MODE;
 	Config::getinstance()->setintergralenable(0);
-	setmenumode(SELECTZEROMODE);
 	Plantformpzt::getinstance()->setpanoscanstop();
+	setmenumode(SELECTZEROMODE);
+	
 	setscanpanflag(0);
 	
 	OSA_mutexUnlock(&modelock);
@@ -684,10 +689,12 @@ void Render::zeromod()
 
 void Render::panomod()
 {
+
+	OSA_mutexLock(&modelock);
 	double angle=0;
 	bool enable=1;
 	
-	OSA_mutexLock(&modelock);
+	
 	if(getmenumode()==SELECTMODE)
 		{
 			setcriticalmode(1);
@@ -3389,7 +3396,7 @@ void Render::viewcameraprocess()
 			
 			leftuprect.height=abs(MOUSEy-mousey);
 
-
+			//if()
 
 			if(!selectareaok(leftuprect))
 				 ;
@@ -3398,6 +3405,9 @@ void Render::viewcameraprocess()
 			leftup2leftdown(leftuprect,leftdownrect);
 
 			cout<<"***start*****"<<leftuprect<<endl;
+
+
+			
 			
 			for(int i=RENDER180;i<=RENDER360;i++)
 				{	
@@ -3411,6 +3421,8 @@ void Render::viewcameraprocess()
 					else
 						cameraselcect=0;
 				}
+			if(mousey>MOUSEy)
+				cameraselcect=0;
 
 			
 			if(cameraselcect)
@@ -3511,7 +3523,7 @@ void Render::Mouse2Select()
 			selecty=min(MOUSEy,mouseypre);
 			
 
-			if(!selectareaok(rect))
+			if(!selectareaok(rect)||(mouseypre>MOUSEy))
 				{ 
 					selectx=0;
 					selecty=0;
@@ -3589,6 +3601,8 @@ void Render::MouseSelectpos()
 		}
 	if(MOUSEST==MOUSEUP&&BUTTON==MOUSELEFT)
 		{
+			if(mouseypre>MOUSEy)
+				return;
 			mousewpre=abs(MOUSEx-mousexpre);
 			mousehpre=abs(MOUSEy-mouseypre);
 			rect.x=mousexpre;
@@ -3597,6 +3611,7 @@ void Render::MouseSelectpos()
 			rect.height=mousehpre;
 			selectx=min(MOUSEx,mousexpre);
 			selecty=min(MOUSEy,mouseypre);
+			
 			if(!selectareaok(rect))
 				return ;
 			selectx=rect.x;

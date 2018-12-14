@@ -541,11 +541,11 @@ void Plantformpzt::main_contrl_func()
 					}
 			}
 		timeout[PLANTSCAN]++;
-		if(timeout[PLANTFORMGETPAN]%5==0)
+		if(timeout[PLANTSCAN]%5==0)
 			{
 				if(scanflag)
 					{
-						if(timeout[PLANTFORMGETPAN]==50)
+						if(timeout[PLANTSCAN]==100)
 							scanflag=0;
 						setpanoscan();
 					}
@@ -713,7 +713,7 @@ void Plantformpzt::setpanoantiscan()
 }
 void Plantformpzt::setpanoscanstop()
 {
-
+	scanflag=0;
 	PlantformContrl->MakeMove(&PELCO_D, PTZ_MOVE_Stop,0x10,true, address);
 	if(HALFUSE)
 		{
@@ -729,7 +729,7 @@ void Plantformpzt::setpanoscanstop()
 			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
 
 		}
-	scanflag=0;
+	
 	OSA_waitMsecs(10);
 }
 

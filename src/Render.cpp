@@ -3509,6 +3509,7 @@ void Render::Mouse2Select()
 			rect.height=selecth;
 			selectx=min(MOUSEx,mousexpre);
 			selecty=min(MOUSEy,mouseypre);
+			
 
 			if(!selectareaok(rect))
 				{ 
@@ -3517,10 +3518,13 @@ void Render::Mouse2Select()
 					selectw=0;
 					selecth=0;
 				}
-			selectx=rect.x;
-			selecty=rect.y;
-			selectw=rect.width;
-			selecth=rect.height;
+			else
+				{
+					selectx=rect.x;
+					selecty=rect.y;
+					selectw=rect.width;
+					selecth=rect.height;
+				}
 		}
 	
 
@@ -3675,7 +3679,7 @@ int Render::selectareaok(Rect &rect)
 			
 			if(rect.x>camrect.x&&rect.x<camrect.x+camrect.width&&\
 				rect.x+rect.width<camrect.x+camrect.width&&\
-				rect.y>camrect.y&&rect.y<camrect.y+camrect.height-PANOEXTRAH/2*viewcamera[i].leftdownrect.height/renderheight
+				rect.y>camrect.y+PANOEXTRAH/2*viewcamera[i].leftdownrect.height/renderheight&&rect.y<camrect.y+camrect.height-PANOEXTRAH/2*viewcamera[i].leftdownrect.height/renderheight
 				//rect.y+rect.height<camrect.y+camrect.height
 				)
 				{

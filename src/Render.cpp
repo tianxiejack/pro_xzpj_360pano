@@ -186,6 +186,7 @@ Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),
 
 		pthis=this;
 		OSA_mutexCreate(&renderlock);
+		OSA_mutexCreate(&modelock);
 		//OSA_mutexCreate
 		//viewcamera[RENDERCAMERA1].updownselcectrect=
 
@@ -195,6 +196,7 @@ Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),
 Render::~Render()
 	{
 		OSA_mutexDelete(&renderlock);
+		OSA_mutexDelete(&modelock);
 
 	}
 bool Render::LoadTGATexture(const char *szFileName, GLenum minFilter, GLenum magFilter, GLenum wrapMode)
@@ -596,44 +598,41 @@ void Render::Menucall(void * contex)
 
 void Render::RenderScene(void)
 	{
-	OSA_mutexLock(&renderlock);
-	// Clear the window with current clearing color
-	
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	
-	switch(displayMode)
-	{
-		case SINGLE_VIDEO_VIEW_MODE:
-			singleView(0,0,renderwidth,renderheight); 
-			break;
-			
-		case MY_TEST_PANO_MODE:
-			panotestView(0,0,renderwidth,renderheight); 
-			break;
-			
-		case PANO_360_MODE:
-			pano360View(0,0,renderwidth,renderheight); 
-			break;
-			
-		default:
-			break;
-			
-	}
-	
-	movMultidetectrect();
-	
-	Drawfusion();
-	
-	Drawosd();
-	
-	// Perform the buffer swap to display back buffer
-	OSA_mutexUnlock(&renderlock);
-	
-	//
-	glFinish();
-	glutSwapBuffers();
-	if(screenenable)
-		screenshot();
+		OSA_mutexLock(&renderlock);
+		
+		// Clear the window with current clearing color
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		
+		switch(displayMode)
+		{
+			case SINGLE_VIDEO_VIEW_MODE:
+				singleView(0,0,renderwidth,renderheight); 
+				break;				
+			case MY_TEST_PANO_MODE:
+				panotestView(0,0,renderwidth,renderheight); 
+				break;	
+			case PANO_360_MODE:
+				pano360View(0,0,renderwidth,renderheight); 
+				break;
+			default:
+				break;
+				
+		}
+		
+		movMultidetectrect();
+		
+		Drawfusion();
+		
+		Drawosd();
+		
+		// Perform the buffer swap to display back buffer
+		
+		
+		glFinish();
+		OSA_mutexUnlock(&renderlock);
+		glutSwapBuffers();
+		if(screenenable)
+			screenshot();
 	}
 
 
@@ -641,6 +640,7 @@ void Render::RenderScene(void)
 
 void Render::callbackpanomod(void *contex)
 {
+	OSA_mutexLock(&pthis->modelock);
 	pthis->setcriticalmode(0);
 	printf("**********************************\n");
 	printf("******callbackpanomod***************\n");
@@ -654,25 +654,32 @@ void Render::callbackpanomod(void *contex)
 	pthis->displayMode=PANO_360_MODE;
 	pthis->setmenumode(PANOMODE);
 
+	OSA_mutexUnlock(&pthis->modelock);
+
 }
 void Render::selectmod()
 {
-	
+	OSA_mutexLock(&modelock);
 	displayMode=PANO_360_MODE;
 	Config::getinstance()->setintergralenable(0);
 	setmenumode(SELECTMODE);
 	Plantformpzt::getinstance()->setpanoscanstop();
 	setscanpanflag(0);
+
+	OSA_mutexUnlock(&modelock);
 }
 
 void Render::zeromod()
 {
+	OSA_mutexLock(&modelock);
 	
 	displayMode=PANO_360_MODE;
 	Config::getinstance()->setintergralenable(0);
 	setmenumode(SELECTZEROMODE);
 	Plantformpzt::getinstance()->setpanoscanstop();
 	setscanpanflag(0);
+	
+	OSA_mutexUnlock(&modelock);
 }
 
 void Render::panomod()
@@ -680,7 +687,7 @@ void Render::panomod()
 	double angle=0;
 	bool enable=1;
 	
-		
+	OSA_mutexLock(&modelock);
 	if(getmenumode()==SELECTMODE)
 		{
 			setcriticalmode(1);
@@ -741,6 +748,8 @@ void Render::panomod()
 			displayMode=PANO_360_MODE;
 			setmenumode(PANOMODE);	
 		}
+
+	OSA_mutexUnlock(&modelock);
 	
 }
 void Render::singleViewInit(void)
@@ -3481,23 +3490,25 @@ void Render::Mouse2Select()
 	 unsigned int x=0;unsigned int y=0;unsigned int w=0;unsigned int h=0;
 	 getPano360RenderPos(&x,&y,&w,&h);
 	 Rect rect;
+	 static int mousexpre=0;
+	 static int mouseypre=0;
 	// int lux=x+
 	if(MOUSEST==MOUSEPRESS&&BUTTON==MOUSELEFT)
 		{
-			mousex=MOUSEx;
-			mousey=MOUSEy;
+			mousexpre=MOUSEx;
+			mouseypre=MOUSEy;
 		}
 	if(MOUSEST==MOUSEUP&&BUTTON==MOUSELEFT)
 		{
-			selectw=abs(MOUSEx-mousex);
-			selecth=abs(MOUSEy-mousey);
+			selectw=abs(MOUSEx-mousexpre);
+			selecth=abs(MOUSEy-mouseypre);
 
-			rect.x=mousex;
-			rect.y=mousey;
+			rect.x=mousexpre;
+			rect.y=mouseypre;
 			rect.width=selectw;
 			rect.height=selecth;
-			selectx=min(MOUSEx,mousex);
-			selecty=min(MOUSEy,mousey);
+			selectx=min(MOUSEx,mousexpre);
+			selecty=min(MOUSEy,mouseypre);
 
 			if(!selectareaok(rect))
 				{ 

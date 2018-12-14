@@ -190,6 +190,7 @@ public:
 	ViewCamera viewcamera[MAXCAMER];
 	int debuggl;
 	OSA_MutexHndl renderlock;
+	OSA_MutexHndl modelock;
 	Mat viewWarningarea[MAXCAMER];
 	unsigned char *viewWarningdata[MAXCAMER];
 	void viewcameraprocess();

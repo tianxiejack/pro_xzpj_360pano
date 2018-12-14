@@ -1,6 +1,20 @@
----- selectareaok Matches (5 in 2 files) ----
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):			if(!selectareaok(rect))
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):			if(!selectareaok(rect))
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):int Render::selectareaok(Rect &rect)
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):			if(!selectareaok(rect))
-Render.hpp (z:\home\wj\cuda-workspace\360pano\src):	int selectareaok(Rect & rect);
+---- panselecttriangleBatchnew Matches (19 in 2 files) ----
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):					panselecttriangleBatchnew[j][i]=new GLBatch();
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):							panselecttriangleBatchnew[RENDERCAMERA1][0]->Draw();
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):									panselecttriangleBatchnew[RENDERCAMERA1][i]->Draw();
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):									panselecttriangleBatchnew[RENDERCAMERA3][0]->Draw();
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):									panselecttriangleBatchnew[RENDERCAMERA3][i]->Draw();
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):								panselecttriangleBatchnew[RENDERCAMERA2][0]->Draw();
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):								panselecttriangleBatchnew[RENDERCAMERA2][i]->Draw();
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):					panselecttriangleBatchnew[index][i]->Begin(GL_TRIANGLE_STRIP, 4, 1);
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):					panselecttriangleBatchnew[index][i]->CopyVertexData3f(vVerts);
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):					panselecttriangleBatchnew[index][i]->CopyTexCoordData2f(vTexselectCoords, 0);
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):					panselecttriangleBatchnew[index][i]->End();
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):					printf("the panselecttriangleBatchnew i=%d \n",i);
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):					panselecttriangleBatchnew[i][0]->CopyTexCoordData2f(vTexselectCoords, 0);
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):					panselecttriangleBatchnew[i][0]->CopyVertexData3f(vVerts);
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):					panselecttriangleBatchnew[i][0]->CopyTexCoordData2f(vTexselectCoords, 0);
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):					panselecttriangleBatchnew[i][1]->CopyTexCoordData2f(vTexselectCoordsbak, 0);
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):					panselecttriangleBatchnew[i][0]->CopyVertexData3f(vVerts);
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):					panselecttriangleBatchnew[i][1]->CopyVertexData3f(vVertsback);
+Render.hpp (z:\home\wj\cuda-workspace\360pano\src):	GLBatch	*panselecttriangleBatchnew[MAXCAMER][SELECTMAX];

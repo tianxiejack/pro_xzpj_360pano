@@ -117,7 +117,7 @@ Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),
 	CameraFov(0),maxtexture(0),pano360texturenum(0),pano360texturewidth(0),pano360textureheight(0),selecttexture(0),shotcutnum(0),
 	movviewx(0),movviewy(0),movvieww(0),movviewh(0),menumode(0),tailcut(0),radarinner(3.0),radaroutter(10),viewfov(90),viewfocus(10),
 	osdmenushow(0),osdmenushowpre(0),screenpiex(NULL),screenenable(1),recordscreen(0),zeroselect(0),poisitionreach(0),poisitionreachpan(0),
-	poisitionreachtitle(0),criticalmode(0)
+	poisitionreachtitle(0),criticalmode(0),debuggl(0)
 	{
 		displayMode=SINGLE_VIDEO_VIEW_MODE;
 		
@@ -185,6 +185,8 @@ Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),
 		
 
 		pthis=this;
+		OSA_mutexCreate(&renderlock);
+		//OSA_mutexCreate
 		//viewcamera[RENDERCAMERA1].updownselcectrect=
 
 		
@@ -192,7 +194,7 @@ Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),
 	}
 Render::~Render()
 	{
-
+		OSA_mutexDelete(&renderlock);
 
 	}
 bool Render::LoadTGATexture(const char *szFileName, GLenum minFilter, GLenum magFilter, GLenum wrapMode)
@@ -328,6 +330,7 @@ void Render::ShutdownRC()
  
 void Render::mouseButtonPress(int button, int state, int x, int y)
 {
+	OSA_mutexLock(&renderlock);
 	printf(" mouse--> %i %i %i %i\n", button, state, x, y);
 	setMouseCor(x,y);
 	setMouseButton(button);
@@ -349,10 +352,16 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 		
 	if(getmenumode()==SELECTMODE||getmenumode()==SELECTZEROMODE)
 	if(PoisitionReach()==0)
-		return ;
+		{
+			OSA_mutexUnlock(&renderlock);
+			return ;
+		}
 
 	if(getcriticalmode())
-		return;
+		{
+			OSA_mutexUnlock(&renderlock);
+			return;
+		}
 	
 	poisitionreach=0;
 	if(getmenumode()==SELECTMODE)
@@ -365,6 +374,7 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 		viewcameraprocess();
 	if(Plantformpzt::getinstance()->getplantformcalibration())
 		Mousemenu();
+	OSA_mutexUnlock(&renderlock);
 }
  void Render::specialkeyPressed (int key, int x, int y)
 {
@@ -453,6 +463,9 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 						break;
 					case GLUT_KEY_F12:
 						recordscreen=(recordscreen+1)%2;
+						break;
+					case GLUT_KEY_F4:
+						debuggl=(debuggl+1)%2;
 						break;
 					
 			
@@ -583,32 +596,41 @@ void Render::Menucall(void * contex)
 
 void Render::RenderScene(void)
 	{
-	
+	OSA_mutexLock(&renderlock);
 	// Clear the window with current clearing color
+	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	//printf("11111111111111\n");
-		switch(displayMode)
-		{
-			case SINGLE_VIDEO_VIEW_MODE:
-				singleView(0,0,renderwidth,renderheight);
-				break;
-			case MY_TEST_PANO_MODE:
-				panotestView(0,0,renderwidth,renderheight);
-				break;
-			case PANO_360_MODE:
-				pano360View(0,0,renderwidth,renderheight);
-				break;
-			default:
-				break;
-		}
-
+	
+	switch(displayMode)
+	{
+		case SINGLE_VIDEO_VIEW_MODE:
+			singleView(0,0,renderwidth,renderheight); 
+			break;
+			
+		case MY_TEST_PANO_MODE:
+			panotestView(0,0,renderwidth,renderheight); 
+			break;
+			
+		case PANO_360_MODE:
+			pano360View(0,0,renderwidth,renderheight); 
+			break;
+			
+		default:
+			break;
+			
+	}
+	
 	movMultidetectrect();
+	
 	Drawfusion();
+	
 	Drawosd();
 	
 	// Perform the buffer swap to display back buffer
+	OSA_mutexUnlock(&renderlock);
 	
 	//
+	glFinish();
 	glutSwapBuffers();
 	if(screenenable)
 		screenshot();
@@ -2331,7 +2353,10 @@ void Render::pano360View(int x,int y,int width,int height)
 								}
 							
 							//viewcamera[RENDERCAMERA1].panselecttriangleBatch[0]->Draw();
-							panselecttriangleBatchnew[RENDERCAMERA1][0]->Draw();
+							if(debuggl)
+								viewcamera[RENDERCAMERA1].panselecttriangleBatch[0]->Draw();
+							else
+								panselecttriangleBatchnew[RENDERCAMERA1][0]->Draw();
 						}
 					else if(viewcamera[RENDERCAMERA1].blindtextnum==2)
 						{
@@ -3098,7 +3123,7 @@ void Render::selectupdate()
 			
 			if(i==RENDERCAMERA1||i==RENDERCAMERA2)
 				{
-					if(printcount%100==0)
+					
 						printf("i=%d x=%d y=%d w=%d h=%d tempw=%d tempH=%d\n",i,rect.x,rect.y,rect.width,rect.height,tempw,tempH);
 
 				}
@@ -3206,13 +3231,15 @@ void Render::selectupdate()
 			//panselectrectBatch.Begin(GLenum primitive, GLuint nVerts, GLuint nTextureUnits)
 			if(viewcamera[i].blindtextnum==1)
 				{
-					if(i==RENDERCAMERA1||i==RENDERCAMERA2)
+					if(i==RENDERCAMERA1)
 					{
-						if(printcount%100==0)
-							{
-							printf("o=%f 1=%f 2=%f 3=%f 4=%f 5=%f 6=%f 7=%f\n",vTexselectCoords[0],vTexselectCoords[1],vTexselectCoords[2],vTexselectCoords[3],vTexselectCoords[4],\
+						
+							printf("vTexselectCoords o=%f 1=%f 2=%f 3=%f 4=%f 5=%f 6=%f 7=%f\n",vTexselectCoords[0],vTexselectCoords[1],vTexselectCoords[2],vTexselectCoords[3],vTexselectCoords[4],\
 							vTexselectCoords[5],vTexselectCoords[6],vTexselectCoords[7]);
-							}
+
+							printf("vVerts o=%f 1=%f 2=%f 3=%f 4=%f 5=%f 6=%f 7=%f\n",vVerts[0],vVerts[1],vVerts[2],vVerts[3],vVerts[4],\
+							vVerts[5],vVerts[6],vVerts[7]);
+							
 
 					}
 					viewcamera[i].panselecttriangleBatch[0]->CopyTexCoordData2f(vTexselectCoords, 0);
@@ -3398,7 +3425,7 @@ void Render::viewcameraprocess()
 										viewcamera[j].updownselcectrect=leftuprect;
 										panselecttriangleBatchnewenable[j]=1;
 										
-										cout<<"***end*****"<<leftdownrect<<"*******i="<<j<<"********"<<endl;
+										cout<<"***end*****"<<leftdownrect<<"*******i="<<j<<"****leftuprect****"<<leftuprect<<endl;
 										
 									}
 							}
@@ -3510,7 +3537,7 @@ int Render::PoisitionReach()
 				status=1;
 			else
 				status=0;
-			OSA_printf("the pan=%f title=%f   poisitionreachpan=%f poisitionreachtitle=%f \n",pan,title,poisitionreachpan,poisitionreachtitle);
+			OSA_printf("the pan=%f title=%f   poisitionreachpan=%f poisitionreachtitle=%f status=%d \n",pan,title,poisitionreachpan,poisitionreachtitle,status);
 		}
 	else
 		status=1;

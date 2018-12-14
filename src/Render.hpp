@@ -31,6 +31,7 @@
 #include "osd.hpp"
 #include"menu.hpp"
 
+#include <osa_mutex.h>
 //#include "mvdectInterface.hpp"
 //static const int ALPHA_MASK_HEIGHT= DEFAULT_IMAGE_HEIGHT;
 //static const int ALPHA_MASK_WIDTH = (DEFAULT_IMAGE_WIDTH/16);
@@ -187,6 +188,8 @@ public:
 
 	/***ViewCamera**/
 	ViewCamera viewcamera[MAXCAMER];
+	int debuggl;
+	OSA_MutexHndl renderlock;
 	Mat viewWarningarea[MAXCAMER];
 	unsigned char *viewWarningdata[MAXCAMER];
 	void viewcameraprocess();

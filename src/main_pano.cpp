@@ -24,6 +24,7 @@
 #include"Comcontrl.hpp"
 #include <gst/gst.h>
 #include"FileCapture.hpp"
+#include"Gststreamercontrl.hpp"
 static GLMain render;
 
 ImageProcess *Imageprocesspt;
@@ -201,6 +202,8 @@ void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capIn
 	info->timestamp = (uint64)capInfo.timestamp.tv_sec*1000*1000*1000
 			+ (uint64)capInfo.timestamp.tv_usec*1000;
 	info->calibration=calibration;
+
+	GstreaemerContrl::getinstance()->gstputmat(img);
     	 Imageprocesspt->CaptureThreadProcess(img,info);
 	//cv::imshow(WindowName, img);
 	//waitKey(1);
@@ -229,7 +232,8 @@ int main_pano(int argc, char **argv)
 	StichAlg::getinstance()->create();
 	Plantformpzt::getinstance()->create();
 	COM_Contrl::getinstance()->create();
-
+	GstreaemerContrl::getinstance()->create();
+	
 	
 	GLMain_InitPrm dsInit;
 	kalmanfilterinit();
@@ -266,6 +270,8 @@ int main_pano(int argc, char **argv)
 	//setgyrostart(1);
 	OSA_printf("run app success!\n");
 	//gst_videnc_create();
+
+	
 	
 	render.mainloop();
 	return 0;

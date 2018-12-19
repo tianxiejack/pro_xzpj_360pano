@@ -24,7 +24,7 @@
 #include <GLMatrixStack.h>
 #include <GLGeometryTransform.h>
 #include <GLFrustum.h>
-#include"Compress.hpp"
+#include"Gststream.hpp"
 #include "config.h"
 #include <iostream>
 #include "Glosd.hpp"
@@ -116,7 +116,7 @@ public:
 
 
 
-	Compress compress;
+	//Gstreamer gstreamer;
 	unsigned char *screenpiex;
 	Mat screenpiexframe;
 	unsigned char screenenable;

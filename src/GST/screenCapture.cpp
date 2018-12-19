@@ -322,7 +322,6 @@ static GstPadProbeReturn enc_tick_cb(GstPad * pad, GstPadProbeInfo * info, gpoin
 			g_object_set (pData->udpsink, "host","192.168.1.26", NULL);
 			g_object_set (pData->udpsink, "port", 16000, NULL);
 
-
 		}
 	if(UDPSINK)
 		{
@@ -774,10 +773,11 @@ int screenInit()
 		g_printerr("gst record init failed\n");
 		return -1;
 	}
-
+/*
 	res = pthread_create(&thread_0, NULL, record_main_loop, (void*)&customData);
 	if(res == -1)
 		return -1;
+*/
 	return 0;
 }
 

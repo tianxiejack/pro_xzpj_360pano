@@ -33,17 +33,17 @@ typedef enum
 
 typedef struct
 {
-	UINT flag;	// 0xFFFF0001
-	UINT size;
-	UINT chnId;	// no use in current version
-	UINT strmId;
+	unsigned int flag;	// 0xFFFF0001
+	unsigned int size;
+	unsigned int chnId;	// no use in current version
+	unsigned int strmId;
 	VCODEC_TYPE_E codecType;
 	VCODEC_FRAME_TYPE_E frameType;
-	UINT timestamp;
-	UINT reserved;
+	unsigned int timestamp;
+	unsigned int reserved;
 } DATAHEADER;
 
 void demoInterfacesDestroy(void);
-int demoInterfacesPut(DATAHEADER *pPrm, BYTE* pData);
+int demoInterfacesPut(DATAHEADER *pPrm, char* pData);
 void demoInterfacesCreate(char *ip_addr, Uint32 port);
 #endif

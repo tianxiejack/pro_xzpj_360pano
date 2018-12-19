@@ -324,7 +324,7 @@ int getGyroprocess(Mat& frame,GYRO_DATA_T *gyro)
 		}
 	if(GyroCalibration()==0)
 		{
-			printf("the GyroCalibration error\n ");
+			//printf("the GyroCalibration error\n ");
 		return 0;
 		}
 	GyrogetRPY();

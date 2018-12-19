@@ -1,15 +1,9 @@
----- PANOMODE Matches (14 in 3 files) ----
-Osd.cpp (z:\home\wj\cuda-workspace\360pano\src\osd):		{PANOMODE,1700,10,REDColour,DISMODE,L"拼接模式"},
-Osd.hpp (z:\home\wj\cuda-workspace\360pano\src\osd):	PANOMODE,
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	//else if(getmenumode()==PANOMODE)
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(getmenumode()==PANOMODE)
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	pthis->setmenumode(PANOMODE);
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):			setmenumode(PANOMODE);	
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src): if(Plantformpzt::getinstance()->getplantformcalibration()&&getmenumode()==PANOMODE)
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(getmenumode()==PANOMODE)
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(getmenumode()==PANOMODE)
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(getmenumode()==PANOMODE)
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(getmenumode()==PANOMODE)
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(getmenumode()==PANOMODE)
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(getmenumode()==PANOMODE)
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	if(getmenumode()==PANOMODE)
+---- caps_enc_to_rtp_265 Matches (8 in 2 files) ----
+Gststream.cpp (z:\home\wj\cuda-workspace\360pano\src\compress):	GstCaps *	caps_enc_to_rtp_265;
+Gststream.cpp (z:\home\wj\cuda-workspace\360pano\src\compress):			    if(!gst_element_link_filtered(pData->omxh265enc, pData->rtph265pay, pData->caps_enc_to_rtp_265))
+Gststream.cpp (z:\home\wj\cuda-workspace\360pano\src\compress):			if(!gst_element_link_filtered(pData->omxh265enc,pData->h264parse, pData->caps_enc_to_rtp_265))
+Gststream.cpp (z:\home\wj\cuda-workspace\360pano\src\compress):	pData->caps_enc_to_rtp_265 = gst_caps_new_simple("video/x-h264",
+screenCapture.cpp (z:\home\wj\cuda-workspace\360pano\src\gst):  	GstCaps *	caps_enc_to_rtp_265;
+screenCapture.cpp (z:\home\wj\cuda-workspace\360pano\src\gst):			    if(!gst_element_link_filtered(pData->omxh265enc, pData->rtph265pay, pData->caps_enc_to_rtp_265))
+screenCapture.cpp (z:\home\wj\cuda-workspace\360pano\src\gst):			if(!gst_element_link_filtered(pData->omxh265enc, pData->filesink1, pData->caps_enc_to_rtp_265))
+screenCapture.cpp (z:\home\wj\cuda-workspace\360pano\src\gst):	pData->caps_enc_to_rtp_265 = gst_caps_new_simple("video/x-h265",

@@ -4,13 +4,16 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-../src/compress/Compress.cpp 
+../src/compress/Gststream.cpp \
+../src/compress/Gststreamercontrl.cpp 
 
 OBJS += \
-./src/compress/Compress.o 
+./src/compress/Gststream.o \
+./src/compress/Gststreamercontrl.o 
 
 CPP_DEPS += \
-./src/compress/Compress.d 
+./src/compress/Gststream.d \
+./src/compress/Gststreamercontrl.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

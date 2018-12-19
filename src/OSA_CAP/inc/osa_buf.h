@@ -16,6 +16,7 @@ typedef struct {
   int 		bufferId;
   int 		memtype;
   uint64_t	timestamp;//ns
+  uint64_t      timestampCap;
   uint32_t  pbo;
   struct cudaGraphicsResource *resource;
   int 		width;

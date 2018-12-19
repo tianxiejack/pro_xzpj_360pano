@@ -220,7 +220,7 @@ void ImageProcess::CaptureThreadProcess(Mat src,OSA_BufInfo* frameinfo)
 
 */
 	
-
+	
 	OSA_BufInfo* info=NULL;
 	info = image_queue_getEmpty(&mcap_bufQue[queueid]);
 	if(info == NULL){

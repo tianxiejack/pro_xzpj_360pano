@@ -85,7 +85,6 @@ void FileCapture::main_Recv_func()
 		//capangle=angle*1000;
 		if(capturecallback!=NULL)
 		capturecallback(capture.data,&angle);
-
 	}
 
 }

@@ -18,6 +18,8 @@
 #include <gst_interfaces.h>
 using namespace cv;
 typedef int (*SendDataCallback)   (int dtype, unsigned char *buf, int size);
+
+typedef int (*SendSyncDataCallback)   (void *data);
 typedef enum
 {
 	FLIP_METHOD_NONE = 0,
@@ -47,6 +49,13 @@ enum
 	ENC_MAX_QB,
 	ENC_QP_PARAMS_COUNT
 };
+typedef struct{
+	double gyrox;
+	double gyroy;
+	double gyroz;
+	int event;
+
+}Privatedata;
 typedef struct _recordHandle
 {
 	int index;
@@ -63,9 +72,12 @@ typedef struct _recordHandle
 	FLIP_METHOD filp_method;
 	CAPTURE_SRC capture_src;
 	SendDataCallback sd_cb;
+	SendSyncDataCallback sy_cb;
 	int Q_PIB[ENC_QP_PARAMS_COUNT];
 	OSA_BufHndl *pushQueue;
 	OSA_SemHndl *pushSem;
+
+	Privatedata privatedata;
 }RecordHandle;
 
 typedef struct _gstCapture_data
@@ -80,6 +92,7 @@ typedef struct _gstCapture_data
 	char* format;
 	char* ip_addr;
 	SendDataCallback sd_cb;
+	SendSyncDataCallback sy_cb;
 	int Q_PIB[ENC_QP_PARAMS_COUNT];
 	void *notify;
 }GstCapture_data;
@@ -92,6 +105,7 @@ class Gstreamer
 		void create();
 		RecordHandle * gstpipeadd(GstCapture_data gstCapture_data);
 		int gstCapturePushData(RecordHandle *recordHandle, char *pbuffer , int datasize);
+		int gstCapturePushDataMux(RecordHandle *recordHandle, char *pbuffer , int datasize,Privatedata *privatedata);
 		void encode(Mat src);
 	private:
 		int gstlinkInit_convert_enc_fakesink(RecordHandle *recordHandle);

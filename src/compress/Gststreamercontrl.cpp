@@ -1,5 +1,6 @@
 #include"Gststreamercontrl.hpp"
 #include "StlGlDefines.h"
+#include"videorecord.hpp"
 static char TARGET_IP[32] = "192.168.1.26";
 
 GstCapture_data gstCapture_data[5];
@@ -13,7 +14,7 @@ static FILE *g_gst_wrfp=NULL;
 static int g_gst_wrPkt=0;
 
 GstreaemerContrl* GstreaemerContrl::instance=NULL;
-GstreaemerContrl::GstreaemerContrl()
+GstreaemerContrl::GstreaemerContrl():gstrecordfun(NULL)
 {
 
 }
@@ -22,10 +23,26 @@ GstreaemerContrl::~GstreaemerContrl()
 {
 
 }
+int GstreaemerContrl::syncdatafun(void *data)
+{
+	Privatedata *pridata=(Privatedata *)data;
+	SyncDate syncdata;
+	//printf("%s\n",__func__);
+	syncdata.gyroX=pridata->gyrox;
+	syncdata.gyroY=pridata->gyroy;
+	syncdata.gyroZ=pridata->gyroz;
+	VideoRecord::getinstance()->putsync(&syncdata);
+
+
+}
+
 int GstreaemerContrl::sync422_ontime_video(int dtype, unsigned char *buf, int size)
 {
-	printf("%s framelen=%d \n",__func__,size);
-	
+	//printf("%s framelen=%d \n",__func__,size);
+
+	if(instance!=NULL&&instance->gstrecordfun!=NULL)
+		instance->gstrecordfun(buf,&size);
+	/*
 	if(g_gst_recrod)
 	{
 		if(g_gst_wrfp == NULL)
@@ -68,6 +85,14 @@ int GstreaemerContrl::sync422_ontime_video(int dtype, unsigned char *buf, int si
 			printf(" close local file\n");
 		}
 	}
+	*/
+
+}
+
+
+void GstreaemerContrl::registrecordfun(CallBackfun fun)
+{
+	gstrecordfun=fun;
 
 }
 void GstreaemerContrl::create()
@@ -104,6 +129,7 @@ void GstreaemerContrl::create()
 	gstCapture_data[H265RTP].format = strFormat;//"I420";
 	gstCapture_data[H265RTP].ip_addr =TARGET_IP;
 	gstCapture_data[H265RTP].sd_cb=sync422_ontime_video;
+	gstCapture_data[H265RTP].sy_cb=syncdatafun;
 	for(int i=0;i<ENC_QP_PARAMS_COUNT;i++)
 		gstCapture_data[H265RTP].Q_PIB[i]=-1;
 
@@ -118,6 +144,11 @@ void GstreaemerContrl::create()
 void GstreaemerContrl::gstputmat(cv::Mat src)
 {
 	gstreamer.gstCapturePushData(record_handle[H265RTP],(char *)src.data,src.cols*src.rows*src.channels());
+}
+
+void GstreaemerContrl::gstputmux(cv::Mat src,Privatedata *privatedata)
+{
+	gstreamer.gstCapturePushDataMux(record_handle[H265RTP],(char *)src.data,src.cols*src.rows*src.channels(),privatedata);
 }
 
 void GstreaemerContrl::gstputmat(char* buf,int size)

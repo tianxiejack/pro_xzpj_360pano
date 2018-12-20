@@ -25,6 +25,9 @@
 #include <gst/gst.h>
 #include"FileCapture.hpp"
 #include"Gststreamercontrl.hpp"
+#include"videorecord.hpp"
+#include"videoload.hpp"
+
 static GLMain render;
 
 ImageProcess *Imageprocesspt;
@@ -80,10 +83,72 @@ void processFrame_file(void *data,void *angle)
 	
 
 }
+
+
+void  processFrameRecord_pano(void *data,void *infodata)
+{
+	bool status=0;
+	int cap_chid=TV_DEV_ID;
+	Mat img;
+	int queueid=0;
+	Uint32 processtime=OSA_getCurTimeInMsec();
+	unsigned char *framdata=NULL;
+	OSA_BufInfo* info=NULL;
+	int calibration=1;
+	Mat cap;// = Mat(TV_HEIGHT,TV_WIDTH,CV_8UC2,src);
+	framdata=(unsigned char *)data;
+
+	if(Config::getinstance()->getcam_readfromfile())
+		return ;
+
+	if(Config::getinstance()->getcamsource()==0)
+		return ;
+
+	//printf("the angle=%d\n",*(int *)angle);
+	//if(Config::getinstance()->getcam_readfromfile()==0)
+	//	return ;
+	info = image_queue_getEmptytime(imgQ[queueid],OSA_TIMEOUT_FOREVER);
+	if(info==NULL||data==NULL||infodata==NULL)
+			return ;
+	VideoLoadData gryodata=*(VideoLoadData*)infodata;
+	if(cap_chid==TV_DEV_ID)
+		{
+			img = Mat(config->getcamheight(),config->getcamwidth(),CV_8UC3, info->virtAddr);
+		}
+	memcpy(img.data,framdata,img.cols*img.rows*img.channels());
+	info->channels = img.channels();
+	info->width = img.cols;
+	info->height = img.rows;
+	info->timestamp = 0;
+	info->calibration=calibration;
+	info->framegyroyaw=gryodata.gyroz*ANGLESCALE;
+    	 Imageprocesspt->CaptureThreadProcess(img,info);
+	///////////////////////////////////////////
+	static Uint32 pretime=0;
+	Uint32 currenttime=OSA_getCurTimeInMsec();
+	if(currenttime-pretime>50||currenttime-pretime<30)
+		{
+			OSA_printf("********lost %d ms %s timeoffset=%d ms**********\n", OSA_getCurTimeInMsec(), __func__,currenttime-pretime);
+		}
+	pretime=currenttime;
+
+	//return;
+
+	//////////////////////////////////////////
+	//cv::imshow(WindowName, img);
+	//waitKey(1);
+	  image_queue_putFull(imgQ[queueid], info);
+	OSA_printf("********capture process%d ms**********\n", OSA_getCurTimeInMsec()-processtime);
+	
+	
+
+}
 void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capInfo, int format)
 {
 	bool status=0;
 	if(Config::getinstance()->getcam_readfromfile())
+		return ;
+	if(Config::getinstance()->getcamsource())
 		return ;
 	char WindowName[64]={0};
 	Mat img;
@@ -114,7 +179,7 @@ void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capIn
 	Uint32 currenttime=OSA_getCurTimeInMsec();
 	if(currenttime-pretime>50||currenttime-pretime<30)
 		{
-			//OSA_printf("********lost %d ms %s timeoffset=%d ms**********\n", OSA_getCurTimeInMsec(), __func__,currenttime-pretime);
+			OSA_printf("********lost %d ms %s timeoffset=%d ms**********\n", OSA_getCurTimeInMsec(), __func__,currenttime-pretime);
 		}
 	pretime=currenttime;
 
@@ -203,11 +268,16 @@ void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capIn
 			+ (uint64)capInfo.timestamp.tv_usec*1000;
 	info->calibration=calibration;
 
-	GstreaemerContrl::getinstance()->gstputmat(img);
+	Privatedata privatedata;
+	privatedata.gyrox= info->framegyroroll*1.0/ANGLESCALE ;
+	privatedata.gyroy=info->framegyropitch*1.0/ANGLESCALE;
+	privatedata.gyroz=info->framegyroyaw*1.0/ANGLESCALE;
+	if(info->calibration==1)
+	GstreaemerContrl::getinstance()->gstputmux(img,&privatedata);
     	 Imageprocesspt->CaptureThreadProcess(img,info);
 	//cv::imshow(WindowName, img);
 	//waitKey(1);
-	  image_queue_putFull(imgQ[queueid], info);
+	image_queue_putFull(imgQ[queueid], info);
 
 /*
 	if(DETECTTEST)
@@ -225,6 +295,7 @@ int main_pano(int argc, char **argv)
 	Config::getinstance()->saveconfig();
 	return 0;
 	#endif
+	
 	config=Config::getinstance();
 	config->loadconfig();
 	Queue::getinstance()->create();
@@ -233,7 +304,11 @@ int main_pano(int argc, char **argv)
 	Plantformpzt::getinstance()->create();
 	COM_Contrl::getinstance()->create();
 	GstreaemerContrl::getinstance()->create();
-	
+	VideoRecord::getinstance()->create();
+	GstreaemerContrl::getinstance()->registrecordfun(VideoRecord::recordvideo);
+	VideoLoad::getinstance()->create();
+	VideoLoad::getinstance()->registerfun(processFrameRecord_pano);
+
 	
 	GLMain_InitPrm dsInit;
 	kalmanfilterinit();

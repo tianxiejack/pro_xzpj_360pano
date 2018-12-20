@@ -226,7 +226,6 @@ void ImageProcess::CaptureThreadProcess(Mat src,OSA_BufInfo* frameinfo)
 	if(info == NULL){
 			return;
 			}
-
 	
 	memcpy(info->virtAddr,src.data,src.rows*src.cols*src.channels());
 	//OSA_printf("the w=%d h=%d c=%d\n",src.cols,src.rows,src.channels());

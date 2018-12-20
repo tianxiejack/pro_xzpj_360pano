@@ -16,7 +16,7 @@ FileStorage configfilestore;
 
 Config *Config::instance=new Config();
 
-Config::Config():panozeroptz(0),intergralenable(1),cam_fov(0),ptzpaninverse(0),ptztitleinverse(0),panoprocessshift(0),panoprocesstailcut(0),ptzspeed(20),angleinterval(10),panocalibration(1),cam_fixcamereafov(0)
+Config::Config():panozeroptz(0),intergralenable(1),cam_fov(0),ptzpaninverse(0),ptztitleinverse(0),panoprocessshift(0),panoprocesstailcut(0),ptzspeed(20),angleinterval(10),panocalibration(1),cam_fixcamereafov(0),camsource(0)
 {
 	#if CONFIGINIT
 	configfilestore=FileStorage(CONFIGFILENAME, FileStorage::WRITE);

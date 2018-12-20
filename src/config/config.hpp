@@ -28,6 +28,11 @@ class Config{
      int cam_readfromfile;
      int cam_fixcamereafov;
 
+
+    int camsource;
+
+     inline int getcamsource(){return camsource;};
+     void setcamsource(int flag){camsource=flag;};
      inline int getcam_fixcamereafov(){return cam_fixcamereafov;};
      inline int getcam_readfromfile(){return cam_readfromfile;};
      void setcam_readfromfile(int flag){cam_readfromfile=flag;};

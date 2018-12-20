@@ -12,6 +12,7 @@
 #include "osa.h"
 #include "osa_image_queue.h"
 #include "osa_sem.h"
+#include "config.h"
 typedef struct _CustomData
 {
   	GstElement *pipeline, *source, *videoconvert0, *tee0, *queue0, *fakesink0;
@@ -93,6 +94,12 @@ void * Gstreamer::thrdhndl_push_buffer(void* arg)
 			break;
 		OSA_BufInfo* bufInfo = image_queue_getFull(&pData->pushBuffQueue);
 		if(bufInfo != NULL){
+			Privatedata privatedata;
+			privatedata.gyrox=bufInfo->framegyroroll*1.0/ANGLESCALE;
+			privatedata.gyroy=bufInfo->framegyropitch*1.0/ANGLESCALE;
+			privatedata.gyroz=bufInfo->framegyroyaw*1.0/ANGLESCALE;
+			if( pData->record->sy_cb!=NULL)
+		    		pData->record->sy_cb(&privatedata);
 			GstBuffer *buffer = (GstBuffer *)bufInfo->physAddr;
 			OSA_assert(buffer != NULL);
 			GST_BUFFER_PTS(buffer) = pData->buffer_timestamp;
@@ -106,6 +113,7 @@ void * Gstreamer::thrdhndl_push_buffer(void* arg)
 				g_print("\n %s %d: gst_app_src_push_buffer error!\n", __func__, __LINE__);
 			}
 			image_queue_putEmpty(&pData->pushBuffQueue, bufInfo);
+				
 
 			//printf("^^^^^^^push_buffer^^^^pData->source=%p^^^^^^\n",pData->source);
 			//printf("%s  ok \n",__func__);
@@ -1049,6 +1057,7 @@ RecordHandle * Gstreamer::gstpipeadd(GstCapture_data gstCapture_data)
 	recordHandle->framerate = gstCapture_data.framerate;
 	recordHandle->bitrate = gstCapture_data.bitrate;
 	recordHandle->sd_cb=gstCapture_data.sd_cb;
+	recordHandle->sy_cb=gstCapture_data.sy_cb;
 	for(int i=0;i<ENC_QP_PARAMS_COUNT;i++)
 		recordHandle->Q_PIB[i]=gstCapture_data.Q_PIB[i];
 	OSA_assert(gstCapture_data.format!=NULL);
@@ -1167,6 +1176,38 @@ int Gstreamer::gstCapturePushData(RecordHandle *recordHandle, char *pbuffer , in
 	{
 		//printf("%s  ok \n",__func__);
 		memcpy(bufInfo->virtAddr, pbuffer, datasize);
+		image_queue_putFull(&pData->pushBuffQueue, bufInfo);
+		OSA_semSignal(&pData->pushSem);
+	}
+
+	return 0;
+}
+
+int Gstreamer::gstCapturePushDataMux(RecordHandle *recordHandle, char *pbuffer , int datasize,Privatedata *privatedata)
+{
+	if(recordHandle == NULL)
+	{
+		printf("recordHandle=%p\n",recordHandle);
+		return -1;
+	}
+
+	//printf("%s recordHandle=%p\n",__func__,recordHandle);
+	GstCustomData* pData = (GstCustomData *)recordHandle->context;
+
+	if(pData==NULL || pData->source == NULL || APPSRC != pData->capture_src)
+	{
+		printf("pData=%p pData->source=%p pData->capture_src=%d\n",pData,pData->source,pData->capture_src);
+		return -1;
+	}
+
+	OSA_BufInfo* bufInfo = image_queue_getEmpty(&pData->pushBuffQueue);
+	if(bufInfo != NULL)
+	{
+		//printf("%s  ok \n",__func__);
+		memcpy(bufInfo->virtAddr, pbuffer, datasize);
+		bufInfo->framegyroroll=privatedata->gyrox*ANGLESCALE;
+		bufInfo->framegyropitch=privatedata->gyroy*ANGLESCALE;
+		bufInfo->framegyroyaw=privatedata->gyroz*ANGLESCALE;
 		image_queue_putFull(&pData->pushBuffQueue, bufInfo);
 		OSA_semSignal(&pData->pushSem);
 	}

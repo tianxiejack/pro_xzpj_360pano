@@ -23,6 +23,7 @@
 #include "Queuebuffer.hpp"
 #include "StichAlg.hpp"
 #include"Gststreamercontrl.hpp"
+#include"videorecord.hpp"
 
 //#include"Gyroprocess.hpp"
 
@@ -441,10 +442,12 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 						OSA_printf("[fun=%s line=%d] rotsita=%d \n",__func__,__LINE__,rotsita);
 						break;
 					case GLUT_KEY_F1:
-						Panpicenum=(Panpicenum+1)%BRIDGENUM;
+						VideoRecord::getinstance()->settimerecordenable(1);
+						//Panpicenum=(Panpicenum+1)%BRIDGENUM;
 						break;
 					case GLUT_KEY_F2:
-						Panpicenum=(Panpicenum-1+BRIDGENUM)%BRIDGENUM;
+						VideoRecord::getinstance()->settimerecordenable(0);
+						//Panpicenum=(Panpicenum-1+BRIDGENUM)%BRIDGENUM;
 						break;
 					case GLUT_KEY_F5://singprint
 						shotcut=1;
@@ -465,7 +468,12 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 						setpanoflagenable(0);
 						break;
 					case GLUT_KEY_F12:
-						recordscreen=(recordscreen+1)%2;
+						Config::getinstance()->setcamsource(0);
+						//recordscreen=(recordscreen+1)%2;
+						break;
+					case GLUT_KEY_F11:
+						Config::getinstance()->setcamsource(1);
+						//recordscreen=(recordscreen+1)%2;
 						break;
 					case GLUT_KEY_F4:
 						debuggl=(debuggl+1)%2;

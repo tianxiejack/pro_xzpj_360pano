@@ -34,6 +34,10 @@ src/mv/lb \
 src/mov/src \
 src/menu \
 src/lk \
+src/live555/liveMedia \
+src/live555/groupsock \
+src/live555/UsageEnvironment \
+src/live555/BasicUsageEnvironment \
 src/gpio \
 src/file \
 src/detect \

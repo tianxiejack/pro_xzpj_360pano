@@ -1130,7 +1130,11 @@ RecordHandle * Gstreamer::gstpipeadd(GstCapture_data gstCapture_data)
 	*/
 	//res = gstlinkInit_convert_enc_rtp(recordHandle);
 	//res = gstlinkInit_convert_enc_fakesink(recordHandle);
+	//if(createNum==0)
 	res=record_main_init(recordHandle);
+	//else
+	//res = gstlinkInit_convert_enc_fakesink(recordHandle);
+	
 	printf("recordHandle=%p\n",recordHandle);
 	if(res == -1)
 	{

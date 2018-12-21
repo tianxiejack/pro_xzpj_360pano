@@ -38,10 +38,13 @@ int GstreaemerContrl::syncdatafun(void *data)
 
 int GstreaemerContrl::sync422_ontime_video(int dtype, unsigned char *buf, int size)
 {
-	//printf("%s framelen=%d \n",__func__,size);
+	//printf("%s dtype=%d \n",__func__,dtype);
 
 	if(instance!=NULL&&instance->gstrecordfun!=NULL)
 		instance->gstrecordfun(buf,&size);
+
+
+		
 	/*
 	if(g_gst_recrod)
 	{
@@ -149,6 +152,7 @@ void GstreaemerContrl::gstputmat(cv::Mat src)
 void GstreaemerContrl::gstputmux(cv::Mat src,Privatedata *privatedata)
 {
 	gstreamer.gstCapturePushDataMux(record_handle[H265RTP],(char *)src.data,src.cols*src.rows*src.channels(),privatedata);
+	//gstreamer.gstCapturePushDataMux(record_handle[H265COMPRESS],(char *)src.data,src.cols*src.rows*src.channels(),privatedata);
 }
 
 void GstreaemerContrl::gstputmat(char* buf,int size)

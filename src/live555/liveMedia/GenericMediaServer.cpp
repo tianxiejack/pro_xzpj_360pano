@@ -149,7 +149,7 @@ int GenericMediaServer::setUpOurSocket(UsageEnvironment& env, Port& ourPort) {
     NoReuse dummy(env); // Don't use this socket if there's already a local server using it
 #endif
     
-    ourSocket = setupStreamSocket(env, ourPort, True, True);
+    ourSocket = setupStreamSocket(env, ourPort);
     if (ourSocket < 0) break;
     
     // Make sure we have a big send buffer:
@@ -184,7 +184,7 @@ void GenericMediaServer::incomingConnectionHandler() {
 void GenericMediaServer::incomingConnectionHandlerOnSocket(int serverSocket) {
   struct sockaddr_in clientAddr;
   SOCKLEN_T clientAddrLen = sizeof clientAddr;
-  int clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, (socklen_t*)&clientAddrLen);
+  int clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, (socklen_t *)&clientAddrLen);
   if (clientSocket < 0) {
     int err = envir().getErrno();
     if (err != EWOULDBLOCK) {

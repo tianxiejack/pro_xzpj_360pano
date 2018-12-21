@@ -520,9 +520,9 @@ void RTCPInstance
     if ((rtcpHdr & 0xE0FE0000) != (0x80000000 | (RTCP_PT_SR<<16)) &&
 	(rtcpHdr & 0xE0FF0000) != (0x80000000 | (RTCP_PT_APP<<16))) {
 #ifdef DEBUG
-      fprintf(stderr, "rejected bad RTCP packet: header 0x%08x\n", rtcpHdr);
+      fprintf(stderr, "LW allow  rejected bad RTCP packet: header 0x%08x\n", rtcpHdr);
 #endif
-      break;
+      break; 
     }
 
     // Process each of the individual RTCP 'subpackets' in (what may be)
@@ -818,9 +818,9 @@ void RTCPInstance
 
     if (!packetOK) {
 #ifdef DEBUG
-      fprintf(stderr, "rejected bad RTCP subpacket: header 0x%08x\n", rtcpHdr);
+      fprintf(stderr, "LW allow 2 rejected bad RTCP subpacket: header 0x%08x\n", rtcpHdr);
 #endif
-      break;
+      //break;
     } else {
 #ifdef DEBUG
       fprintf(stderr, "validated entire RTCP packet\n");

@@ -74,7 +74,7 @@ char* RTSPServer::rtspURLPrefix(int clientSocket) const {
       : ourIPAddress(envir()); // hack
   } else {
     SOCKLEN_T namelen = sizeof ourAddress;
-    getsockname(clientSocket, (struct sockaddr*)&ourAddress, (socklen_t*)&namelen);
+    getsockname(clientSocket, (struct sockaddr*)&ourAddress, (socklen_t *)&namelen);
   }
   
   char urlBuffer[100]; // more than big enough for "rtsp://<ip-address>:<port>/"
@@ -391,12 +391,12 @@ static void lookForHeader(char const* headerName, char const* source, unsigned s
       for (unsigned j = i; j < sourceLen; ++j) {
 	if (source[j] == '\r' || source[j] == '\n') {
 	  // We've found the end of the line.  Copy it to the result (if it will fit):
-	  if (j-i+1 > resultMaxSize) return; // it wouldn't fit
+	  if (j-i+1 > resultMaxSize) break;
 	  char const* resultSource = &source[i];
 	  char const* resultSourceEnd = &source[j];
 	  while (resultSource < resultSourceEnd) *resultStr++ = *resultSource++;
 	  *resultStr = '\0';
-	  return;
+	  break;
 	}
       }
     }
@@ -541,8 +541,8 @@ Boolean RTSPServer::RTSPClientConnection
   }
   RTSPServer::RTSPClientConnection* prevClientConnection
     = (RTSPServer::RTSPClientConnection*)(fOurRTSPServer.fClientConnectionsForHTTPTunneling->Lookup(sessionCookie));
-  if (prevClientConnection == NULL || prevClientConnection == this) {
-    // Either there was no previous HTTP "GET" request, or it was on the same connection; treat this "POST" request as bad:
+  if (prevClientConnection == NULL) {
+    // There was no previous HTTP "GET" request; treat this "POST" request as bad:
     handleHTTPCmd_notSupported();
     fIsActive = False; // triggers deletion of ourself
     return False;
@@ -699,7 +699,6 @@ void RTSPServer::RTSPClientConnection::handleRequestBytes(int newBytesRead) {
     char cseq[RTSP_PARAM_STRING_MAX];
     char sessionIdStr[RTSP_PARAM_STRING_MAX];
     unsigned contentLength = 0;
-    Boolean playAfterSetup = False;
     fLastCRLF[2] = '\0'; // temporarily, for parsing
     Boolean parseSucceeded = parseRTSPRequestString((char*)fRequestBuffer, fLastCRLF+2 - fRequestBuffer,
 						    cmdName, sizeof cmdName,
@@ -709,13 +708,7 @@ void RTSPServer::RTSPClientConnection::handleRequestBytes(int newBytesRead) {
 						    sessionIdStr, sizeof sessionIdStr,
 						    contentLength);
     fLastCRLF[2] = '\r'; // restore its value
-    // Check first for a bogus "Content-Length" value that would cause a pointer wraparound:
-    if (tmpPtr + 2 + contentLength < tmpPtr + 2) {
-#ifdef DEBUG
-      fprintf(stderr, "parseRTSPRequestString() returned a bogus \"Content-Length:\" value: 0x%x (%d)\n", contentLength, (int)contentLength);
-#endif
-      parseSucceeded = False;
-    }
+    Boolean playAfterSetup = False;
     if (parseSucceeded) {
 #ifdef DEBUG
       fprintf(stderr, "parseRTSPRequestString() succeeded, returning cmdName \"%s\", urlPreSuffix \"%s\", urlSuffix \"%s\", CSeq \"%s\", Content-Length %u, with %d bytes following the message.\n", cmdName, urlPreSuffix, urlSuffix, cseq, contentLength, ptr + newBytesRead - (tmpPtr + 2));
@@ -1394,7 +1387,7 @@ void RTSPServer::RTSPClientSession
     
     // Make sure that we transmit on the same interface that's used by the client (in case we're a multi-homed server):
     struct sockaddr_in sourceAddr; SOCKLEN_T namelen = sizeof sourceAddr;
-    getsockname(ourClientConnection->fClientInputSocket, (struct sockaddr*)&sourceAddr,(socklen_t*) &namelen);
+    getsockname(ourClientConnection->fClientInputSocket, (struct sockaddr*)&sourceAddr, (socklen_t *)&namelen);
     netAddressBits origSendingInterfaceAddr = SendingInterfaceAddr;
     netAddressBits origReceivingInterfaceAddr = ReceivingInterfaceAddr;
     // NOTE: The following might not work properly, so we ifdef it out for now:

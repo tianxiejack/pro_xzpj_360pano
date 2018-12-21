@@ -22,7 +22,7 @@
 #include <time.h>
 
 #include"Queuebuffer.hpp"
-
+#include <gst_ring_buffer.h>
 
 
 using namespace std;
@@ -137,6 +137,11 @@ static GstPadProbeReturn filesink1_buffer (GstPad *pad, GstPadProbeInfo *info, g
 
 	if(gst_buffer_map(buffer, &map, GST_MAP_READ))
 	{
+
+
+	     //printf("***********%s**************\n",__func__);
+	     put_ring_buffer((char *)map.data, map.size);
+		/*
 		if(screenGetData!= NULL)
 		{
 			//malloc 2 p1 p2
@@ -156,6 +161,8 @@ static GstPadProbeReturn filesink1_buffer (GstPad *pad, GstPadProbeInfo *info, g
 				//printf("[%d] %p:%d\n", i, pObj->buf, pObj->dataLenth);
 			}
 		}
+		*/
+		
 
 		gst_buffer_unmap(buffer, &map);
 	}
@@ -215,7 +222,7 @@ static GstPadProbeReturn enc_buffer (GstPad *pad, GstPadProbeInfo *info, gpointe
 }
 
 
-#define UDPSINK  (1)
+#define UDPSINK  (0)
 #define GST_ENCBITRATE	(5600000)
 static GstPadProbeReturn enc_tick_cb(GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
@@ -233,7 +240,7 @@ static GstPadProbeReturn enc_tick_cb(GstPad * pad, GstPadProbeInfo * info, gpoin
 	}
 
 	pData->nvvidconv0 = gst_element_factory_make ("nvvidconv", NULL);
-	pData->omxh265enc = gst_element_factory_make ("omxh265enc", NULL);
+	pData->omxh265enc = gst_element_factory_make ("omxh264enc", NULL);
 	pData->queue1 = gst_element_factory_make("queue", NULL);
 	
 	if(UDPSINK)
@@ -629,9 +636,9 @@ int record_main_init()
 	pData->queue0 = gst_element_factory_make("queue", NULL);
 	pData->fakesink0 = gst_element_factory_make ("fakesink", NULL);
 	//创建空的管道
-	pData->pipeline = gst_pipeline_new ("test-pipeline");
+	pData->pipeline = gst_pipeline_new ("test-pipelinertsp");
 
-	pData->caps_enc_to_rtp_265 = gst_caps_new_simple("video/x-h265",
+	pData->caps_enc_to_rtp_265 = gst_caps_new_simple("video/x-h264",
 										"stream-format", G_TYPE_STRING, "byte-stream",
 										"width", G_TYPE_INT, pData->width,
 										"height", G_TYPE_INT, pData->height,

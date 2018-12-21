@@ -27,6 +27,7 @@
 #include"Gststreamercontrl.hpp"
 #include"videorecord.hpp"
 #include"videoload.hpp"
+#include"rtspserver.hpp"
 
 static GLMain render;
 
@@ -179,7 +180,8 @@ void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capIn
 	Uint32 currenttime=OSA_getCurTimeInMsec();
 	if(currenttime-pretime>50||currenttime-pretime<30)
 		{
-			OSA_printf("********lost %d ms %s timeoffset=%d ms**********\n", OSA_getCurTimeInMsec(), __func__,currenttime-pretime);
+			;
+			//OSA_printf("********lost %d ms %s timeoffset=%d ms**********\n", OSA_getCurTimeInMsec(), __func__,currenttime-pretime);
 		}
 	pretime=currenttime;
 
@@ -308,7 +310,7 @@ int main_pano(int argc, char **argv)
 	GstreaemerContrl::getinstance()->registrecordfun(VideoRecord::recordvideo);
 	VideoLoad::getinstance()->create();
 	VideoLoad::getinstance()->registerfun(processFrameRecord_pano);
-
+	RtspServer::getinstance()->create();
 	
 	GLMain_InitPrm dsInit;
 	kalmanfilterinit();

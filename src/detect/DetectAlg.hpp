@@ -70,6 +70,7 @@ class DetectAlg
 		double LKprocessangle[MOVELKBLOCKNUM];
 		CMvDectInterface *m_pMovDetector;
 		ClassifyDetect *classifydetect;
+	
 
 	private:
 			/*******************detect******************/

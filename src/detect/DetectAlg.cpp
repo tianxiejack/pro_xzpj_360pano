@@ -189,11 +189,14 @@ void DetectAlg::panomoveprocess()
 								//printf(" newmat proceess ****************num=%d\n",premodelnum);
 								LKRramegray(blackrect).copyTo(LKRramegrayblackboard(blackrect));
 							}
+
+						/*
 						//int num=getmodelnum(blocknum);
 						if(getmodeling()==0)
 							videowriter[blocknum]<<LKRramegrayblackboard;
 						else
 							videowriter[blocknum]<<Modelframe[blocknum][premodelnum];
+						*/
 						/*
 						if(blocknum==1)
 							{
@@ -607,8 +610,8 @@ void DetectAlg::Multicpufilepanoprocess(Mat& src)
 		processsrc=src;
 
 	int angle=getcurrentcapangle()*1000;
-	
-	blucknum=angle/22500;
+	int fixangle=Config::getinstance()->getcam_fixcamereafov()*1000;
+	blucknum=angle/fixangle;
 
 	
 

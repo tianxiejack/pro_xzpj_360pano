@@ -3,13 +3,17 @@
 #include"Stich.hpp"
 #include "plantformcontrl.hpp"
 #include"Gyroprocess.hpp"
+#include"math.h"
+#include <iostream> 
+#include <cmath>
+
 StichAlg*StichAlg::instance=NULL;
 
 
 StichAlg::StichAlg():tailcut(0),Seampostion(0),xoffsetfeat(0),yoffsetfeat(0),zeroflameupdate(1),camerazeroossfet(0),zeroflag(0),zeroangle(0),zerocalibflag(1),
-	zerolostcout(0),zerolostflag(0),zerocalibrationstatus(1)
+	zerolostcout(0),zerolostflag(0),zerocalibrationstatus(1),gamma(2.5),bl_width_(32),bl_height_(32)
 {
-	
+	alpha.push_back(Point3d(1,1,1));
 }
 StichAlg::~StichAlg()
 {
@@ -293,8 +297,10 @@ void StichAlg::Panoprocess()
 			//if((getcurrentangle()<360-ZEROJUEGE)&&(getcurrentangle()>0))
 				if(Config::getinstance()->getpanocalibration()==0)
 				{
+					//CColorCorrectfeed(pre,dst,getSeamPos());
 					fusiontail(dst,dst.cols-getSeamPos());
 					StichFusionSeam(dst,dst.cols-getSeamPos());
+					//CColorCorrect(dst);
 				}
 				else
 					FusionSeam(pre,dst,getSeamPos());
@@ -310,6 +316,88 @@ void StichAlg::Panoprocess()
 	
 
 }
+void StichAlg::CColorCorrectfeed(Mat &src,Mat & dst,int seampostion)
+{
+	int img_idx=0;
+	alpha[img_idx].x  = alpha[img_idx].y = alpha[img_idx].z = 1.0;
+	
+	printf("seampostion=%d\n",seampostion);
+	
+	int rows = src.rows;
+	int cols = src.cols; 
+	double processWidth = src.cols - seampostion;
+	Point3d Isum1 = Point3d(0.0,0.0,0.0), Isum2 = Point3d(0.0,0.0,0.0);
+	for (int i = 0; i < rows; i++)
+	{
+		uchar* p  = src.ptr<uchar>(i);  
+		uchar* t  = dst.ptr<uchar>(i);
+		uchar* d = dst.ptr<uchar>(i);
+		const Point3_<uchar>* r1 = src.ptr<Point3_<uchar> >(i);
+		const Point3_<uchar>* r2 = dst.ptr<Point3_<uchar> >(i);
+		for (int j = 0; j < processWidth; j++)
+		{
+			
+			
+			Isum1.x += std::pow(static_cast<double>(r1[j+seampostion].x/255.0),gamma)*255.0;
+			Isum1.y += std::pow(static_cast<double>(r1[j+seampostion].y/255.0),gamma)*255.0;
+			Isum1.z += std::pow(static_cast<double>(r1[j+seampostion].z/255.0),gamma)*255.0;
+
+			Isum2.x += std::pow(static_cast<double>(r2[j].x/255.0),gamma)*255.0;
+			Isum2.y += std::pow(static_cast<double>(r2[j].y/255.0),gamma)*255.0;
+			Isum2.z += std::pow(static_cast<double>(r2[j].z/255.0),gamma)*255.0;
+		}
+	}
+	alpha[img_idx].x  = Isum1.x/Isum2.x;
+	alpha[img_idx].y  = Isum1.y/Isum2.y;
+	alpha[img_idx].z  = Isum1.z/Isum2.z;
+	alpha[img_idx].x  *= alpha[img_idx-1].x;
+	alpha[img_idx].y  *= alpha[img_idx-1].y;
+	alpha[img_idx].z  *= alpha[img_idx-1].z;
+
+	Point3d sum_alph = Point3d(0.0, 0.0, 0.0);
+	Point3d sum_alph2 = Point3d(0.0, 0.0, 0.0);
+	sum_alph.x += alpha[img_idx].x;
+	sum_alph.y += alpha[img_idx].y;
+	sum_alph.z += alpha[img_idx].z;
+	sum_alph2.x += alpha[img_idx].x*alpha[img_idx].x;
+	sum_alph2.y += alpha[img_idx].y*alpha[img_idx].y;
+	sum_alph2.z += alpha[img_idx].z*alpha[img_idx].z;
+
+	gain_c.x = sum_alph.x/sum_alph2.x;
+	gain_c.y = sum_alph.y/sum_alph2.y;
+	gain_c.z = sum_alph.z/sum_alph2.z;
+	printf("thegain_c x=%d y=%d z=%d\n ",gain_c.x,gain_c.y,gain_c.z);
+
+
+}
+
+void StichAlg::CColorCorrect(Mat &image)
+{
+	int index=0;
+	 CV_Assert(image.type() == CV_8UC3);
+
+	  Point3d gain_  ;
+	  gain_.x = std::pow(alpha[index].x*gain_c.x, 1/gamma);
+	  gain_.y = std::pow(alpha[index].y*gain_c.y, 1/gamma);
+	  gain_.z = std::pow(alpha[index].z*gain_c.z, 1/gamma);
+
+	 for (int y = 0; y < image.rows; ++y)
+	 {
+		 Point3_<uchar>* row = image.ptr<Point3_<uchar> >(y);
+		 for (int x = 0; x < image.cols; ++x)
+		 {
+// 			 row[x].x = saturate_cast<uchar>(row[x].x * gain_.x);
+// 			 row[x].y = saturate_cast<uchar>(row[x].y * gain_.y);
+// 			 row[x].z = saturate_cast<uchar>(row[x].z * gain_.z);
+
+			 row[x].x = saturate_cast<uchar>(std::pow((row[x].x /255.0),1.0/gain_.x)*255.0);
+			 row[x].y = saturate_cast<uchar>(std::pow((row[x].y /255.0), 1.0/gain_.y)*255.0);
+			 row[x].z = saturate_cast<uchar>(std::pow((row[x].z /255.0), 1.0/gain_.z)*255.0);
+		 }
+	 }
+
+	
+}
 
 void StichAlg::StichFusionSeam(Mat & src,int pos)
 {
@@ -321,7 +409,8 @@ void StichAlg::StichFusionSeam(Mat & src,int pos)
 	int cols = src.cols; 
 	double alpha = 1;
 	int angle=getcurrentangle()*1000;
-	int currentid=angle/22500;
+	int fixangle=Config::getinstance()->getcam_fixcamereafov()*1000;
+	int currentid=angle/fixangle;
 	int preid=(MAXFUSON+currentid-1)%MAXFUSON;
 	int lastid=(MAXFUSON+currentid+1)%MAXFUSON;
 	
@@ -330,7 +419,8 @@ void StichAlg::StichFusionSeam(Mat & src,int pos)
 	
 	Mat dsthead=Fusiontail[preid];
 	Mat dsttail=Fusionhead[lastid];
-
+	
+	//CColorCorrectfeed();
 	
 	//printf("2FusionSeam w=%f  seampostion=%d\n",processWidth,seampostion);
 	for (int i = 0; i < rows; i++)
@@ -377,7 +467,8 @@ void StichAlg::fusiontail(Mat src,int pos)
 	int channel=src.channels();
 	//int sem=min(FIXDIS,pos);
 	int angle=getcurrentangle()*1000;
-	int framid=angle/22500;
+	int fixangle=Config::getinstance()->getcam_fixcamereafov()*1000;
+	int framid=angle/fixangle;
 	framid=framid%MAXFUSON;
 	char bufname[20];
 	Mat dsttail=Fusiontail[framid];

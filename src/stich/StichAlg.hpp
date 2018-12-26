@@ -40,8 +40,8 @@ typedef struct {
 	bool						initFlag;
 	void 						*pParent;
 }MAIN_ProcThrStichObj;
-#define MAXFUSON (16)
-#define FIXDIS (200)
+#define MAXFUSON (40)
+#define FIXDIS (500)
 class StichAlg 
 {
 
@@ -71,7 +71,18 @@ class StichAlg
 
 			void fusiontail(Mat src,int pos);
 			void StichFusionSeam(Mat & dst,int seampostion);
+			void CColorCorrect(Mat &src);
+			void CColorCorrectfeed(Mat &src,Mat & dst,int seampostion);
 		static StichAlg *getinstance();
+	public:
+			/*****************fusion*************************/
+	
+		int bl_width_;
+		int bl_height_;
+		 std::vector<Mat_<float> > gain_maps_;
+		 double gamma;
+		 Point3d gain_c;
+		 std::vector<Point3d>	alpha;
 	public:
 		
 		int Fusion[MAXFUSON];

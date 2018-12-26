@@ -74,13 +74,13 @@
 
 #define PANOGRAYDETECT (1)
 
-#define MOVEBLOCKNUM (20)
+#define MOVEBLOCKNUM (40)
 
 #define MODELINGNUM (5)
 
 #define MOVEBLOCKENABLE (1)
 
-#define MOVELKBLOCKNUM (20)
+#define MOVELKBLOCKNUM (40)
 
 #define LKMOVANGLE (1.5)
 
@@ -108,7 +108,7 @@
 #define PTZPANINVERSE (0)
 #define PTZTITLEINVERSE (1)
 
-#define MULTICPUPANONUM (20)
+#define MULTICPUPANONUM (15)
 
 #define ZEROJUEGE (15)
 

@@ -10,6 +10,8 @@ RM := rm -rf
 -include sources.mk
 -include subdir.mk
 -include src/stich/subdir.mk
+-include src/rtsp/subdir.mk
+-include src/record/subdir.mk
 -include src/subdir.mk
 -include src/pelco/subdir.mk
 -include src/mv/subdir.mk
@@ -17,6 +19,10 @@ RM := rm -rf
 -include src/mov/src/subdir.mk
 -include src/menu/subdir.mk
 -include src/lk/subdir.mk
+-include src/live555/liveMedia/subdir.mk
+-include src/live555/groupsock/subdir.mk
+-include src/live555/UsageEnvironment/subdir.mk
+-include src/live555/BasicUsageEnvironment/subdir.mk
 -include src/gpio/subdir.mk
 -include src/file/subdir.mk
 -include src/detect/subdir.mk

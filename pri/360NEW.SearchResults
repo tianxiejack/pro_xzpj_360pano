@@ -1,11 +1,7 @@
----- OutPacketBuffer::maxSize Matches (10 in 5 files) ----
-DynamicRTSPServer.cpp (z:\home\wj\cuda-workspace\360pano\src\rtsp):    OutPacketBuffer::maxSize = 100000; // allow for some possibly large H.264 frames
-DynamicRTSPServer.cpp (z:\home\wj\cuda-workspace\360pano\src\rtsp):    OutPacketBuffer::maxSize = 100000; // allow for some possibly large H.265 frames
-DynamicRTSPServer.cpp (z:\home\wj\cuda-workspace\360pano\src\rtsp):    OutPacketBuffer::maxSize = 300000;
-DynamicRTSPServer.cpp (z:\home\wj\cuda-workspace\360pano\src\rtsp):    OutPacketBuffer::maxSize = 100000; // allow for some possibly large VP8 or VP9 frames
-H264or5VideoRTPSink.cpp (z:\home\wj\cuda-workspace\360pano\src\live555\livemedia):    fOurFragmenter = new H264or5Fragmenter(fHNumber, envir(), fSource, OutPacketBuffer::maxSize,
-MediaSink.cpp (z:\home\wj\cuda-workspace\360pano\src\live555\livemedia):unsigned OutPacketBuffer::maxSize = 60000; // by default
-MultiFramedRTPSink.cpp (z:\home\wj\cuda-workspace\360pano\src\live555\livemedia):	    << numTruncatedBytes << " bytes of trailing data was dropped!  Correct this by increasing \"OutPacketBuffer::maxSize\" to at least "
-MultiFramedRTPSink.cpp (z:\home\wj\cuda-workspace\360pano\src\live555\livemedia):	    << OutPacketBuffer::maxSize + numTruncatedBytes << ", *before* creating this 'RTPSink'.  (Current value is "
-MultiFramedRTPSink.cpp (z:\home\wj\cuda-workspace\360pano\src\live555\livemedia):	    << OutPacketBuffer::maxSize << ".)\n";
-T140TextRTPSink.cpp (z:\home\wj\cuda-workspace\360pano\src\live555\livemedia):    fBufferSize(OutPacketBuffer::maxSize), fNumBufferedBytes(0) {
+---- DISPALYTORTP Matches (6 in 4 files) ----
+Queuebuffer.cpp (z:\home\wj\cuda-workspace\360pano\src\buffer):		image_queue_create(&bufQue[DISPALYTORTP][chId], 3,
+Queuebuffer.hpp (z:\home\wj\cuda-workspace\360pano\src\buffer):			DISPALYTORTP,
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	OSA_BufInfo *info=(OSA_BufInfo *)queue->getempty(Queue::DISPALYTORTP, 0,OSA_TIMEOUT_NONE);
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):			queue->putfull(Queue::DISPALYTORTP, 0, info);
+screenCapture.cpp (z:\home\wj\cuda-workspace\360pano\src\gst):		OSA_BufInfo* bufInfo =(OSA_BufInfo*)queue->getfull(Queue::DISPALYTORTP, 0, OSA_TIMEOUT_FOREVER);
+screenCapture.cpp (z:\home\wj\cuda-workspace\360pano\src\gst):			queue->putempty(Queue::DISPALYTORTP, 0,bufInfo);

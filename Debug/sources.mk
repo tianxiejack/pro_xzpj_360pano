@@ -26,6 +26,8 @@ C_DEPS :=
 # Every subdirectory with source files must be described here
 SUBDIRS := \
 src/stich \
+src/rtsp \
+src/record \
 src \
 src/pelco \
 src/mv \
@@ -33,6 +35,10 @@ src/mv/lb \
 src/mov/src \
 src/menu \
 src/lk \
+src/live555/liveMedia \
+src/live555/groupsock \
+src/live555/UsageEnvironment \
+src/live555/BasicUsageEnvironment \
 src/gpio \
 src/file \
 src/detect \

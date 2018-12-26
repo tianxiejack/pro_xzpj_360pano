@@ -3,12 +3,13 @@
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/features2d/features2d.hpp"
+#include "config.hpp"
 using namespace cv;
 using namespace std;
 //char filename[50]="/home/ubuntu/file/"
 
-#define BLOCKIDMAX (311)
-#define FEILDIDMAX (16)
+#define BLOCKIDMAX (13)
+#define FEILDIDMAX (40)
 FileCapture::FileCapture():capturecallback(NULL),captureangle(0.0),blockid(0),fieldid(0)
 {
 
@@ -40,7 +41,7 @@ void *FileCapture::readfilepicture(void *info)
 {
 	char bufname[50];
 	int *angle=(int *)info;
-	sprintf(bufname,"/home/ubuntu/capture/%da%d.jpg",blockid,fieldid);
+	sprintf(bufname,"/home/ubuntu/calib/xb/%da%d.jpg",blockid,fieldid);
 	//puts(bufname);
 	Mat filepic;
 	filepic=imread(bufname,CV_LOAD_IMAGE_UNCHANGED);
@@ -57,7 +58,8 @@ void *FileCapture::readfilepicture(void *info)
 		resize(filepic,capture,Size(Config::getinstance()->getcamwidth(),Config::getinstance()->getcamheight()),0,0,INTER_LINEAR);
 	if(fieldid==FEILDIDMAX-1)
 		blockid++;
-	*angle=22500*fieldid;
+	int fov=Config::getinstance()->getcam_fixcamereafov();
+	*angle=fov*1000*fieldid;
 	*angle=*angle%360000;
 	
 	fieldid=(fieldid+1)%FEILDIDMAX;
@@ -80,7 +82,7 @@ void FileCapture::main_Recv_func()
 	while(mainRecvThrObj.exitProcThread ==  false)
 	{	
 		int capangle=0;
-		OSA_waitMsecs(20);
+		OSA_waitMsecs(30);
 		data=(unsigned char *)readfilepicture(&angle);
 		//capangle=angle*1000;
 		if(capturecallback!=NULL)

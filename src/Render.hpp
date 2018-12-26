@@ -199,6 +199,11 @@ public:
 
 
 	VideoWriter videowriter;
+
+
+
+
+	 
 	/******************modeselect ***********************/
 	static void callbackpanomod(void *contex);
 	void selectmod();

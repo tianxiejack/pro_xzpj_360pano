@@ -308,6 +308,7 @@ int main_pano(int argc, char **argv)
 	GstreaemerContrl::getinstance()->create();
 	VideoRecord::getinstance()->create();
 	GstreaemerContrl::getinstance()->registrecordfun(VideoRecord::recordvideo);
+	
 	VideoLoad::getinstance()->create();
 	VideoLoad::getinstance()->registerfun(processFrameRecord_pano);
 	RtspServer::getinstance()->create();

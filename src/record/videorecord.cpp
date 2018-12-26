@@ -46,6 +46,7 @@ void VideoRecord::recordvideo(void *data,void* size)
 		filewriteenable=1;
 	if(filewriteenable)
 	instance->getsync(&syncdata);
+
 	
 
 	int year=tm_set.tm_year+1900;

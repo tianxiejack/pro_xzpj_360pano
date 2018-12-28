@@ -32,6 +32,7 @@
 #include "PortFactory.hpp"
 #include "CPortBase.hpp"
 #include"RecordManager.hpp"
+#include "DxTimer.hpp"
 static GLMain render;
 
 ImageProcess *Imageprocesspt;
@@ -306,6 +307,7 @@ int main_pano(int argc, char **argv)
 	config=Config::getinstance();
 	config->loadconfig();
 	Queue::getinstance()->create();
+	DxTimer::getinstance()->create();
 	DetectAlg::getinstance()->create();
 	StichAlg::getinstance()->create();
 	Plantformpzt::getinstance()->create();
@@ -320,6 +322,8 @@ int main_pano(int argc, char **argv)
 
 	CMessage::getInstance()->MSGDRIV_create();
 	RecordManager::getinstance()->create();
+
+	
 	
 	GLMain_InitPrm dsInit;
 	kalmanfilterinit();

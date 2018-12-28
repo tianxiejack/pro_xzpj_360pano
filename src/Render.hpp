@@ -201,7 +201,8 @@ public:
 	VideoWriter videowriter;
 
 
-
+	/***********************************************/
+	int recordtimer;
 
 	 
 	/******************modeselect ***********************/

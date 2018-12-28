@@ -6,12 +6,16 @@
 #include <stdio.h>
 #include <string>
 #include"videoload.hpp"
+#include "DxTimer.hpp"
+
 RecordManager*RecordManager::instance=NULL;
 #define AVHEAD "local"
 #define AVTAIL ".avi"
 #define FILETAIL ".xml"
 #define AVCONTENC "/home/ubuntu/calib/"
-RecordManager::RecordManager():recordpath(AVCONTENC),nextvideoid(0)
+
+
+RecordManager::RecordManager():recordpath(AVCONTENC),nextvideoid(0),createplayertimeid(0),playertimer(60),enableplay(0)
 {
 
 }
@@ -20,9 +24,35 @@ RecordManager::~RecordManager()
 
 
 }
+
 void RecordManager::create()
 {
 	findrecordnames();
+	createplayertimer();
+	
+
+}
+void RecordManager::recordplaycallback(void *arg)
+{
+	
+	//printf("%s\n",__func__);
+	if(instance==NULL)
+		return ;
+	if(instance->getableplayer())
+	VideoLoad::getinstance()->playvideo();
+	
+}
+
+void RecordManager::setplayertimer(unsigned int timer)
+{
+	DxTimer::getinstance()->resetTimer(createplayertimeid,timer);
+
+}
+void RecordManager::createplayertimer()
+{
+	createplayertimeid=DxTimer::getinstance()->createTimer();
+	DxTimer::getinstance()->registerTimer(createplayertimeid,recordplaycallback,0);
+	DxTimer::getinstance()->startTimer(createplayertimeid,playertimer);
 
 }
  bool RecordManager::startsWith(const std::string& str, const std::string& substr)

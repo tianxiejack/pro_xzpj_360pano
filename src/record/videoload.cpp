@@ -9,20 +9,23 @@ VideoLoad::VideoLoad():callfun(NULL),readnewfile(0),readname("1.xml"),readavi("1
 }
 VideoLoad::~VideoLoad()
 {
-
+	
 
 }
 
 void VideoLoad::create()
 {
 	MAIN_threadRecvCreate();
+	OSA_semCreate(&loadsem,1,0);
 
 }
 
 void VideoLoad::destory()
 {
 	MAIN_threadRecvDestroy();
+	OSA_semDelete(&loadsem);
 }
+
 
 
 void VideoLoad::registerfun(VideoCallBackfun fun)
@@ -31,7 +34,11 @@ void VideoLoad::registerfun(VideoCallBackfun fun)
 }
 
 
+void VideoLoad::playvideo()
+{
+	OSA_semSignal(&loadsem);
 
+}
 void VideoLoad::initvideo()
 {
 
@@ -58,7 +65,8 @@ void VideoLoad::main_Recv_func()
 	while(mainRecvThrObj.exitProcThread ==  false)
 	{	
 		int capangle=0;
-		OSA_waitMsecs(30);
+		//OSA_waitMsecs(30);
+		OSA_semWait(&loadsem,OSA_TIMEOUT_FOREVER);
 		if(getreadnewfile())
 			{
 				setreadnewfile(0);

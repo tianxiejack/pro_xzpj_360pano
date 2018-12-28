@@ -54,4 +54,5 @@ src/Osd \
 src/OSA_CAP/src \
 src/GST \
 src/GLTools/src \
+src/DxTimer/src \
 

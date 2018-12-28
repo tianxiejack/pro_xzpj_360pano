@@ -121,7 +121,7 @@ Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),
 	CameraFov(0),maxtexture(0),pano360texturenum(0),pano360texturewidth(0),pano360textureheight(0),selecttexture(0),shotcutnum(0),
 	movviewx(0),movviewy(0),movvieww(0),movviewh(0),menumode(0),tailcut(0),radarinner(3.0),radaroutter(10),viewfov(90),viewfocus(10),
 	osdmenushow(0),osdmenushowpre(0),screenpiex(NULL),screenenable(1),recordscreen(0),zeroselect(0),poisitionreach(0),poisitionreachpan(0),
-	poisitionreachtitle(0),criticalmode(0),debuggl(0)
+	poisitionreachtitle(0),criticalmode(0),debuggl(0),recordtimer(60)
 	{
 		displayMode=SINGLE_VIDEO_VIEW_MODE;
 		
@@ -464,22 +464,29 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 						setfilestoreenable(1);
 						break;
 					case GLUT_KEY_F8://singprint
-						setfilestoreenable(0);
-						destoryfile();
+						//setfilestoreenable(0);
+						//destoryfile();
+						if(recordtimer<600)
+							recordtimer++;
+						RecordManager::getinstance()->setplayertimer(recordtimer);
 						break;
 					case GLUT_KEY_F9://singprint
-						setpanoflagenable(1);
-				
+						//setpanoflagenable(1);
+						if(recordtimer>30)
+							recordtimer--;
+						RecordManager::getinstance()->setplayertimer(recordtimer);
 						break;
 					case GLUT_KEY_F10://singprint
 						setpanoflagenable(0);
 						break;
 					case GLUT_KEY_F12:
 						Config::getinstance()->setcamsource(0);
+						RecordManager::getinstance()->enableplayer(0);
 						//recordscreen=(recordscreen+1)%2;
 						break;
 					case GLUT_KEY_F11:
 						Config::getinstance()->setcamsource(1);
+						RecordManager::getinstance()->enableplayer(1);
 						//recordscreen=(recordscreen+1)%2;
 						break;
 					case GLUT_KEY_F4:
@@ -4069,11 +4076,13 @@ void Render::displaymod(long lParam)
 	if(lParam==Status::LIVEMOD)
 		{
 			Config::getinstance()->setcamsource(0);
+			RecordManager::getinstance()->enableplayer(0);
 		
 		}
 	else if(lParam==Status::PLAYCALLBACK)
 		{
 			Config::getinstance()->setcamsource(1);
+			RecordManager::getinstance()->enableplayer(1);
 			
 		}
 

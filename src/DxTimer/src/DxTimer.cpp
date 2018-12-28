@@ -7,12 +7,10 @@
 #include <assert.h>
 #include "DxTimer.hpp"
 #include "osa.h"
-
+DxTimer *DxTimer::instance=NULL;
 DxTimer::DxTimer()
 {
-    Dx_initTimer();
-    PTH_msgrecv();
-    PTH_timerloop(10);
+    
 }
 
 DxTimer::~DxTimer()
@@ -20,6 +18,20 @@ DxTimer::~DxTimer()
     Dx_destroyTimer();
 }
 
+void DxTimer::create()
+{
+	Dx_initTimer();
+	PTH_msgrecv();
+	PTH_timerloop(10);
+
+}
+DxTimer *DxTimer::getinstance()
+{
+	if(instance==NULL)
+		instance=new DxTimer();
+	return instance;
+
+}
 /*******************************************************************************
 *    Function Name		:    createTimer
 *    Create Date		:    2018/10/25        
@@ -308,6 +320,7 @@ void DxTimer::sig_func(void)
         //pthread_testcancel();
         memcpy(&timeout, &cTimer.timeout, sizeof(timeout));
         select(0, NULL, NULL, NULL, &timeout);
+	//  printf("%s\n",__func__);
 
         Dx_OnTimer();
     }
@@ -341,6 +354,7 @@ void DxTimer::MSGDRIV_recv(void *pPrm)
         {
             msg.msgId = msg_recv.cmd;
             msg.refContext = msg_recv.pPrm;
+	    //  printf("%s\n",__func__);
             assert(msg.msgId >= 0 && msg.msgId < MAX_MSG_NUM);
             if (pMsgDrvObj->msgTab[msg.msgId].pRtnFun != NULL)
             {

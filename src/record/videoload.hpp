@@ -166,6 +166,8 @@ class VideoLoad{
 		void registerfun(VideoCallBackfun fun);
 		void putvideoname(char *name){memcpy(videoname,name,60);};
 		char * getvideoname(){return videoname;};
+
+		void playvideo();
 	private:
 		VideoLoad();
 		~VideoLoad();
@@ -173,6 +175,8 @@ class VideoLoad{
 		VideoCallBackfun callfun;
 		char videoname[60];
 		MyTDataLoad mydata;
+
+		OSA_SemHndl  loadsem;
 
 	public:
 		string readname;

@@ -69,7 +69,14 @@ typedef struct
 class DxTimer 
 {
 public:
-    DxTimer();
+	void create();
+	static DxTimer *getinstance();
+private:
+	DxTimer();
+	static DxTimer *instance;
+	;
+public:
+    
     ~DxTimer();
     int createTimer();
     int registerTimer(unsigned int timerId,void (*callback)(void *), void *);   

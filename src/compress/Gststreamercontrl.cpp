@@ -103,7 +103,7 @@ void GstreaemerContrl::create()
 	memset(gstCapture_data, 0, sizeof(gstCapture_data));
 	gstCapture_data[H265COMPRESS].width = TV_WIDTH;
 	gstCapture_data[H265COMPRESS].height = TV_HEIGHT;
-	gstCapture_data[H265COMPRESS].framerate = 60;
+	gstCapture_data[H265COMPRESS].framerate = 30;
 	gstCapture_data[H265COMPRESS].bitrate = 1500000;
 	gstCapture_data[H265COMPRESS].ip_port = PORT_RTP+TV_DEV_ID;
 	gstCapture_data[H265COMPRESS].filp_method = FLIP_METHOD_VERTICAL_FLIP;
@@ -123,7 +123,7 @@ void GstreaemerContrl::create()
 
 	gstCapture_data[H265RTP].width = TV_WIDTH;
 	gstCapture_data[H265RTP].height = TV_HEIGHT;
-	gstCapture_data[H265RTP].framerate = 60;
+	gstCapture_data[H265RTP].framerate = 30;
 	gstCapture_data[H265RTP].bitrate = 1500000;
 	gstCapture_data[H265RTP].ip_port = PORT_RTP;
 	gstCapture_data[H265RTP].filp_method = FLIP_METHOD_VERTICAL_FLIP;

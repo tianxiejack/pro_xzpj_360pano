@@ -13,6 +13,10 @@
 #include <opencv/cv.hpp>
 #include <opencv2/opencv.hpp>
 #include "opencv2/core/core.hpp"
+#include <iostream>
+#include <vector>
+#include <string>
+using namespace std;
 typedef struct {
 	bool bTrack;
 	bool bMtd;
@@ -42,6 +46,8 @@ typedef struct{
 	double gyroy;
 	double gyroz;
 }VideoLoadData;
+#define FILEXML (1)
+#define MAX_LINE (100)
 class MyTDataLoad
 {
 public :
@@ -61,20 +67,50 @@ public :
   FileNodeIterator fni;
   FileNodeIterator fniEnd;
   FileNodeIterator current; 
-
+ FILE *filefp=NULL;
+  char buf[MAX_LINE];
    cv::FileStorage filestore;
-  void open(char *name)
+  void open(const char *name)
   	{
-		filestore=FileStorage(name, FileStorage::READ);
-		FileNode features = filestore["gyro"];
-		fni= features.begin();
-    	      fniEnd = features.end();
-	      current=fni;
+  		//printf("%s l=%d\n",__func__,__LINE__);
+  	if(FILEXML)
+  		{
+  				if ((filefp=fopen(name,"r"))==NULL)			//\u6253\u5f00\u6307\u5b9a\u6587\u4ef6\uff0c\u5982\u679c\u6587\u4ef6\u4e0d\u5b58\u5728\u5219\u65b0\u5efa\u8be5\u6587\u4ef6
+					{
+						printf("Open Failed.\n");
+						return;
+					} 
+  			
+  		}
+	else
+		{
+			try
+				{
+					filestore=FileStorage(name, FileStorage::READ);
+				}
+			catch (Exception ex)
+				{
+					;
+					//printf("%s l=%d\n",__func__,__LINE__);
+				}
+			//printf("%s l=%d\n",__func__,__LINE__);
+			FileNode features = filestore["gyro"];
+			//printf("%s l=%d\n",__func__,__LINE__);
+			fni= features.begin();
+	    	      fniEnd = features.end();
+		      current=fni;
+		}
   	}
 
    void close()
   	{
-		
+		if(FILEXML)
+  		{
+  			if(filefp!=NULL)
+  				fclose(filefp);
+			filefp=NULL;
+		}
+		else
 		filestore.release();
   	}
 
@@ -84,7 +120,23 @@ public :
   VideoLoadData read()  //Read serialization for this class
   {
   	//if(current==)
-	VideoLoadData data;
+  	VideoLoadData data;
+  	if(FILEXML)
+  		{	
+  			if(filefp!=NULL)
+  				{
+  					if(!feof(filefp))
+  						{
+		  					fgets(buf,MAX_LINE,filefp);
+							sscanf(buf,"event:%d_gyrox:%lf_gyroy:%lf_gyroz:%lf",&data.event,&data.gyrox,&data.gyroy,&data.gyroz);
+  						}
+					else
+						fseek(filefp, 0, SEEK_SET);
+  				}
+  		}
+	else
+		{
+	
 	data.event=(int)(*current)["event"];
 	data.gyrox=(double)(*current)["gyrox"];
 	data.gyroy=(double)(*current)["gyroy"];
@@ -92,7 +144,7 @@ public :
 	if(current==fniEnd)
 		current=fni;
 	current++;
-	
+		}
 	return data;
 	
   	
@@ -122,7 +174,20 @@ class VideoLoad{
 		char videoname[60];
 		MyTDataLoad mydata;
 
-
+	public:
+		string readname;
+		string readavi;
+		string readdir;
+		int readnewfile;
+	public:
+		void setreadnewfile(int flag){readnewfile=flag;};
+		int getreadnewfile(){ return readnewfile;};
+		void setreadname(string name){readname=name;};
+		string getreadname(){return readname;};
+		void setreadavi(string name){readavi=name;};
+		string getreadavi(){return readavi;};
+	public:
+		void initvideo();
 	public:
 		//MyTDataLoad mydata;
 		MAIN_VideoLoadCaptureThrObj	mainRecvThrObj;

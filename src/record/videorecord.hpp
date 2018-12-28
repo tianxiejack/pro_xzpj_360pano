@@ -21,12 +21,16 @@ typedef struct {
 using namespace std;
 
 using namespace cv;
+
+#define FILEXML (1)
+#define MAX_LINE (100)
 class MyTData
 {
 public :
   MyTData() :
     event(0), gyrox(0), gyroy(0),gyroz(0)
   {
+  	memset(buf,0,strlen(buf));
   }
  
   explicit MyTData(int t,double x,double y,double z) :
@@ -37,23 +41,52 @@ public :
   double gyrox;
   double gyroy;
   double gyroz;
-
+  FILE *filefp=NULL;
+  char buf[MAX_LINE];
    cv::FileStorage filestore;
   void open(char *name)
   	{
-		filestore=FileStorage(name, FileStorage::WRITE);
-		filestore << "gyro" << "[";
+  		if(FILEXML)
+  			{
+  					if ((filefp=fopen(name,"w"))==NULL)			//\u6253\u5f00\u6307\u5b9a\u6587\u4ef6\uff0c\u5982\u679c\u6587\u4ef6\u4e0d\u5b58\u5728\u5219\u65b0\u5efa\u8be5\u6587\u4ef6
+					{
+						printf("Open Failed.\n");
+						return;
+					} 
+  			}
+		else
+			{
+				filestore=FileStorage(name, FileStorage::WRITE);
+				filestore << "gyro" << "[";
+			}
   	}
 
    void close()
   	{
+  	if(FILEXML)
+  		{
+  			if(filefp!=NULL)
+  				fclose(filefp);
+			filefp=NULL;
+  		}
+	else
+		{
 		filestore << "]";
 		filestore.release();
+		}
   	}
 
  
   void write(int event,double gyrox,double gyroy,double gyroz)  //Write serialization for this class
   {
+  if(FILEXML)
+  	{
+  		sprintf(buf,"event:%d_gyrox:%f_gyroy:%f_gyroz:%f",event,gyrox,gyroy,gyroz);
+		if(filefp!=NULL)
+  		fprintf(filefp,"%s\n",buf);
+		fflush(filefp);
+  	}
+  else
     filestore << "{" << "event" << event << "gyrox" << gyrox << "gyroy" << gyroy << "gyroz" << gyroz << "}";
 	// fs << "{"<< "time" << Xspeed  <<  "}";
   }

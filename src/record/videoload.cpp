@@ -1,7 +1,8 @@
 #include"videoload.hpp"
 #include<stdio.h>
 VideoLoad* VideoLoad::instance=NULL;
-VideoLoad::VideoLoad():callfun(NULL)
+#define DIRRECTDIR  "/home/ubuntu/calib/"
+VideoLoad::VideoLoad():callfun(NULL),readnewfile(0),readname("1.xml"),readavi("1.avi"),readdir(DIRRECTDIR)
 {
 
 
@@ -21,18 +22,22 @@ void VideoLoad::create()
 void VideoLoad::destory()
 {
 	MAIN_threadRecvDestroy();
-
 }
 
 
 void VideoLoad::registerfun(VideoCallBackfun fun)
-{
-
+{	
 	callfun=fun;
 }
 
-#define AVINAME "/home/ubuntu/calib/1.avi"
-#define DATAINAME "/home/ubuntu/calib/1.xml"
+
+
+void VideoLoad::initvideo()
+{
+
+
+
+}
 void VideoLoad::main_Recv_func()
 {
 	OSA_printf("%s: Main Proc Tsk Is Entering...\n",__func__);
@@ -42,14 +47,35 @@ void VideoLoad::main_Recv_func()
 	int status;
 	VideoCapture videocapture;
 	Mat fileframe;
-	videocapture.open(AVINAME);
+	videocapture.open(readavi);
 	VideoLoadData loaddata;
-	mydata.open(DATAINAME);
+	mydata.open(readname.c_str());
+	string aviname=readdir+readavi;
+	string  xmlname=readdir+readname;
 	memset(&loaddata,0,sizeof(VideoLoadData));
+	static double gyrodata=0;
+	
 	while(mainRecvThrObj.exitProcThread ==  false)
 	{	
 		int capangle=0;
 		OSA_waitMsecs(30);
+		if(getreadnewfile())
+			{
+				setreadnewfile(0);
+				aviname=readdir+getreadavi();
+				xmlname=readdir+getreadname();
+				videocapture.release();
+				mydata.close();
+				videocapture.open(aviname);
+				mydata.open(xmlname.c_str());
+
+			}
+		
+		//initvideo();
+		if(getreadnewfile())
+			{
+
+			}
 		status=videocapture.read(fileframe);
 		if(!fileframe.empty())
 			{
@@ -64,15 +90,16 @@ void VideoLoad::main_Recv_func()
 				//printf("********3*file cap ok******\n");
 
 				loaddata=mydata.read();
-				printf("********loaddata=%f******\n",loaddata.gyroz);
+				
+				//printf("********loaddata=%f******\n",loaddata.gyroz);
 			}
 		else
 			{
 				//videocapture.set(CV_CAP_PROP_POS_FRAMES,0);
 				videocapture.release();
-				videocapture.open(AVINAME);
+				videocapture.open(aviname);
 				mydata.close();
-				mydata.open(DATAINAME);
+				mydata.open(xmlname.c_str());
 				videocapture.read(fileframe);
 				loaddata=mydata.read();
 

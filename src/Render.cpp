@@ -24,7 +24,9 @@
 #include "StichAlg.hpp"
 #include"Gststreamercontrl.hpp"
 #include"videorecord.hpp"
-
+#include "globalDate.h"
+#include"Status.hpp"
+#include"RecordManager.hpp"
 //#include"Gyroprocess.hpp"
 
 
@@ -303,7 +305,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 	writefilehead();
 	Fullscreen = true;
 	glutFullScreen();
-
+	registorfun();
 	//
 
 
@@ -450,8 +452,13 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 						//Panpicenum=(Panpicenum-1+BRIDGENUM)%BRIDGENUM;
 						break;
 					case GLUT_KEY_F5://singprint
-						shotcut=1;
-						shotcutnum++;
+						RecordManager::getinstance()->getnexvideo();
+						//shotcut=1;
+						//shotcutnum++;
+						break;
+					case GLUT_KEY_F6://singprint
+						//shotcut=1;
+						//shotcutnum++;
 						break;
 					case GLUT_KEY_F7://singprint
 						setfilestoreenable(1);
@@ -4049,7 +4056,27 @@ void Render::gltMakeradarpoints(vector<OSDPoint>& osdpoints, GLfloat innerRadius
 	
 
 	}
+void Render::registorfun()
+{
+	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_DISMOD,displaymod,0);
+	
+}
+void Render::displaymod(long lParam)
+{
+	printf("__func__=%s lParam=%d\n",__func__,lParam);
+	//if(CGlobalDate::Instance()->dismod==0)
+	
+	if(lParam==Status::LIVEMOD)
+		{
+			Config::getinstance()->setcamsource(0);
+		
+		}
+	else if(lParam==Status::PLAYCALLBACK)
+		{
+			Config::getinstance()->setcamsource(1);
+			
+		}
 
-
+}
 
 

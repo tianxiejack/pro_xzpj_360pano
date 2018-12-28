@@ -52,9 +52,9 @@
 
 #include <sys/msg.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 /*
 * *VAR TYPE REDEFINED
  */
@@ -179,9 +179,9 @@ typedef OSA_MsgHndl     MSG_ID;
 
 #define PROJ_T18_205	1
 
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif
 
 #endif
 

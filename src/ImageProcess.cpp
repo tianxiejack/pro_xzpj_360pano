@@ -161,9 +161,9 @@ void ImageProcess::unInit()
 
 void ImageProcess::CaptureThreadProcess(Mat src,OSA_BufInfo* frameinfo)
 {
+	
 	int queueid=0;
 	Plantformpzt::getinstance()->setplantformcalibration(frameinfo->calibration);
-	
 #if 0
 	int frameid=getImagePinpang();
 	int preframeid=getImagePrePinpang();
@@ -1173,7 +1173,7 @@ void ImageProcess::cpupanoprocess(Mat& src)
 int ImageProcess::detectenable(OSA_BufInfo* info)
 {
 	int ret=0;
-	ret=1;
+	ret=0;
 	return ret;
 }
 

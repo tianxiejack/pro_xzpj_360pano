@@ -30,7 +30,7 @@
 #include "Glosd.hpp"
 #include "osd.hpp"
 #include"menu.hpp"
-
+#include "CMessage.hpp"
 #include <osa_mutex.h>
 //#include "mvdectInterface.hpp"
 //static const int ALPHA_MASK_HEIGHT= DEFAULT_IMAGE_HEIGHT;
@@ -408,6 +408,7 @@ public:
 
 	/******************mov detect***********************/
 	Mat cpuPANO[PANODETECTNUM];
+
 	
 public:
 	unsigned int Fullscreen;
@@ -506,7 +507,10 @@ public:
 		TOTAL_MODE_COUNT
 		} displayMode; 
 
-
+public:
+	void registorfun();
+	//static MsgApiFun displaymod();
+	static void displaymod(long lParam);
 	
 	
 };

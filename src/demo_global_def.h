@@ -13,9 +13,9 @@
 #ifndef _GLOBAL_DEF_H_
 #define _GLOBAL_DEF_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 
 #include <osa.h>
 #include <osa_thr.h>
@@ -178,9 +178,9 @@ typedef OSA_MsgHndl     MSG_ID;
 #define ERR_INVALID_FILE                                    11
 
 
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif
 
 #endif
 

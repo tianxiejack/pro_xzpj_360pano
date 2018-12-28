@@ -22,7 +22,7 @@ void VideoRecord::create()
 }
 void VideoRecord::recordvideo(void *data,void* size)
 {
-	//printf("data=%p size=%p instance=%p\n",data,size,instance);
+	//printf("data=%p size=%d instance=%p\n",data,size,instance);
 	if(data==NULL||size==NULL||instance==NULL)
 		return ;
 	//return;
@@ -47,7 +47,7 @@ void VideoRecord::recordvideo(void *data,void* size)
 	if(filewriteenable)
 	instance->getsync(&syncdata);
 
-	
+	//printf("the  size=%d \n",videolen);
 
 	int year=tm_set.tm_year+1900;
 	int mon=tm_set.tm_mon+1;
@@ -90,7 +90,7 @@ void VideoRecord::recordvideo(void *data,void* size)
 			instance->g_gst_wrPkt = 0;
 			printf(" open local file %s\n", filename);
 		}
-		if((year!=instance->tm_year||instance->tm_mon!=mon||instance->tm_mday!=day||instance->tm_hour!=hour))
+		if((year!=instance->tm_year||instance->tm_mon!=mon||instance->tm_mday!=day||instance->tm_hour!=hour)&&(videolen<10))
 			{
 				fclose(instance->videorecordfb);
 				instance->mydata.close();

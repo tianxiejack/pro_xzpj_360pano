@@ -1,7 +1,7 @@
----- DISPALYTORTP Matches (6 in 4 files) ----
-Queuebuffer.cpp (z:\home\wj\cuda-workspace\360pano\src\buffer):		image_queue_create(&bufQue[DISPALYTORTP][chId], 3,
-Queuebuffer.hpp (z:\home\wj\cuda-workspace\360pano\src\buffer):			DISPALYTORTP,
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	OSA_BufInfo *info=(OSA_BufInfo *)queue->getempty(Queue::DISPALYTORTP, 0,OSA_TIMEOUT_NONE);
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):			queue->putfull(Queue::DISPALYTORTP, 0, info);
-screenCapture.cpp (z:\home\wj\cuda-workspace\360pano\src\gst):		OSA_BufInfo* bufInfo =(OSA_BufInfo*)queue->getfull(Queue::DISPALYTORTP, 0, OSA_TIMEOUT_FOREVER);
-screenCapture.cpp (z:\home\wj\cuda-workspace\360pano\src\gst):			queue->putempty(Queue::DISPALYTORTP, 0,bufInfo);
+---- sy_cb Matches (7 in 3 files) ----
+Gststream.cpp (z:\home\wj\cuda-workspace\360pano\src\compress):			if( pData->record->sy_cb!=NULL)
+Gststream.cpp (z:\home\wj\cuda-workspace\360pano\src\compress):		    		pData->record->sy_cb(&privatedata);
+Gststream.cpp (z:\home\wj\cuda-workspace\360pano\src\compress):	recordHandle->sy_cb=gstCapture_data.sy_cb;
+Gststream.hpp (z:\home\wj\cuda-workspace\360pano\src\compress):	SendSyncDataCallback sy_cb;
+Gststream.hpp (z:\home\wj\cuda-workspace\360pano\src\compress):	SendSyncDataCallback sy_cb;
+Gststreamercontrl.cpp (z:\home\wj\cuda-workspace\360pano\src\compress):	gstCapture_data[H265RTP].sy_cb=syncdatafun;

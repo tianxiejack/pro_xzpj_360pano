@@ -26,14 +26,17 @@ C_DEPS :=
 # Every subdirectory with source files must be described here
 SUBDIRS := \
 src/stich \
+src/status \
 src/rtsp \
 src/record \
 src \
 src/pelco \
 src/mv \
 src/mv/lb \
+src/msg/src \
 src/mov/src \
 src/menu \
+src/manager \
 src/lk \
 src/live555/liveMedia \
 src/live555/groupsock \
@@ -51,4 +54,5 @@ src/Osd \
 src/OSA_CAP/src \
 src/GST \
 src/GLTools/src \
+src/DxTimer/src \
 

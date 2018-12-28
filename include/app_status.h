@@ -19,9 +19,9 @@
 #ifndef _GLOBAL_STATUS_H_
 #define _GLOBAL_STATUS_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 
 #include "demo_global_def.h"
 
@@ -46,51 +46,51 @@ extern "C" {
 #define MMT_TARGET_NUM  5
 #endif
 
-typedef enum Dram_SysMode {
+typedef enum Dram_SysMode1 {
     INIT_MODE           = 0x00,
     CHECK_MODE      = 0x01,
     AXIS_MODE           = 0x02,
     NORMAL_MODE     = 0x03,
 }
-eSysMode;
+eSysMode1;
 
-typedef enum Dram_SenserStat
+typedef enum Dram_SenserStat1
 {
     eSen_TV_Stat        = 0x00,
     eSen_FLIR_Stat      = 0x01,
     eSen_Max
-} eSenserStat;
+} eSenserStat1;
 
-typedef enum Dram_zoomCtrl
+typedef enum Dram_zoomCtrl1
 {
     eZoom_Ctrl_Pause    = 0x00,
     eZoom_Ctrl_SCAL2    = 0x01,
     eZoom_Ctrl_SCAL4    = 0x02,
-} eZoomCtrl;
+} eZoomCtrl1;
 
-typedef enum Dram_ImgAlg
+typedef enum Dram_ImgAlg1
 {
     eImgAlg_Disable     = 0x00,
     eImgAlg_Enable      = 0x01,
-} eImgAlgStat;  // use by img enh/stb/mtd
+} eImgAlgStat1;  // use by img enh/stb/mtd
 
-typedef enum Dram_MMTSelect
+typedef enum Dram_MMTSelect1
 {
     eMMT_No     = 0x00,
     eMMT_Next       = 0x01,
     eMMT_Prev       = 0x02,
     eMMT_Select = 0x03,
-} eMMTSelect;
+} eMMTSelect1;
 
-typedef enum Dram_DispGradeStat
+typedef enum Dram_DispGradeStat1
 {
     eDisp_hide      = 0x00,
     eDisp_show_rect     = 0x01,
     eDisp_show_text     = 0x02,
     eDisp_show_dbg      = 0x04,
-} eDispGrade;
+} eDispGrade1;
 
-typedef enum Dram_DispGradeColor
+typedef enum Dram_DispGradeColor1
 {
     ecolor_Default  = 0x0,
     ecolor_Black 	= 0x1,
@@ -99,7 +99,7 @@ typedef enum Dram_DispGradeColor
     ecolor_Yellow 	= 0x04,
     ecolor_Blue 	= 0x05,
     ecolor_Green 	= 0x06,
-} eOSDColor;
+} eOSDColor1;
 
 typedef enum
 {
@@ -107,9 +107,9 @@ typedef enum
     eTrk_Normal 	= 0x01,
     eTrk_Assi       = 0x02,
     eTrk_Lost       = 0x03,
-} eTrkStat;
+} eTrkStat1;
 
-typedef enum Dram_trkMode
+typedef enum Dram_trkMode1
 {
     eTrk_mode_acq       = 0x00,
     eTrk_mode_target    = 0x01,
@@ -122,18 +122,18 @@ typedef enum Dram_trkMode
     eTrk_mode_trkalg          = 0x07,
 
     eTrk_mode_switch      = 0x100,
-} eTrkMode;
+} eTrkMode1;
 
-typedef enum Dram_trkRefine
+typedef enum Dram_trkRefine1
 {
     eTrk_ref_no     = 0x00,
     eTrk_ref_left   = 0x01,
     eTrk_ref_right  = 0x02,
     eTrk_ref_up     = 0x01,
     eTrk_ref_down   = 0x02,
-} eTrkRefine;
+} eTrkRefine1;
 
-typedef enum Dram_workMode
+typedef enum Dram_workMode1
 {
     eMode_svr       = 0x00,
 #if PROJ_T18_205
@@ -147,14 +147,14 @@ typedef enum Dram_workMode
     eMode_sectrk,
     eMode_trk,
 #endif
-} eWorkMode;
+} eWorkMode1;
 
-typedef enum Dram_saveMode
+typedef enum Dram_saveMode1
 {
     eSave_Disable       = 0x00,
     eSave_Enable        = 0x01,
     eSave_Cancel        = 0x02,
-} eSaveMode;
+} eSaveMode1;
 
 /** universal status **/
 typedef struct
@@ -298,7 +298,7 @@ typedef struct
 
 #endif
 
-} CMD_EXT, CMD_ext;
+} CMD_EXT1, CMD_ext1;
 
 typedef struct
 {
@@ -353,14 +353,14 @@ typedef struct
     unsigned  int   retain5: 4;
 
     unsigned char check;
-} ACK_EXT;
+} ACK_EXT1;
 #pragma pack ()
 
 
 typedef enum 
 {
-    MSGID_SYS_INIT  = 0x00000000,           ///< internal cmd system init.
-    MSGID_SYS_RESET,
+   // MSGID_SYS_INIT  = 0x00000000,           ///< internal cmd system init.
+  //  MSGID_SYS_RESET,
     //MSGID_AVT_RESET,
 
     MSGID_EXT_INPUT_SYSMODE = 0x00000010,   ///< external cmd, system work mode.
@@ -398,12 +398,13 @@ typedef enum
     MSGID_EXT_INPUT_VIDEOCTRL,              ///< external cmd, video record or replay.
     MSGID_EXT_INPUT_GSTCTRL,              ///< external cmd, gst.
 
-}MSG_PROC_ID;
+}MSG_PROC_ID1;
 
 
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+
+//}
+//#endif
 
 #endif
 

@@ -28,7 +28,10 @@
 #include"videorecord.hpp"
 #include"videoload.hpp"
 #include"rtspserver.hpp"
-
+#include "CPortInterface.hpp"
+#include "PortFactory.hpp"
+#include "CPortBase.hpp"
+#include"RecordManager.hpp"
 static GLMain render;
 
 ImageProcess *Imageprocesspt;
@@ -129,7 +132,8 @@ void  processFrameRecord_pano(void *data,void *infodata)
 	Uint32 currenttime=OSA_getCurTimeInMsec();
 	if(currenttime-pretime>50||currenttime-pretime<30)
 		{
-			OSA_printf("********lost %d ms %s timeoffset=%d ms**********\n", OSA_getCurTimeInMsec(), __func__,currenttime-pretime);
+			;
+			//OSA_printf("********lost %d ms %s timeoffset=%d ms**********\n", OSA_getCurTimeInMsec(), __func__,currenttime-pretime);
 		}
 	pretime=currenttime;
 
@@ -139,7 +143,7 @@ void  processFrameRecord_pano(void *data,void *infodata)
 	//cv::imshow(WindowName, img);
 	//waitKey(1);
 	  image_queue_putFull(imgQ[queueid], info);
-	OSA_printf("********capture process%d ms**********\n", OSA_getCurTimeInMsec()-processtime);
+	//OSA_printf("********capture process%d ms**********\n", OSA_getCurTimeInMsec()-processtime);
 	
 	
 
@@ -262,6 +266,7 @@ void processFrame_pano(int cap_chid,unsigned char *src, struct v4l2_buffer capIn
 	//info->rotaionstamp=fameinfo.intervalsita;
 	//info->rotationvalid=fameinfo.validintervalsita;
 	//OSA_printf("%d %s. 1   valid=%d rot=%d\n", OSA_getCurTimeInMsec(), __func__,info->rotationvalid,info->rotaionstamp);
+
 	
 	info->channels = img.channels();
 	info->width = img.cols;
@@ -312,6 +317,9 @@ int main_pano(int argc, char **argv)
 	VideoLoad::getinstance()->create();
 	VideoLoad::getinstance()->registerfun(processFrameRecord_pano);
 	RtspServer::getinstance()->create();
+
+	CMessage::getInstance()->MSGDRIV_create();
+	RecordManager::getinstance()->create();
 	
 	GLMain_InitPrm dsInit;
 	kalmanfilterinit();
@@ -349,7 +357,10 @@ int main_pano(int argc, char **argv)
 	OSA_printf("run app success!\n");
 	//gst_videnc_create();
 
-	
+	CPortInterface *p2 = PortFactory::createProduct(2);
+      p2->getpM();
+      p2->create();
+      p2->run();
 	
 	render.mainloop();
 	return 0;

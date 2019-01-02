@@ -9,10 +9,10 @@
 #include "DxTimer.hpp"
 
 RecordManager*RecordManager::instance=NULL;
-#define AVHEAD "local"
+#define AVHEAD "record"
 #define AVTAIL ".avi"
 #define FILETAIL ".xml"
-#define AVCONTENC "/home/ubuntu/calib/"
+#define AVCONTENC "/home/ubuntu/calib/video/"
 
 
 RecordManager::RecordManager():recordpath(AVCONTENC),nextvideoid(0),createplayertimeid(0),playertimer(60),enableplay(0)
@@ -55,6 +55,7 @@ void RecordManager::createplayertimer()
 	DxTimer::getinstance()->startTimer(createplayertimeid,playertimer);
 
 }
+
  bool RecordManager::startsWith(const std::string& str, const std::string& substr)
     {
         return str.find(substr) == 0;
@@ -81,7 +82,7 @@ void RecordManager::getJustCurrentFile(string  path, vector<string> & video,vect
 	      names = x;
 	      if(startsWith(names,AVHEAD))
 	      	{
-	      		//cout<<names<<endl;
+	      		cout<<names<<endl;
 	      		if(endsWith(names,AVTAIL))
 				video.push_back(names);
 			else if(endsWith(names,FILETAIL))

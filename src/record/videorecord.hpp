@@ -120,6 +120,9 @@ class VideoRecord{
 		int eventenable;
 		VideoRecord();
 		~VideoRecord();
+		char avihead[1000];
+		int aviheadlen;
+		int aviheadenable;
 		static VideoRecord* instance;
 		
 

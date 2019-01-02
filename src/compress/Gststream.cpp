@@ -539,6 +539,8 @@ GstPadProbeReturn Gstreamer::filesink1_buffer (GstPad *pad, GstPadProbeInfo *inf
 
 #define UDPSINK  (0)
 #define GST_ENCBITRATE	(5600000)
+
+#define RECORDAVI (1)
 GstPadProbeReturn Gstreamer::enc_tick_cb(GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
 	GstCustomData *pData = (GstCustomData *)user_data;
@@ -557,20 +559,29 @@ GstPadProbeReturn Gstreamer::enc_tick_cb(GstPad * pad, GstPadProbeInfo * info, g
 	pData->nvvidconv0 = gst_element_factory_make ("nvvidconv", NULL);
 	
 	pData->omxh265enc = gst_element_factory_make ("omxh264enc", NULL);
-
+if(RECORDAVI)
+{
 	//pData->h264parse = gst_element_factory_make ("h264parse", NULL);
-
 	//pData->qtmux = gst_element_factory_make ("qtmux", NULL);
-
+	//pData->avimux = gst_element_factory_make("matroskamux", NULL);
+	
 	pData->avimux = gst_element_factory_make("avimux", NULL);
+}else
+{
+	pData->h264parse = gst_element_factory_make ("h264parse", NULL);
+	pData->qtmux = gst_element_factory_make ("qtmux", NULL);
+}
 	
 	pData->queue1 = gst_element_factory_make("queue", NULL);
 	
 	
 	if(UDPSINK)
 		{
+			
 			pData->udpsink = gst_element_factory_make("udpsink", "udpsink");
+			
 			pData->rtph265pay = gst_element_factory_make("rtph265pay", "rtph265pay");
+			
 		}
 	else
 		{
@@ -581,11 +592,16 @@ GstPadProbeReturn Gstreamer::enc_tick_cb(GstPad * pad, GstPadProbeInfo * info, g
 	gst_object_ref(pData->nvvidconv0);
 	gst_object_ref(pData->omxh265enc);
 
-
+if(RECORDAVI)
+{
 	gst_object_ref(pData->avimux);
-	//gst_object_ref(pData->h264parse);
+}
+else
+{
+	gst_object_ref(pData->h264parse);
 
-	//gst_object_ref(pData->qtmux);
+	gst_object_ref(pData->qtmux);
+}
 	
 	if(UDPSINK)
 		{
@@ -601,7 +617,12 @@ GstPadProbeReturn Gstreamer::enc_tick_cb(GstPad * pad, GstPadProbeInfo * info, g
 			gst_bin_add_many (GST_BIN(pData->pipeline), pData->queue1, pData->nvvidconv0, pData->omxh265enc, pData->rtph265pay, pData->udpsink,  NULL);
 		}
 	else
-		gst_bin_add_many (GST_BIN(pData->pipeline), pData->queue1, pData->nvvidconv0, pData->omxh265enc,pData->avimux, pData->filesink1, NULL);
+		{
+		if(RECORDAVI)
+			gst_bin_add_many (GST_BIN(pData->pipeline), pData->queue1, pData->nvvidconv0, pData->omxh265enc,pData->avimux, pData->filesink1, NULL);
+		else
+			gst_bin_add_many (GST_BIN(pData->pipeline), pData->queue1, pData->nvvidconv0, pData->omxh265enc,pData->h264parse,pData->qtmux, pData->filesink1, NULL);
+		}
 	//gst_bin_add_many (GST_BIN(pData->pipeline), pData->queue1, pData->nvvidconv0, pData->omxh265enc,pData->h264parse,pData->qtmux, pData->filesink1, NULL);
 	//
 
@@ -641,31 +662,56 @@ GstPadProbeReturn Gstreamer::enc_tick_cb(GstPad * pad, GstPadProbeInfo * info, g
 		}
 	else
 		{
+		if(RECORDAVI)
+			{
 			if(!gst_element_link_filtered(pData->omxh265enc,pData->avimux, pData->caps_enc_to_rtp_265))
 				{
 					g_printerr ("Elements could not be linked.\n");
 					gst_object_unref (pData->pipeline);
 					return (GstPadProbeReturn)-1;
 				}
+			}
+		else
+			{
+
+			if(!gst_element_link_filtered(pData->omxh265enc,pData->h264parse, pData->caps_enc_to_rtp_265))
+				{
+					g_printerr ("Elements could not be linked.\n");
+					gst_object_unref (pData->pipeline);
+					return (GstPadProbeReturn)-1;
+				}
+
+			}
+		if(RECORDAVI)
+			{
 			if(!gst_element_link_many(pData->avimux, pData->filesink1, NULL))
 				{
 					g_printerr ("Elements could not be linked:pData->qtmux--->pData->filesink1.\n");
 					gst_object_unref (pData->pipeline);
 					return (GstPadProbeReturn)-1;
 				}
-/*
-			if(!gst_element_link_many(pData->h264parse, pData->qtmux, pData->filesink1, NULL))
+			}
+			else
 				{
-					g_printerr ("Elements could not be linked:pData->qtmux--->pData->filesink1.\n");
-					gst_object_unref (pData->pipeline);
-					return (GstPadProbeReturn)-1;
+				if(!gst_element_link_many(pData->h264parse, pData->qtmux, NULL))
+					{
+						g_printerr ("Elements could not be linked:pData->qtmux--->pData->filesink1.\n");
+						gst_object_unref (pData->pipeline);
+						return (GstPadProbeReturn)-1;
+					}
+				if(!gst_element_link_many(pData->qtmux, pData->filesink1, NULL))
+					{
+						g_printerr ("Elements could not be linked:pData->qtmux--->pData->filesink1.\n");
+						gst_object_unref (pData->pipeline);
+						return (GstPadProbeReturn)-1;
+					}
 				}
-	*/
+	
 		}
 
 	
 
-	g_object_set (pData->omxh265enc, "iframeinterval", 60, NULL);
+	g_object_set (pData->omxh265enc, "iframeinterval", 30, NULL);
 	g_object_set (pData->omxh265enc, "bitrate", GST_ENCBITRATE, NULL);
 	g_object_set (pData->omxh265enc, "control-rate", 2, NULL);
 	g_object_set (pData->omxh265enc, "quality-level", 2, NULL);
@@ -698,7 +744,13 @@ GstPadProbeReturn Gstreamer::enc_tick_cb(GstPad * pad, GstPadProbeInfo * info, g
 		}
 	else
 		{
+			if(RECORDAVI)
 			gst_element_sync_state_with_parent (pData->avimux);
+			else
+				{
+					gst_element_sync_state_with_parent (pData->h264parse);
+					gst_element_sync_state_with_parent (pData->qtmux);
+				}
 		//	gst_element_sync_state_with_parent (pData->qtmux);
 			gst_element_sync_state_with_parent (pData->filesink1);
 		}

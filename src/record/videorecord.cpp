@@ -3,8 +3,8 @@
 #include <queue>
 
 VideoRecord* VideoRecord::instance=NULL;
-#define SAVEDIR "/home/ubuntu/calib"
-VideoRecord::VideoRecord():timeenable(1),eventenable(0),tm_year(0),tm_mon(0),tm_mday(0),tm_hour(0),tm_min(0),tm_sec(0),videorecordfb(NULL)
+#define SAVEDIR "/home/ubuntu/calib/video"
+VideoRecord::VideoRecord():timeenable(1),eventenable(0),tm_year(0),tm_mon(0),tm_mday(0),tm_hour(0),tm_min(0),tm_sec(0),videorecordfb(NULL),aviheadenable(1)
 {
 
 
@@ -26,8 +26,11 @@ void VideoRecord::recordvideo(void *data,void* size)
 	if(data==NULL||size==NULL||instance==NULL)
 		return ;
 	//return;
-	char filename[64];
-	char filedataname[64];
+	static char filename[128];
+	static char filedataname[128];
+
+	static char filenamestart[128];
+	static char filedatanamestart[128];
 	struct tm tm_set;
 	struct timeval tv_set;
 	struct timezone tz_set;
@@ -46,8 +49,18 @@ void VideoRecord::recordvideo(void *data,void* size)
 		filewriteenable=1;
 	if(filewriteenable)
 	instance->getsync(&syncdata);
+	if(instance->aviheadenable)
+		{
+			instance->aviheadlen=videolen;
+			memcpy(instance->avihead,videodata,instance->aviheadlen);
+			instance->aviheadenable=0;
+			return;
+		}
+	
 
-	//printf("the  size=%d \n",videolen);
+	printf("the  size=%d \n",videolen);
+
+	//return ;
 
 	int year=tm_set.tm_year+1900;
 	int mon=tm_set.tm_mon+1;
@@ -58,16 +71,44 @@ void VideoRecord::recordvideo(void *data,void* size)
 	//printf("instance->getrecordflag()=%d\n",instance->getrecordflag());
 	if(instance->getrecordflag()==0)
 		{
-			if(instance->videorecordfb!=NULL)
+			if((instance->videorecordfb!=NULL))
 				{
+					sprintf(filenamestart, "%s/local_%04d%02d%02d-%02d%02d%02d.avi", 
+						SAVEDIR, 
+						instance->tm_year, instance->tm_mon, instance->tm_mday,
+					      instance->tm_hour, instance->tm_min,instance->tm_sec);
+					sprintf(filedatanamestart, "%s/local_%04d%02d%02d-%02d%02d%02d.xml", 
+						SAVEDIR, 
+						instance->tm_year, instance->tm_mon, instance->tm_mday,
+						instance->tm_hour, instance->tm_min,instance->tm_sec);
+
+					
+					
+					sprintf(filename, "%s/record_%04d%02d%02d-%02d%02d%02d_%04d%02d%02d-%02d%02d%02d.avi", 
+					SAVEDIR, 
+					instance->tm_year, instance->tm_mon, instance->tm_mday,
+					instance->tm_hour, instance->tm_min,instance->tm_sec,
+					year, mon, day,
+					hour, mint,sect);
+					
+					sprintf(filedataname, "%s/record_%04d%02d%02d-%02d%02d%02d_%04d%02d%02d-%02d%02d%02d.xml", 
+					SAVEDIR,
+					instance->tm_year, instance->tm_mon, instance->tm_mday,
+					instance->tm_hour, instance->tm_min,instance->tm_sec,
+					year, mon, day,
+					hour, mint,sect);
+					
 					fclose(instance->videorecordfb);
 					instance->mydata.close();
+
+					rename(filenamestart, filename);
+					rename(filedatanamestart, filedataname);
 					instance->videorecordfb=NULL;
 
 				}
 			return ;
 		}
-		if(instance->videorecordfb == NULL)
+		if((instance->videorecordfb == NULL)&&(videolen==8))
 		{
 			
 			sprintf(filename, "%s/local_%04d%02d%02d-%02d%02d%02d.avi", 
@@ -88,13 +129,43 @@ void VideoRecord::recordvideo(void *data,void* size)
 			instance->videorecordfb = fopen(filename,"wb");
 			instance->mydata.open(filedataname);
 			instance->g_gst_wrPkt = 0;
+			if(instance->videorecordfb!=NULL&&instance->aviheadenable==0)
+				fwrite(instance->avihead, instance->aviheadlen, 1, instance->videorecordfb);
+				
 			printf(" open local file %s\n", filename);
 		}
-		if((year!=instance->tm_year||instance->tm_mon!=mon||instance->tm_mday!=day||instance->tm_hour!=hour)&&(videolen<10))
+		if((year!=instance->tm_year||instance->tm_mon!=mon||instance->tm_mday!=day||(instance->tm_hour*60+instance->tm_min+30<hour*60+mint))&&(videolen==8))
 			{
+					sprintf(filenamestart, "%s/local_%04d%02d%02d-%02d%02d%02d.avi", 
+						SAVEDIR, 
+						instance->tm_year, instance->tm_mon, instance->tm_mday,
+					      instance->tm_hour, instance->tm_min,instance->tm_sec);
+					sprintf(filedatanamestart, "%s/local_%04d%02d%02d-%02d%02d%02d.xml", 
+						SAVEDIR, 
+						instance->tm_year, instance->tm_mon, instance->tm_mday,
+						instance->tm_hour, instance->tm_min,instance->tm_sec);
+
+					
+					sprintf(filename, "%s/record_%04d%02d%02d-%02d%02d%02d_%04d%02d%02d-%02d%02d%02d.avi", 
+					SAVEDIR, 
+					instance->tm_year, instance->tm_mon, instance->tm_mday,
+					instance->tm_hour, instance->tm_min,instance->tm_sec,
+					year, mon, day,
+					hour, mint,sect);
+					
+					sprintf(filedataname, "%s/record_%04d%02d%02d-%02d%02d%02d_%04d%02d%02d-%02d%02d%02d.xml", 
+					SAVEDIR,
+					instance->tm_year, instance->tm_mon, instance->tm_mday,
+					instance->tm_hour, instance->tm_min,instance->tm_sec,
+					year, mon, day,
+					hour, mint,sect);
+					
 				fclose(instance->videorecordfb);
 				instance->mydata.close();
 				instance->videorecordfb=NULL;
+				rename(filenamestart, filename);
+				rename(filedatanamestart, filedataname);
+				
 				if(instance->videorecordfb == NULL)
 					{
 						
@@ -116,6 +187,8 @@ void VideoRecord::recordvideo(void *data,void* size)
 						instance->videorecordfb = fopen(filename,"wb");
 						instance->mydata.open(filedataname);
 						instance->g_gst_wrPkt = 0;
+						if(instance->videorecordfb!=NULL&&instance->aviheadenable==0)
+							fwrite(instance->avihead, instance->aviheadlen, 1, instance->videorecordfb);
 						printf(" open local file %s\n", filename);
 					}
 
@@ -127,7 +200,7 @@ void VideoRecord::recordvideo(void *data,void* size)
 			if(filewriteenable)
 			instance->mydata.write(syncdata.event, syncdata.gyroX, syncdata.gyroY, syncdata.gyroZ);
 			instance->g_gst_wrPkt++;
-			if((instance->g_gst_wrPkt % 50) == 0)
+			//if((instance->g_gst_wrPkt % 50) == 0)
 			{
 				fflush(instance->videorecordfb);
 			}

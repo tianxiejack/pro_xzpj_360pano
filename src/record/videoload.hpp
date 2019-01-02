@@ -16,6 +16,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <gst/gst.h>
+#include <gst/app/gstappsink.h>
 using namespace std;
 typedef struct {
 	bool bTrack;
@@ -30,6 +32,7 @@ typedef struct {
 typedef struct {
 	MAIN_VideoLoadCaptureThrObj_cxt cxt[2];
 	OSA_ThrHndl		thrHandleProc;
+	OSA_ThrHndl		thrHandleProcdouble;
 	OSA_SemHndl	procNotifySem;
 	int pp;
 	bool bFirst;
@@ -171,10 +174,15 @@ class VideoLoad{
 	private:
 		VideoLoad();
 		~VideoLoad();
+		void initgstreamer();
+		void uninitgstreamer();
+		Mat getgstframebegin();
+		void getgstframeend();
 		static VideoLoad* instance;
 		VideoCallBackfun callfun;
 		char videoname[60];
 		MyTDataLoad mydata;
+		Mat record;
 
 		OSA_SemHndl  loadsem;
 
@@ -183,6 +191,33 @@ class VideoLoad{
 		string readavi;
 		string readdir;
 		int readnewfile;
+	private :
+		GstElement *pipeline, *sink;
+	      GstElement *app_src;
+	      gint width, height;
+
+	      GstSample *sample = NULL;
+
+	      gchar *descr;
+
+	      GError *error = NULL;
+
+	      GstStateChangeReturn ret;
+
+	      gboolean res;
+
+	      GstMapInfo map;
+
+	      GMainLoop *loop;
+
+	      GstBus *bus;
+	      GstMessage *msg;
+
+		GstBuffer *buffer;
+
+        GstCaps *caps;
+
+        GstStructure *s;
 	public:
 		void setreadnewfile(int flag){readnewfile=flag;};
 		int getreadnewfile(){ return readnewfile;};

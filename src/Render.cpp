@@ -27,6 +27,7 @@
 #include "globalDate.h"
 #include"Status.hpp"
 #include"RecordManager.hpp"
+#include"videorecord.hpp"
 //#include"Gyroprocess.hpp"
 
 
@@ -482,11 +483,14 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 					case GLUT_KEY_F12:
 						Config::getinstance()->setcamsource(0);
 						RecordManager::getinstance()->enableplayer(0);
+						VideoRecord::getinstance()->seteventrecordenable(0);
+						VideoRecord::getinstance()->settimerecordenable(0);
 						//recordscreen=(recordscreen+1)%2;
 						break;
 					case GLUT_KEY_F11:
 						Config::getinstance()->setcamsource(1);
 						RecordManager::getinstance()->enableplayer(1);
+						VideoRecord::getinstance()->seteventrecordenable(1);
 						//recordscreen=(recordscreen+1)%2;
 						break;
 					case GLUT_KEY_F4:
@@ -4077,12 +4081,15 @@ void Render::displaymod(long lParam)
 		{
 			Config::getinstance()->setcamsource(0);
 			RecordManager::getinstance()->enableplayer(0);
+			VideoRecord::getinstance()->seteventrecordenable(1);
 		
 		}
 	else if(lParam==Status::PLAYCALLBACK)
 		{
 			Config::getinstance()->setcamsource(1);
 			RecordManager::getinstance()->enableplayer(1);
+			VideoRecord::getinstance()->seteventrecordenable(0);
+			VideoRecord::getinstance()->settimerecordenable(0);
 			
 		}
 

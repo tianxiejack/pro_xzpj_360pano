@@ -1,7 +1,22 @@
----- sy_cb Matches (7 in 3 files) ----
-Gststream.cpp (z:\home\wj\cuda-workspace\360pano\src\compress):			if( pData->record->sy_cb!=NULL)
-Gststream.cpp (z:\home\wj\cuda-workspace\360pano\src\compress):		    		pData->record->sy_cb(&privatedata);
-Gststream.cpp (z:\home\wj\cuda-workspace\360pano\src\compress):	recordHandle->sy_cb=gstCapture_data.sy_cb;
-Gststream.hpp (z:\home\wj\cuda-workspace\360pano\src\compress):	SendSyncDataCallback sy_cb;
-Gststream.hpp (z:\home\wj\cuda-workspace\360pano\src\compress):	SendSyncDataCallback sy_cb;
-Gststreamercontrl.cpp (z:\home\wj\cuda-workspace\360pano\src\compress):	gstCapture_data[H265RTP].sy_cb=syncdatafun;
+---- videocapture Matches (21 in 6 files) ----
+DetectAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\detect):	//videocapture
+DetectAlg.hpp (z:\home\wj\cuda-workspace\360pano\src\detect):		VideoCapture videocapture;
+ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):	//videocapture
+ImageProcess.hpp (z:\home\wj\cuda-workspace\360pano\src):		VideoCapture videocapture;
+Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):VideoCapture videocapture;
+Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):			status=videocapture.read(fileframe);
+Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):					//videocapture.set(CV_CAP_PROP_POS_FRAMES,0);
+Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):					videocapture.release();
+Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):					videocapture.open(AVINAME);
+Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):					videocapture.read(fileframe);
+Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):	videocapture=VideoCapture(AVINAME);
+Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):	videocapture.read(fileframe);
+Videoload.cpp (z:\home\wj\cuda-workspace\360pano\src\record):	VideoCapture videocapture;
+Videoload.cpp (z:\home\wj\cuda-workspace\360pano\src\record):	videocapture.open(readavi);
+Videoload.cpp (z:\home\wj\cuda-workspace\360pano\src\record):				videocapture.release();
+Videoload.cpp (z:\home\wj\cuda-workspace\360pano\src\record):				videocapture.open(aviname);
+Videoload.cpp (z:\home\wj\cuda-workspace\360pano\src\record):		status=videocapture.read(fileframe);
+Videoload.cpp (z:\home\wj\cuda-workspace\360pano\src\record):				//videocapture.set(CV_CAP_PROP_POS_FRAMES,0);
+Videoload.cpp (z:\home\wj\cuda-workspace\360pano\src\record):				videocapture.release();
+Videoload.cpp (z:\home\wj\cuda-workspace\360pano\src\record):				videocapture.open(aviname);
+Videoload.cpp (z:\home\wj\cuda-workspace\360pano\src\record):				videocapture.read(fileframe);

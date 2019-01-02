@@ -102,19 +102,25 @@ void  processFrameRecord_pano(void *data,void *infodata)
 	int calibration=1;
 	Mat cap;// = Mat(TV_HEIGHT,TV_WIDTH,CV_8UC2,src);
 	framdata=(unsigned char *)data;
-
+	//OSA_printf("**%s****%d*****\n", __func__,__LINE__);
 	if(Config::getinstance()->getcam_readfromfile())
 		return ;
 
 	if(Config::getinstance()->getcamsource()==0)
 		return ;
-
+	//OSA_printf("**%s****%d*****\n", __func__,__LINE__);
 	//printf("the angle=%d\n",*(int *)angle);
 	//if(Config::getinstance()->getcam_readfromfile()==0)
 	//	return ;
+	if(data==NULL||infodata==NULL)
+		return ;
 	info = image_queue_getEmptytime(imgQ[queueid],OSA_TIMEOUT_FOREVER);
-	if(info==NULL||data==NULL||infodata==NULL)
+	if(info==NULL)
+		{
+			
 			return ;
+		}
+	//OSA_printf("**%s****%d*****\n", __func__,__LINE__);
 	VideoLoadData gryodata=*(VideoLoadData*)infodata;
 	if(cap_chid==TV_DEV_ID)
 		{
@@ -127,6 +133,7 @@ void  processFrameRecord_pano(void *data,void *infodata)
 	info->timestamp = 0;
 	info->calibration=calibration;
 	info->framegyroyaw=gryodata.gyroz*ANGLESCALE;
+	//OSA_printf("**%s****%d*****\n", __func__,__LINE__);
     	 Imageprocesspt->CaptureThreadProcess(img,info);
 	///////////////////////////////////////////
 	static Uint32 pretime=0;
@@ -136,14 +143,16 @@ void  processFrameRecord_pano(void *data,void *infodata)
 			;
 			//OSA_printf("********lost %d ms %s timeoffset=%d ms**********\n", OSA_getCurTimeInMsec(), __func__,currenttime-pretime);
 		}
+	
 	pretime=currenttime;
-
+	//OSA_printf("**%s****%d*****\n", __func__,__LINE__);
 	//return;
 
 	//////////////////////////////////////////
 	//cv::imshow(WindowName, img);
 	//waitKey(1);
 	  image_queue_putFull(imgQ[queueid], info);
+	//  OSA_printf("**%s****%d*****\n", __func__,__LINE__);
 	//OSA_printf("********capture process%d ms**********\n", OSA_getCurTimeInMsec()-processtime);
 	
 	

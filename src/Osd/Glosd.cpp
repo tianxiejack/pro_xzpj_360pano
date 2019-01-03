@@ -188,6 +188,72 @@ void GLOSD::drawrectfill(int x,int y,int w,int h)
 	
 }
 
+#define LINELEN (15)
+#define CROSSLINELEN (10)
+#define CROSSLINE (8)
+#define POINTSIZE (2)
+void GLOSD::drawrectfov(int x1,int y1,int w,int h)
+{
+	
+	int x=x1;
+	int y=y1;
+	int centerx=x+w/2;
+	int centery=y+h/2;
+	drawline(x,y,x+LINELEN,y);
+	drawline(x,y,x,y+LINELEN);
+	x=x1+w;
+	y=y1;
+	drawline(x,y,x-LINELEN,y);
+	drawline(x,y,x,y+LINELEN);
+
+	x=x1;
+	y=y1+h;
+	drawline(x,y,x+LINELEN,y);
+	drawline(x,y,x,y-LINELEN);
+
+	x=x1+w;
+	y=y1+h;
+	
+	drawline(x,y,x-LINELEN,y);
+	drawline(x,y,x,y-LINELEN);
+
+	x=centerx-CROSSLINELEN-CROSSLINE;
+	y=centery;
+	drawline(x,y,x+CROSSLINELEN,y);
+
+	x=centerx+CROSSLINE;
+	y=centery;
+	drawline(x,y,x+CROSSLINELEN,y);
+
+	x=centerx;
+	y=centery-CROSSLINELEN-CROSSLINE;
+	drawline(x,y,x,y+CROSSLINELEN);
+
+	x=centerx;
+	y=centery+CROSSLINE;
+	drawline(x,y,x,y+CROSSLINELEN);
+
+
+	x=centerx-POINTSIZE;
+	y=centery;
+	drawline(x,y,x+POINTSIZE,y);
+
+	x=centerx;
+	y=centery-POINTSIZE;
+	drawline(x,y,x,y+POINTSIZE);
+
+	
+
+
+	
+
+	
+
+	
+
+	
+}
+
 
 
 

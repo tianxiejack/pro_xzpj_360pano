@@ -58,7 +58,7 @@ void VideoRecord::recordvideo(void *data,void* size)
 		}
 	
 
-	printf("the  size=%d \n",videolen);
+	//printf("the  size=%d \n",videolen);
 
 	//return ;
 

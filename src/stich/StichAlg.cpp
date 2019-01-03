@@ -6,6 +6,7 @@
 #include"math.h"
 #include <iostream> 
 #include <cmath>
+#include "CMessage.hpp"
 
 StichAlg*StichAlg::instance=NULL;
 
@@ -213,6 +214,46 @@ void StichAlg::stichprocess()
 	//OSA_printf("StichAlg %s:*****************line=%d**********************\n",__func__,__LINE__);
 
 }
+void StichAlg::singleinterupt()
+{
+	//printf("%s show\n",__func__);
+	CMessage::getInstance()->MSGDRIV_send(MSGID_EXT_INPUT_SIGLEinterrupt, 0);
+
+}
+void StichAlg::singlefun()
+{
+	if(getcurrentangle()<90&&getcurrentangle()>0)
+		siglecircle=1;
+	if(siglecircle==1)
+		{
+			if(getcurrentangle()>90&&getcurrentangle()<180)
+				siglecircle=2;
+
+		}
+
+	if(siglecircle==2)
+		{
+			if(getcurrentangle()>180&&getcurrentangle()<270)
+				siglecircle=3;
+
+		}
+	if(siglecircle==3)
+		{
+			if(getcurrentangle()>270&&getcurrentangle()<340)
+				siglecircle=4;
+
+		}
+	if(siglecircle==4)
+		{
+			if(getcurrentangle()>340&&getcurrentangle()<360)
+				{
+					singleinterupt();
+					siglecircle=5;
+				}
+
+		}
+
+}
 
 void StichAlg::Panoprocess()
 {
@@ -222,6 +263,8 @@ void StichAlg::Panoprocess()
 	
 	double angleoffset=0.0;
 	int  piexoffset=0;
+
+	singlefun();
 	int preoffset=getpanooffet(getpreangle());
 	int curoffset=getpanooffet(getcurrentangle());
 	angleoffset=getcurrentangle()-getpreangle();

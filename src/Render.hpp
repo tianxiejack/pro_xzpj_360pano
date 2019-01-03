@@ -50,6 +50,8 @@ typedef struct{
 	Rect updownselcectrect;
 
 	Rect rectback;
+
+	Rect fixrect;
 	int active;
 	
 	int panotextureindex;
@@ -93,6 +95,7 @@ public:
 	RENDERCAMERA2,
 	RENDERCAMERA3,
 	RENDERCAMERA4,
+	RENDERCAMERASELECT,
 	RENDERCAMERMAX,
 	RENDERRADER,
 	MAXCAMER,
@@ -207,9 +210,13 @@ public:
 	 
 	/******************modeselect ***********************/
 	static void callbackpanomod(void *contex);
+	static void callbacksignalpanomod(void *contex);
 	void selectmod();
 	void panomod();
+	void signalpanomod();
 	void zeromod();
+
+	void signalmod();
 
 	void pano(int num);
 
@@ -231,7 +238,8 @@ public:
 	void Drawmenu();
 	void Drawosdmenu();
 	void Drawzero();
-	
+	void DrawSelectrect();
+	void fixrectupdate();
 
 	MENU *Menu;
 	int movviewx;
@@ -302,6 +310,8 @@ public:
 
 	/******************display mod ***********************/
 
+	void panoshow();
+	void selectshow();
 	void pano360View(int x,int y,int width,int height);
 	void pano360triangleBatchhalfhead(int mod);
 
@@ -410,6 +420,19 @@ public:
 	/******************mov detect***********************/
 	Mat cpuPANO[PANODETECTNUM];
 
+	/******************single show***********************/
+	int singleenable;
+	double singleangle;
+
+	void setsingleangle(double angle){singleangle=angle;};
+	double getsingleangle(){return singleangle;};
+	
+	void setsingleenable(int enable){singleenable=enable;};
+	int getsingleenable(){return singleenable;};
+	void singlefun();
+	int siglecircle;
+	void singleinterupt();
+
 	
 public:
 	unsigned int Fullscreen;
@@ -512,7 +535,10 @@ public:
 	void registorfun();
 	//static MsgApiFun displaymod();
 	static void displaymod(long lParam);
-	
+	static void workmod(long lParam);
+	static void singlecircle(long lParam);
+	static void updatepano(long lParam);
+	static void mouseevent(long lParam);
 	
 };
 

@@ -3,7 +3,8 @@
 #include <errno.h>
 #include "gpio_rdwr.h"
 #include"demo_global_def.h"
-
+#include"Status.hpp"
+#include "CMessage.hpp"
 #define MAX_RECV_BUF_LEN 256
 Plantformpzt *Plantformpzt::instance=NULL;
 
@@ -68,6 +69,7 @@ void Plantformpzt::create()
 	plantformcontrlinit();
 	MAIN_threadRecvCreate();
 	MAIN_contrlthreadCreate();
+	registorfun();
 	
 
 }
@@ -522,6 +524,44 @@ void Plantformpzt::main_contrl_func()
 						
 
 					}
+
+
+
+				if(callbackeable[RENDERSIGNALPANO]==1)
+					{
+						double angle=0;
+						getpanopanpos();
+						getpanotitlepos();
+						angle=gettitleangle();
+						double angleoffettitle=angle-callbacktitle[RENDERSIGNALPANO];
+						if(angleoffettitle>300)
+							angleoffettitle=angleoffettitle-360;
+						if(angleoffettitle<-300)
+							angleoffettitle=angleoffettitle+360;
+						angle=getpanangle();
+						double angleoffetpan=angle-callbackpan[RENDERSIGNALPANO];
+						if(angleoffetpan>300)
+							angleoffetpan=angleoffetpan-360;
+						if(angleoffetpan<-300)
+							angleoffetpan=angleoffetpan+360;
+						
+						if(abs(angleoffetpan)>0.1)
+							setpanopanpos(callbackpan[RENDERSIGNALPANO]);
+						else if(abs(angleoffettitle)>0.1)
+							setpanotitlepos(callbacktitle[RENDERSIGNALPANO]);
+						
+						if(abs(angleoffetpan)<0.1&&abs(angleoffettitle)<0.1)
+							{
+								callbackeable[RENDERSIGNALPANO]=0;
+								//timeoutflag[PLANTFORMGETCALLBACK]=0;
+								if(callback[RENDERSIGNALPANO]!=NULL)
+									callback[RENDERSIGNALPANO](NULL);
+								
+							}
+						
+
+					}
+
 
 			}
 
@@ -1071,6 +1111,73 @@ void Plantformpzt::getpanotitlepos()
 	OSA_waitMsecs(10);
 
 }
+
+void Plantformpzt::registorfun()
+{
+	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_PLATCTRL,ptzcontrl,0);
+	
+}
+
+void Plantformpzt::ptzcontrl(long lParam)
+{
+	printf("*******%s*****lParam=%d**ptzpanspeed=%d  ptzpanodirection=%d ptztitledirection=%d ptztitlespeed=%d\n",__func__,lParam,Status::getinstance()->ptzpanspeed,Status::getinstance()->ptzpanodirection,
+		Status::getinstance()->ptztitledirection,Status::getinstance()->ptztitlespeed);
+	if(lParam==Status::PTZPANOMOV||lParam==Status::PTZTWOMOV)
+		{
+			if(Status::getinstance()->ptzpanodirection==0)
+					PlantformContrl->MakeMove(&instance->PELCO_D, PTZ_MOVE_Stop,Status::getinstance()->ptzpanspeed,true, instance->address);
+			else if(Status::getinstance()->ptzpanodirection==1)
+				     PlantformContrl->MakeMove(&instance->PELCO_D, PTZ_MOVE_Left,Status::getinstance()->ptzpanspeed,true, instance->address);
+			else if(Status::getinstance()->ptzpanodirection==2)
+				     PlantformContrl->MakeMove(&instance->PELCO_D, PTZ_MOVE_Right,Status::getinstance()->ptzpanspeed,true, instance->address);
+
+			instance->Uart.UartSend(instance->fd,( unsigned char *) &instance->PELCO_D, SENDLEN);
+			OSA_waitMsecs(10);
+		}
+	if(lParam==Status::PTZTITLEMOV||lParam==Status::PTZTWOMOV)
+		{
+			if(Status::getinstance()->ptztitledirection==0)
+					PlantformContrl->MakeMove(&instance->PELCO_D, PTZ_MOVE_Stop,Status::getinstance()->ptztitlespeed,true, instance->address);
+			else if(Status::getinstance()->ptztitledirection==1)
+				     PlantformContrl->MakeMove(&instance->PELCO_D, PTZ_MOVE_Up,Status::getinstance()->ptztitlespeed,true, instance->address);
+			else if(Status::getinstance()->ptztitledirection==2)
+				     PlantformContrl->MakeMove(&instance->PELCO_D, PTZ_MOVE_Down,Status::getinstance()->ptztitlespeed,true, instance->address);
+			instance->Uart.UartSend(instance->fd,( unsigned char *) &instance->PELCO_D, SENDLEN);
+			OSA_waitMsecs(10);
+		}
+
+	
+
+
+
+}
+void Plantformpzt::focuscontrl(long lParam)
+{
+	if(lParam==Status::PTZFOCUSSTOP)
+			;
+		//PlantformContrl->MakeFocusStop(&instance->PELCO_D, instance->address);
+	else if(lParam==Status::PTZFOCUSSNEAR)
+			;
+		//PlantformContrl->MakeFocusNear(&instance->PELCO_D, instance->address);
+	else if(lParam==Status::PTZFOCUSSFAR)
+			;
+		//PlantformContrl->MakeFocusFar(&instance->PELCO_D, instance->address);
+
+
+}
+void Plantformpzt::iriscontrl(long lParam)
+{
+	if(lParam==Status::PTZIRISSTOP)
+		;
+		//	PlantformContrl->MakeFocusStop(&instance->PELCO_D, instance->address);
+	else if(lParam==Status::PTZIRISDOWN)
+		;//	PlantformContrl->MakeFocusNear(&instance->PELCO_D, instance->address);
+	else if(lParam==Status::PTZIRISUP)
+		;//	PlantformContrl->MakeFocusFar(&instance->PELCO_D, instance->address);
+
+
+}
+
 
 void Plantformpzt::plantformcontrluninit()
 {

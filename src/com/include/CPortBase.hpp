@@ -35,10 +35,12 @@ public:
     void selectVideoChannel();
     void EnableTrk();
     void displaymod();
+	void mouseevent(int event);
     void SetResolution();
     void AIMPOS_X();
     void AIMPOS_Y();
     void EnableParamBackToDefault();
+     void updatepano();
     void AxisMove();
     void EnableTrkSearch();
     void Enablealgosdrect();
@@ -56,7 +58,7 @@ public:
     void Config_Write_Save();
     void Config_Read();
     void EnableSavePro();
-    void AXIS_X();
+    void plantctl();
     void AXIS_Y();
     void Preset_Mtd();
     void workMode();

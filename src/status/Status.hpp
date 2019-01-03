@@ -14,11 +14,68 @@ public:
 		PLAYCALLBACK,
 	}Dismod;
 
+	typedef enum {
+		PTZPANOMOV,
+		PTZTITLEMOV,
+		PTZTWOMOV,
+	}Plantctl;
+
+	typedef enum {
+		PTZFOCUSSTOP,
+		PTZFOCUSSNEAR,
+		PTZFOCUSSFAR,
+	}Focusctl;
+	typedef enum {
+		PTZFOCUSONSTOP,
+		PTZFOCUSSONDOWN,
+		PTZFOCUSSONUP,
+	}Focusonctl;
+
+	typedef enum {
+		PTZIRISSTOP,
+		PTZIRISDOWN,
+		PTZIRISUP,
+	}Irisctl;
+
+	typedef enum {
+		PANOAUTO,
+		PANOPTZ,
+		PANOSELECT,
+	}Workmod;
+
+	typedef enum {
+		MOUSEBUTTON,
+		MOUSEROLLER,
+		
+	}MouseEvent;
+
+	
+
+	int ptzpanodirection;
+	int ptztitledirection;
+	int ptzpanspeed;
+	int ptztitlespeed;
+
+	int mouseevent;
+	int mousemod;
+	int mousebuttonstaus;
+	int mouseleftright;
+	int mousex;
+	int mousey;
+	int rollerstatus;
+
+	
+
 public:
+	void getmouseparam(int &button, int &state, int &x, int &y){button=mouseleftright;state=mousebuttonstaus;x=mousex;y=mousey;};
 	int getdisplaymod(){return displaymod;};
 	void setdisplaymod(int dis){displaymod=dis;};
+
+	int getworkmod(){return workmode;};
+	void setworkmod(int dis){workmode=dis;};
 private:
 	int displaymod;
+	int workmode;
 private:
 	Status();
 	~Status();

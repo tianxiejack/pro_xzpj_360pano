@@ -19,10 +19,13 @@ public:
     virtual void EnableswitchVideoChannel(){};
     virtual void selectVideoChannel(){};
     virtual void EnableTrk(){};
+    virtual void mouseevent(int event){};
     virtual void displaymod(){};
     virtual void AIMPOS_X(){};
     virtual void AIMPOS_Y(){};
     virtual void EnableParamBackToDefault(){};
+
+    virtual void updatepano(){};;
     virtual void AxisMove(){};
     virtual void EnableTrkSearch(){};
     virtual void Enablealgosdrect(){};
@@ -40,7 +43,7 @@ public:
     virtual void Config_Write_Save(){};
     virtual void Config_Read(){};
     virtual void EnableSavePro(){};
-    virtual void AXIS_X(){};
+    virtual void plantctl(){};
     virtual void AXIS_Y(){};
     virtual void Preset_Mtd(){};
     virtual void workMode(){};

@@ -1,22 +1,5 @@
----- videocapture Matches (21 in 6 files) ----
-DetectAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\detect):	//videocapture
-DetectAlg.hpp (z:\home\wj\cuda-workspace\360pano\src\detect):		VideoCapture videocapture;
-ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):	//videocapture
-ImageProcess.hpp (z:\home\wj\cuda-workspace\360pano\src):		VideoCapture videocapture;
-Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):VideoCapture videocapture;
-Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):			status=videocapture.read(fileframe);
-Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):					//videocapture.set(CV_CAP_PROP_POS_FRAMES,0);
-Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):					videocapture.release();
-Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):					videocapture.open(AVINAME);
-Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):					videocapture.read(fileframe);
-Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):	videocapture=VideoCapture(AVINAME);
-Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):	videocapture.read(fileframe);
-Videoload.cpp (z:\home\wj\cuda-workspace\360pano\src\record):	VideoCapture videocapture;
-Videoload.cpp (z:\home\wj\cuda-workspace\360pano\src\record):	videocapture.open(readavi);
-Videoload.cpp (z:\home\wj\cuda-workspace\360pano\src\record):				videocapture.release();
-Videoload.cpp (z:\home\wj\cuda-workspace\360pano\src\record):				videocapture.open(aviname);
-Videoload.cpp (z:\home\wj\cuda-workspace\360pano\src\record):		status=videocapture.read(fileframe);
-Videoload.cpp (z:\home\wj\cuda-workspace\360pano\src\record):				//videocapture.set(CV_CAP_PROP_POS_FRAMES,0);
-Videoload.cpp (z:\home\wj\cuda-workspace\360pano\src\record):				videocapture.release();
-Videoload.cpp (z:\home\wj\cuda-workspace\360pano\src\record):				videocapture.open(aviname);
-Videoload.cpp (z:\home\wj\cuda-workspace\360pano\src\record):				videocapture.read(fileframe);
+---- EnableParamBackToDefault Matches (4 in 3 files) ----
+CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):void CPortBase::EnableParamBackToDefault()
+CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):                EnableParamBackToDefault();
+CPortBase.hpp (z:\home\wj\cuda-workspace\360pano\src\com\include):    void EnableParamBackToDefault();
+CPortInterface.hpp (z:\home\wj\cuda-workspace\360pano\src\com\include):    virtual void EnableParamBackToDefault(){};

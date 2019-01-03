@@ -122,7 +122,7 @@ Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),
 	CameraFov(0),maxtexture(0),pano360texturenum(0),pano360texturewidth(0),pano360textureheight(0),selecttexture(0),shotcutnum(0),
 	movviewx(0),movviewy(0),movvieww(0),movviewh(0),menumode(0),tailcut(0),radarinner(3.0),radaroutter(10),viewfov(90),viewfocus(10),
 	osdmenushow(0),osdmenushowpre(0),screenpiex(NULL),screenenable(1),recordscreen(0),zeroselect(0),poisitionreach(0),poisitionreachpan(0),
-	poisitionreachtitle(0),criticalmode(0),debuggl(0),recordtimer(60)
+	poisitionreachtitle(0),criticalmode(0),debuggl(0),recordtimer(60),singleenable(0),singleangle(0),siglecircle(0)
 	{
 		displayMode=SINGLE_VIDEO_VIEW_MODE;
 		
@@ -300,6 +300,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 
 	//#include "FileRW.hpp"
 	Plantformpzt::getinstance()->registcall(callbackpanomod,Plantformpzt::RENDERPANO);
+	Plantformpzt::getinstance()->registcall(callbacksignalpanomod,Plantformpzt::RENDERSIGNALPANO);
 	//gstreamer.create();
 	screenshotinit();
 	createfile();
@@ -537,6 +538,9 @@ void Render::ProcessOitKeys(unsigned char key, int x, int y)
 				
 				selectmod();
 				break;
+			case 'q':
+				signalpanomod();
+				break;
 			case 'z':
 				zeromod();
 				break;
@@ -650,6 +654,7 @@ void Render::RenderScene(void)
 				break;
 				
 		}
+		singlefun();
 		
 		movMultidetectrect();
 		
@@ -667,8 +672,84 @@ void Render::RenderScene(void)
 			screenshot();
 	}
 
+void Render::singlefun()
+{
+	if(getsingleenable())
+		{
+			if(getPanoAngle()<90*ANGLESCALE&&getPanoAngle()>0)
+				siglecircle=1;
+			if(siglecircle==1)
+				{
+					if(getPanoAngle()>90*ANGLESCALE&&getPanoAngle()<180*ANGLESCALE)
+						siglecircle=2;
 
+				}
 
+			if(siglecircle==2)
+				{
+					if(getPanoAngle()>180*ANGLESCALE&&getPanoAngle()<270*ANGLESCALE)
+						siglecircle=3;
+
+				}
+			if(siglecircle==3)
+				{
+					if(getPanoAngle()>270*ANGLESCALE&&getPanoAngle()<340*ANGLESCALE)
+						siglecircle=4;
+
+				}
+			if(siglecircle==4)
+				{
+					if(getPanoAngle()>345*ANGLESCALE&&getPanoAngle()<360*ANGLESCALE)
+						{
+							singleinterupt();
+							siglecircle=5;
+						}
+
+				}
+			/*
+			if(getPanoAngle()>359)
+				{
+					Config::getinstance()->setintergralenable(0);
+					Plantformpzt::getinstance()->setpanoscanstop();
+					setscanpanflag(0);
+					setsingleenable(0);
+				}
+			*/
+		}
+
+}
+
+void Render::singleinterupt()
+{
+		Config::getinstance()->setintergralenable(0);
+		Plantformpzt::getinstance()->setpanoscanstop();
+		setscanpanflag(0);
+		setsingleenable(0);
+
+}
+void Render::callbacksignalpanomod(void *contex)
+{
+
+	OSA_mutexLock(&pthis->renderlock);
+	//OSA_mutexLock(&pthis->modelock);
+	pthis->setcriticalmode(0);	
+	setforcezeroprocess(1);
+	Config::getinstance()->setintergralenable(1);
+	setpanoflagenable(1);
+	setfusionenalge(1);
+	setscanpanflag(1);
+	Plantformpzt::getinstance()->setpanoscan();
+	pthis->displayMode=PANO_360_MODE;
+	pthis->setmenumode(SELECTMODE);
+	
+	pthis->setsingleenable(1);
+	
+	//pthis->setsingleangle(pthis->getPanoAngle());
+	//printf("the single angle=%d\n",pthis->getPanoAngle());
+	//OSA_mutexUnlock(&pthis->modelock);
+	OSA_mutexUnlock(&pthis->renderlock);
+
+}
 
 void Render::callbackpanomod(void *contex)
 {
@@ -704,7 +785,17 @@ void Render::selectmod()
 
 	OSA_mutexUnlock(&modelock);
 }
-
+void Render::signalmod()
+{
+	
+	OSA_mutexLock(&modelock);
+	displayMode=SINGLE_VIDEO_VIEW_MODE;
+	setmenumode(SINGLEMODE);
+	Plantformpzt::getinstance()->setpanoscanstop();
+	setscanpanflag(0);
+	OSA_mutexUnlock(&modelock);
+	
+}
 void Render::zeromod()
 {
 	OSA_mutexLock(&modelock);
@@ -717,6 +808,48 @@ void Render::zeromod()
 	setscanpanflag(0);
 	
 	OSA_mutexUnlock(&modelock);
+}
+
+
+void Render::signalpanomod()
+{
+	OSA_mutexLock(&modelock);
+	double angle=0;
+	bool enable=1;
+	if(getsingleenable())
+		return ;
+	if(getmenumode()==SELECTMODE)
+		{
+			setcriticalmode(1);
+			double zeroanglepan=getptzzeroangle()-1;
+			if(zeroanglepan<0)
+				zeroanglepan+=360;
+			Plantformpzt::getinstance()->setpanopanpos(zeroanglepan);
+			double zeroangletitle=getptzzerotitleangle();
+			if(zeroangletitle<0)
+				zeroangletitle+=360;
+			Plantformpzt::getinstance()->setpanotitlepos(zeroangletitle);
+			
+			Plantformpzt::getinstance()->Enbalecallback(Plantformpzt::RENDERSIGNALPANO,zeroanglepan,zeroangletitle);
+			enable=0;
+		} 
+/*
+	if(enable)
+		{
+			setcriticalmode(0);
+			Config::getinstance()->setintergralenable(1);
+			setpanoflagenable(1);
+			setfusionenalge(Config::getinstance()->getpanofusion());
+			setscanpanflag(1);
+			Plantformpzt::getinstance()->setpanoscan();
+			displayMode=PANO_360_MODE;
+			setmenumode(PANOMODE);	
+		}
+*/
+	OSA_mutexUnlock(&modelock);
+
+
+
 }
 
 void Render::panomod()
@@ -1567,6 +1700,32 @@ void Render::Drawosdcamera()
 
 
 }
+
+void Render::DrawSelectrect()
+{
+
+	glViewport(0,0,renderwidth,renderheight);
+	Glosdhandle.setwindow(renderwidth,renderheight);
+	//Glosdhandle.setcolorline(GLBLUE);
+	//Glosdhandle.drawbegin();
+	if(getmenumode()==PANOMODE)
+		for(int i=RENDERCAMERA1;i<=RENDERCAMERA3;i++)
+		{
+			Rect rect;
+			leftdown2leftup(viewcamera[i].leftdownrect,rect);
+			Glosdhandle.setcolorline(i-RENDERCAMERA1);
+		
+			Glosdhandle.drawbegin();
+			
+			Glosdhandle.drawrect(rect.x,rect.y,rect.width,rect.height);
+		}
+
+	
+		
+
+	Glosdhandle.drawend();
+
+}
 void Render::Drawosdmenu()
 {
 
@@ -1848,11 +2007,13 @@ void Render::Drawfusion()
 	if(getmenumode()==PANOMODE)
 	for(int i=RENDERCAMERA1;i<=RENDERCAMERA3;i++)
 		{
-			Rect rect=viewcamera[i].updownselcectrect;
+			//Rect rect=viewcamera[i].updownselcectrect;
+			Rect rect=viewcamera[i].fixrect;
 			Glosdhandle.setcolorline(i-RENDERCAMERA1);
-			Glosdhandle.setcolorlinealpha(0.2);
+			//Glosdhandle.setcolorlinealpha(0.2);
 			Glosdhandle.drawbegin();
-			Glosdhandle.drawrectfill(rect.x,rect.y,rect.width,rect.height);
+			Glosdhandle.drawrectfov(rect.x,rect.y,rect.width,rect.height);
+			
 		}
 	//Glosdhandle.drawrect(detect_vect360[i].x, detect_vect360[i].y, detect_vect360[i].width, detect_vect360[i].height);
 	
@@ -2057,6 +2218,8 @@ void Render::Drawosd()
 	Drawlines();
 	Drawosdmenu();
 
+	DrawSelectrect();
+
 }
 
 
@@ -2113,7 +2276,11 @@ void Render::pano360triangleBatchhalfhead(GLBatch &Batch,int mod)
 		}
 	
 }
+void Render::panoshow()
+{
 
+
+}
 
 void Render::pano360View(int x,int y,int width,int height)
 {
@@ -2211,6 +2378,18 @@ void Render::pano360View(int x,int y,int width,int height)
 	movviewy=ly;
 	movvieww=w;
 	movviewh=h;
+
+	for(int i=RENDERCAMERA1;i<RENDERCAMERA4;i++)
+		{
+			//viewcamera[i].fixrect.x=lx;
+			int textid=viewcamera[i].panotextureindex;
+			viewcamera[i].fixrect.y=  renderheight-(viewcamera[textid].leftdownrect.y+viewcamera[textid].leftdownrect.height);
+			viewcamera[i].fixrect.width=h;
+			viewcamera[i].fixrect.height=h;
+
+			//y=max(0,y-viewcamera[j].fixrect.height/2);
+
+		}
 
 
 	viewcamera[RENDER360].leftdownrect.x=lx;
@@ -2358,9 +2537,43 @@ void Render::pano360View(int x,int y,int width,int height)
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	/**************************select display***********************************************/
+	
+
+
+
+
+	
 	static int printfount=0;
 	printfount++;
 	selectupdate();
+
+
+	if(getmenumode()==SELECTMODE)
+		{
+			lx=0;
+			ly=0;
+			w=width;
+			h=height*4/6-extrablackw;
+			viewcamera[RENDERCAMERASELECT].leftdownrect.x=lx;
+			viewcamera[RENDERCAMERASELECT].leftdownrect.y=ly;
+			viewcamera[RENDERCAMERASELECT].leftdownrect.width=w;
+			viewcamera[RENDERCAMERASELECT].leftdownrect.height=h;
+			glViewport(lx,ly,w,h);
+			glBindTexture(GL_TEXTURE_2D, textureID[CAPTEXTURE]);
+			m3dLoadIdentity44(identy);
+			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, identy, 0);
+			pansrctriangleBatch.Draw();
+			modelViewMatrix.PopMatrix();
+
+	
+			glUseProgram(0);
+			return;
+
+
+		}
+
+
+	
 	
 	movviewx=width/2+extrablackw;
 	movviewy=0;
@@ -3430,6 +3643,29 @@ void Render::Mousemenu()
 
 
 }
+
+void Render::fixrectupdate()
+{
+
+	int x=mousex;
+	int y=mousey;
+	for(int j=RENDERCAMERA1;j<=RENDERCAMERA3;j++)
+		{
+			if(viewcamera[j].active)
+				{
+					x=max(0,x-viewcamera[j].fixrect.width/2);
+
+					viewcamera[j].fixrect.x=x;
+					//y=max(0,y-viewcamera[j].fixrect.height/2);
+
+					
+
+				}
+
+		}
+
+
+}
 void Render::viewcameraprocess()
 {
 	Rect leftuprect;
@@ -3488,7 +3724,7 @@ void Render::viewcameraprocess()
 											leftuprect.width=viewcamera[i].leftdownrect.width-leftuprect.x;
 										if(leftuprect.y+leftuprect.height>=renderheight-viewcamera[i].leftdownrect.y)
 											leftuprect.height=renderheight-viewcamera[i].leftdownrect.y-leftuprect.y;
-										
+										fixrectupdate();
 										viewcamera[j].panotextureindex=i;	
 										viewcamera[j].updownselcectrect=leftuprect;
 										panselecttriangleBatchnewenable[j]=1;
@@ -3531,7 +3767,7 @@ void Render::viewcameraprocess()
 							if(leftdownrect.x>viewcamera[i].leftdownrect.x&&leftdownrect.x<viewcamera[i].leftdownrect.x+viewcamera[i].leftdownrect.width&&\
 								leftdownrect.y>viewcamera[i].leftdownrect.y&&leftdownrect.y<viewcamera[i].leftdownrect.y+viewcamera[i].leftdownrect.height)
 								{
-								printf("the viewcamera=%d\n",i);
+								//printf("the viewcamera=%d\n",i);
 								//cout<<"***end*****"<<leftdownrect<<endl;
 								viewcamera[i].active=1;
 								}
@@ -4070,7 +4306,11 @@ void Render::gltMakeradarpoints(vector<OSDPoint>& osdpoints, GLfloat innerRadius
 void Render::registorfun()
 {
 	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_DISMOD,displaymod,0);
-	
+	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_WorkModeCTRL,workmod,0);
+	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_SIGLEinterrupt,singlecircle,0);
+	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_Updatapano,updatepano,0);
+	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_MouseEvent,mouseevent,0);
+	//MSGID_EXT_INPUT_WorkModeCTRL
 }
 void Render::displaymod(long lParam)
 {
@@ -4092,6 +4332,76 @@ void Render::displaymod(long lParam)
 			VideoRecord::getinstance()->settimerecordenable(0);
 			
 		}
+
+}
+
+
+
+
+void Render::workmod(long lParam)
+{
+	
+	if(lParam==Status::PANOAUTO)
+		{
+			pthis->panomod();
+		}
+	else if(lParam==Status::PANOPTZ)
+		{
+			
+			pthis->signalmod();
+		}	
+	else if(lParam==Status::PANOSELECT)
+		{
+			pthis->selectmod();
+		}
+
+}
+
+void Render::singlecircle(long lParam)
+{
+
+	
+
+
+
+}
+void Render::updatepano(long lParam)
+{
+	
+	
+	pthis->signalpanomod();
+
+
+}
+
+void Render::mouseevent(long lParam)
+{
+	int button=0; int state=0; int x=0; int y=0;
+	Status::getinstance()->getmouseparam( button,  state,  x,  y);
+	if(button==0)
+		button=MOUSELEFT;
+	else if(button==1)
+		button=MOUSERIGHT;
+	if(state==0)
+		state=MOUSEPRESS;
+	else if(state==1)
+		state=MOUSEUP;
+
+	OSA_printf("%s the x=%d y=%d \n",__func__,x,y);
+		
+	if(lParam==Status::MOUSEBUTTON)
+		{
+			pthis->mouseButtonPress(button,  state,  x,  y);
+			;
+		}
+	else if(lParam==Status::MOUSEROLLER)
+		{	
+			
+			
+			;
+		}
+	
+
 
 }
 

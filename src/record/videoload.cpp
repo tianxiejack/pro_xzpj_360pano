@@ -5,7 +5,7 @@
 VideoLoad* VideoLoad::instance=NULL;
 #define DIRRECTDIR  "/home/ubuntu/calib/video/"
 
-#define OPENCVAVI (0)
+#define OPENCVAVI (1)
 VideoLoad::VideoLoad():callfun(NULL),readnewfile(0),readname("1.xml"),readavi("1.avi"),readdir(DIRRECTDIR)
 {
 
@@ -178,7 +178,7 @@ void VideoLoad::create()
 	record=Mat(1080,1920,CV_8UC3,cv::Scalar(0));
 	MAIN_threadRecvCreate();
 	OSA_semCreate(&loadsem,1,0);
-	initgstreamer();
+	//initgstreamer();
 
 }
 

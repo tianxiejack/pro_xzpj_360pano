@@ -100,6 +100,18 @@ class StichAlg
 		void setcurrentangle(double angle){currentangle=angle;};
 
 
+		
+		int siglecircle;
+		double sigleangle;
+		void setsigleangle(double angle){sigleangle=angle;}
+		double getsigleangle(){return sigleangle;};
+		void singlefun();
+
+		void singleinterupt();
+
+		
+
+
 
 
 		Mat currentflame;

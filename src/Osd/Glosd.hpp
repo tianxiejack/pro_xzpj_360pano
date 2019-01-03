@@ -51,6 +51,7 @@ public:
 	void drawrectfill(int x,int y,int w,int h);
 	bool setcolorlinealpha(double alpha);
 	void drawloops(std::vector<OSDPoint> points);
+	void drawrectfov(int x,int y,int w,int h);
 	GLfloat Linecolor[4];
 	void glcenter(float point[],int num);
 	bool setcolorline(int color);
@@ -67,6 +68,7 @@ public:
 	bool desteryunicode();
 	bool drawunicodebegin();
 	bool drawunicodeend();
+	
 	GLfloat Unicodecolor[4];
 	FreeTypeFont *freetype;
 

@@ -78,6 +78,7 @@ class Plantformpzt
 	public:
 	enum{
 		RENDERPANO,
+		RENDERSIGNALPANO,
 		PLANTFORPANOMMAX,
 		};
 		static Plantformpzt *getinstance();
@@ -99,10 +100,14 @@ class Plantformpzt
 		~Plantformpzt();
 		static Plantformpzt *instance;
 
-
+		void registorfun();
 		int COMCTRL_lookupSync(ComObj*pObj);
 		int COMCTRL_checkSum(ComObj* pObj);
 
+	public:
+		static void ptzcontrl(long lParam);
+		static void focuscontrl(long lParam);
+		static void iriscontrl(long lParam);
 
 	private:
 		CUartBase Uart;

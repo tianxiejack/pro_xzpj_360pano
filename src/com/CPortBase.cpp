@@ -50,6 +50,34 @@ void CPortBase::EnableTrk()
 {
    
 }
+void CPortBase::mouseevent(int event)
+{
+	if(event==Status::MOUSEBUTTON)
+		{
+			if(_globalDate->rcvBufQue.at(6)!=Status::getinstance()->mouseleftright)
+				Status::getinstance()->mouseleftright=_globalDate->rcvBufQue.at(6);
+			if(_globalDate->rcvBufQue.at(7)!=Status::getinstance()->mousebuttonstaus)
+				Status::getinstance()->mousebuttonstaus=_globalDate->rcvBufQue.at(7);
+			Status::getinstance()->mousex=_globalDate->rcvBufQue.at(8)<<8|_globalDate->rcvBufQue.at(9);
+			Status::getinstance()->mousey=_globalDate->rcvBufQue.at(10)<<8|_globalDate->rcvBufQue.at(11);
+
+			
+			OSA_printf("%s the x1=%d x2=%d y1=%d y2=%d \n",__func__,_globalDate->rcvBufQue.at(8),_globalDate->rcvBufQue.at(9),
+				_globalDate->rcvBufQue.at(10),_globalDate->rcvBufQue.at(11));
+			OSA_printf("%s the x=%d y=%d \n",__func__,Status::getinstance()->mousex,Status::getinstance()->mousey);
+			
+			pM->MSGDRIV_send(MSGID_EXT_INPUT_MouseEvent, (void *)(Status::MOUSEBUTTON));
+		}
+	else if(event==Status::MOUSEROLLER)
+		{
+			
+			Status::getinstance()->rollerstatus=_globalDate->rcvBufQue.at(6);
+			pM->MSGDRIV_send(MSGID_EXT_INPUT_MouseEvent, (void *)(Status::MOUSEROLLER));
+		}
+
+	
+
+}
 
 void CPortBase::displaymod()
 {
@@ -86,7 +114,11 @@ void CPortBase::AIMPOS_Y()
 void CPortBase::EnableParamBackToDefault()
 {
 }
+void CPortBase::updatepano()
+{
+	pM->MSGDRIV_send(MSGID_EXT_INPUT_Updatapano, 0);
 
+}
 void CPortBase::AxisMove()
 {
 
@@ -174,9 +206,61 @@ void CPortBase::EnableSavePro()
   
 }
 
-void CPortBase::AXIS_X()
+void CPortBase::plantctl()
 {
-    
+	int mod=0;
+	int mod1=0;
+	int change=0;
+	
+	if(_globalDate->rcvBufQue.at(5)!=Status::getinstance()->ptzpanodirection)
+		{
+			Status::getinstance()->ptzpanodirection=_globalDate->rcvBufQue.at(5);
+			if(Status::getinstance()->ptzpanodirection==0)
+				mod=0;
+			else 
+				mod++;
+			change=1;
+		}
+
+	if(_globalDate->rcvBufQue.at(7)!=Status::getinstance()->ptztitledirection)
+		{
+			Status::getinstance()->ptztitledirection=_globalDate->rcvBufQue.at(7);
+			if(Status::getinstance()->ptztitledirection==0)
+				mod1=0;
+			else 
+				mod1++;
+			change=1;
+		}
+
+	
+
+	
+
+	if(_globalDate->rcvBufQue.at(6)!=Status::getinstance()->ptzpanspeed)
+		{
+			Status::getinstance()->ptzpanspeed=_globalDate->rcvBufQue.at(6);
+			change=1;
+		}
+	if(_globalDate->rcvBufQue.at(8)!=Status::getinstance()->ptztitlespeed)
+		{
+			Status::getinstance()->ptztitlespeed=_globalDate->rcvBufQue.at(8);
+			change=1;
+		}
+	OSA_printf("pandirction=%d  titledirection=%d panspeed=%d titlespeed=%d\n",Status::getinstance()->ptzpanodirection,Status::getinstance()->ptztitledirection,Status::getinstance()->ptzpanspeed,
+		Status::getinstance()->ptztitlespeed);
+	if(change)
+		{
+			if(mod==0&&mod1==0)
+				pM->MSGDRIV_send(MSGID_EXT_INPUT_PLATCTRL, (void *)(Status::PTZTWOMOV));
+			else if(mod==1&&mod1==0)
+				pM->MSGDRIV_send(MSGID_EXT_INPUT_PLATCTRL, (void *)(Status::PTZPANOMOV));
+			else if(mod==0&&mod1==1)
+				pM->MSGDRIV_send(MSGID_EXT_INPUT_PLATCTRL, (void *)(Status::PTZTITLEMOV));
+			else if(mod==1&&mod1==1)
+				pM->MSGDRIV_send(MSGID_EXT_INPUT_PLATCTRL, (void *)(Status::PTZTWOMOV));
+		}
+
+	
 }
 
 void CPortBase::AXIS_Y()
@@ -192,7 +276,19 @@ void CPortBase::Preset_Mtd()
 
 void CPortBase::workMode()
 {
+
+	if(_globalDate->rcvBufQue.at(5)!=Status::getinstance()->getworkmod())
+		Status::getinstance()->setworkmod(_globalDate->rcvBufQue.at(5));
+	else
+		return;
+	if(Status::getinstance()->getworkmod()==0)
+		pM->MSGDRIV_send(MSGID_EXT_INPUT_WorkModeCTRL, (void *)(Status::PANOAUTO));
+	else if(Status::getinstance()->getworkmod()==1)
+		pM->MSGDRIV_send(MSGID_EXT_INPUT_WorkModeCTRL, (void *)(Status::PANOPTZ));
+	else if(Status::getinstance()->getworkmod()==2)
+		pM->MSGDRIV_send(MSGID_EXT_INPUT_WorkModeCTRL, (void *)(Status::PANOSELECT));
 	
+	//PANOAUTO
 
 }
 void CPortBase::targetCaptureMode()
@@ -225,23 +321,23 @@ int CPortBase::prcRcvFrameBufQue(int method)
                 EnableswitchVideoChannel();
                 break;
             case 0x03:
-                selectVideoChannel();
+                mouseevent(Status::MOUSEBUTTON);
                 break;
             case 0x04:
-                EnableTrk();
+                mouseevent(Status::MOUSEROLLER);
                 break;
             case 0x05:
                 displaymod();
                 break;
             case 0x06:
-                SetResolution();
+                workMode();
                 break;
             case 0x08:
                 AIMPOS_X();
                 AIMPOS_Y();
                 break;
             case 0x09:
-                EnableParamBackToDefault();
+                updatepano();
                 break;
             case 0x0a:
                 AxisMove();
@@ -268,8 +364,8 @@ int CPortBase::prcRcvFrameBufQue(int method)
                 FocusUp();
                 break;
             case 0x15:
-                AXIS_X();
-                AXIS_Y();
+                plantctl();
+                //AXIS_Y();
                 break;
             case 0x16:
                 //wait to finish
@@ -306,8 +402,8 @@ int CPortBase::prcRcvFrameBufQue(int method)
                 //provided by a single server
                 break;
             case 0x36:
-                AXIS_X();
-                AXIS_Y();
+                plantctl();
+               // AXIS_Y();
                 break;
             case 0x41:
             	Preset_Mtd();

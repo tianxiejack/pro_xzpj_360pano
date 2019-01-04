@@ -62,6 +62,7 @@ public:
     void AXIS_Y();
     void Preset_Mtd();
     void workMode();
+	void StoreMode(int mod);
     void targetCaptureMode();
 //
     int  getSendInfo(int  respondId, sendInfo * psendBuf);

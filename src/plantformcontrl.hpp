@@ -79,6 +79,7 @@ class Plantformpzt
 	enum{
 		RENDERPANO,
 		RENDERSIGNALPANO,
+		PRESETGO,
 		PLANTFORPANOMMAX,
 		};
 		static Plantformpzt *getinstance();

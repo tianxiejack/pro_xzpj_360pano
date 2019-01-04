@@ -563,6 +563,42 @@ void Plantformpzt::main_contrl_func()
 					}
 
 
+				if(callbackeable[PRESETGO]==1)
+					{
+						double angle=0;
+						getpanopanpos();
+						getpanotitlepos();
+						angle=gettitleangle();
+						double angleoffettitle=angle-callbacktitle[PRESETGO];
+						if(angleoffettitle>300)
+							angleoffettitle=angleoffettitle-360;
+						if(angleoffettitle<-300)
+							angleoffettitle=angleoffettitle+360;
+						angle=getpanangle();
+						double angleoffetpan=angle-callbackpan[PRESETGO];
+						if(angleoffetpan>300)
+							angleoffetpan=angleoffetpan-360;
+						if(angleoffetpan<-300)
+							angleoffetpan=angleoffetpan+360;
+						
+						if(abs(angleoffetpan)>0.1)
+							setpanopanpos(callbackpan[PRESETGO]);
+						else if(abs(angleoffettitle)>0.1)
+							setpanotitlepos(callbacktitle[PRESETGO]);
+						
+						if(abs(angleoffetpan)<0.1&&abs(angleoffettitle)<0.1)
+							{
+								callbackeable[PRESETGO]=0;
+								//timeoutflag[PLANTFORMGETCALLBACK]=0;
+								if(callback[PRESETGO]!=NULL)
+									callback[PRESETGO](NULL);
+								
+							}
+						
+
+					}
+
+
 			}
 
 		if(timeoutflag[PLANTFORMINITTITLE]==0&&timeoutflag[PLANTFORMINITPAN]==0)

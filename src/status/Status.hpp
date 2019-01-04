@@ -49,6 +49,19 @@ public:
 		
 	}MouseEvent;
 
+
+	typedef enum {
+		STOREGO,
+		STORESAVE,
+		
+	}STOREMOD;
+	typedef enum {
+		
+		STOREERASENUM,
+		STORESAVENUM,
+		
+	}STOREMODNUM;
+
 	
 
 	int ptzpanodirection;
@@ -64,6 +77,15 @@ public:
 	int mousey;
 	int rollerstatus;
 
+
+	int storemod;
+	
+	int storegonum;
+
+	int storesavenum;
+
+	int storesavemod;
+
 	
 
 public:
@@ -73,6 +95,11 @@ public:
 
 	int getworkmod(){return workmode;};
 	void setworkmod(int dis){workmode=dis;};
+
+
+	int getstoremod(){return storemod;};
+	void setstoremod(int mod){storemod=mod;};
+	
 private:
 	int displaymod;
 	int workmode;

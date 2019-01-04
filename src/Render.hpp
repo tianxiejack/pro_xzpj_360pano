@@ -52,6 +52,13 @@ typedef struct{
 	Rect rectback;
 
 	Rect fixrect;
+
+	double multiples;
+
+	int multipleshow;
+
+	int multiplecount;
+	
 	int active;
 	
 	int panotextureindex;
@@ -184,6 +191,7 @@ public:
 	void cylindercut(Mat& src,Mat & dst,int cutnum);
 	
 	void Pano360init();
+	void createdisplaytimer();
 
 	void Fusiontailtexture(void);
 	int recordscreen;
@@ -202,7 +210,8 @@ public:
 
 
 	VideoWriter videowriter;
-
+	int createdistimeid;
+	int timerclock;
 
 	/***********************************************/
 	int recordtimer;
@@ -432,6 +441,10 @@ public:
 	void singlefun();
 	int siglecircle;
 	void singleinterupt();
+	/***************ratio****************/
+	Rect multipletextureupdate(Rect &rect,int cameid);
+
+	void multipleupdate(int status);
 
 	
 public:
@@ -530,7 +543,8 @@ public:
 		FRONT_AND_BACK_MODE,
 		TOTAL_MODE_COUNT
 		} displayMode; 
-
+private:
+	static void displaytimer(void *param);
 public:
 	void registorfun();
 	//static MsgApiFun displaymod();

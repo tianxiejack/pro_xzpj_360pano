@@ -47,6 +47,7 @@ public:
     virtual void AXIS_Y(){};
     virtual void Preset_Mtd(){};
     virtual void workMode(){};
+    virtual void StoreMode(int mod){};
     virtual void targetCaptureMode(){};
     virtual void registfunc(){};
     virtual CMessage *getpM(){return 0;};

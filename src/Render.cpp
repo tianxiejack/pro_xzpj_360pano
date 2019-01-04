@@ -28,6 +28,7 @@
 #include"Status.hpp"
 #include"RecordManager.hpp"
 #include"videorecord.hpp"
+#include "DxTimer.hpp"
 //#include"Gyroprocess.hpp"
 
 
@@ -122,7 +123,7 @@ Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),
 	CameraFov(0),maxtexture(0),pano360texturenum(0),pano360texturewidth(0),pano360textureheight(0),selecttexture(0),shotcutnum(0),
 	movviewx(0),movviewy(0),movvieww(0),movviewh(0),menumode(0),tailcut(0),radarinner(3.0),radaroutter(10),viewfov(90),viewfocus(10),
 	osdmenushow(0),osdmenushowpre(0),screenpiex(NULL),screenenable(1),recordscreen(0),zeroselect(0),poisitionreach(0),poisitionreachpan(0),
-	poisitionreachtitle(0),criticalmode(0),debuggl(0),recordtimer(60),singleenable(0),singleangle(0),siglecircle(0)
+	poisitionreachtitle(0),criticalmode(0),debuggl(0),recordtimer(60),singleenable(0),singleangle(0),siglecircle(0),timerclock(600)
 	{
 		displayMode=SINGLE_VIDEO_VIEW_MODE;
 		
@@ -186,7 +187,12 @@ Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),
 
 
 		for(int j=0;j<MAXCAMER;j++)
-			panselecttriangleBatchnewenable[j]=0;
+			{
+				panselecttriangleBatchnewenable[j]=0;
+				viewcamera[j].multiples=1.0;
+				viewcamera[j].multipleshow=0.0;
+				viewcamera[j].multiplecount=0;
+			}
 		
 
 		pthis=this;
@@ -270,6 +276,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 {
 		// Blue background
 	GLint max;
+	createdisplaytimer();
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max);
 	maxtexture=max;
 	CameraFov=2*atan2(Config::getinstance()->getpanoprocesswidth(),2*Config::getinstance()->getcamfx())*180/3.141592653;
@@ -1724,6 +1731,34 @@ void Render::DrawSelectrect()
 		
 
 	Glosdhandle.drawend();
+
+
+
+
+	wchar_t buf[30];
+
+
+	Glosdhandle.drawunicodebegin();
+	Rgba colour=Rgba(255,0,255,255);
+	//Osdcontext *contxt=osdcontex.getOSDcontex();
+	//Drawmenuupdate();
+	for(int i=RENDERCAMERA1;i<=RENDERCAMERA3;i++)
+		{
+			if(viewcamera[i].active&&viewcamera[i].multipleshow)
+				{
+
+					Rect upleft;
+					swprintf(buf,30,L"%3.2f",viewcamera[i].multiples);
+					leftdown2leftup(viewcamera[i].leftdownrect,upleft);
+					int x=upleft.x+upleft.width-350;
+					int y=upleft.y;
+
+					Glosdhandle.setcolorunicode(0);
+					Glosdhandle.drawunicode(x,y,colour,buf);
+				}
+		}
+	Glosdhandle.drawunicodeend();
+	
 
 }
 void Render::Drawosdmenu()
@@ -3286,7 +3321,28 @@ void Render::BestSeam(Mat& src,Mat & dst,int seampostion)
 	
 
 }
+Rect Render::multipletextureupdate(Rect &rect,int cameid)
+{
+	Rect rectreturn;
+	int cenx=viewcamera[cameid].fixrect.x+viewcamera[cameid].fixrect.width/2;
+	int ceny=viewcamera[cameid].fixrect.y+viewcamera[cameid].fixrect.height/2;
+	double ratio=min(viewcamera[cameid].multiples,1.0);
+	int w=ratio*viewcamera[cameid].fixrect.width;
+	int h=ratio*viewcamera[cameid].fixrect.height;
 
+	
+	//if(viewcamera[cameid].fi)
+	//if()
+
+	rectreturn.x=cenx-w/2;
+	rectreturn.y=ceny-h/2;
+	rectreturn.width=w;
+	rectreturn.height=h;
+
+	return rectreturn;
+	
+
+}
 void Render::selectupdate()
 {	
 	static int printcount=0;
@@ -3387,7 +3443,11 @@ void Render::selectupdate()
 			memcpy(vTexselectCoords,vTexCoordsindentify,sizeof(vTexselectCoords));
 			memcpy(vTexselectCoordsbak,vTexCoordsindentify,sizeof(vTexselectCoordsbak));
 			//leftup2leftdown(viewcamera[RENDERCAMERA1].updownselcectrect,rect);
+			#if 0
 			rect=viewcamera[i].updownselcectrect;
+			#else
+			rect=multipletextureupdate(viewcamera[i].fixrect,i);
+			#endif
 			//if(index==RENDER360)
 			rect.y=rect.y-(renderheight-viewcamera[index].leftdownrect.y-viewcamera[index].leftdownrect.height);
 
@@ -4303,6 +4363,69 @@ void Render::gltMakeradarpoints(vector<OSDPoint>& osdpoints, GLfloat innerRadius
 	
 
 	}
+
+#define ratiosetp (0.02)
+void Render::multipleupdate(int status)
+{
+
+		for(int j=RENDERCAMERA1;j<=RENDERCAMERA3;j++)
+		{
+			if(viewcamera[j].active)
+				{
+					if(status==0)
+					{
+						double ratio=viewcamera[j].multiples-ratiosetp;
+						viewcamera[j].multiples=max(0.1,ratio);
+					}
+					else
+					{
+						double ratio=viewcamera[j].multiples+ratiosetp;
+						viewcamera[j].multiples=min(1.0,ratio);
+					}
+					viewcamera[j].multiplecount=4;
+					//x=max(0,x-viewcamera[j].fixrect.width/2);
+
+					//viewcamera[j].fixrect.x=x;
+			
+
+					
+
+				}
+
+		}
+
+}
+
+void Render::displaytimer(void *param)
+{
+	//printf("the time %s\n",__func__);
+	for(int i=RENDERCAMERA1;i<=RENDERCAMERA3;i++)
+		{
+			//printf("the time %s  multiplecount=%d\n",__func__,pthis->viewcamera[i].multiplecount);
+			if(pthis->viewcamera[i].multiplecount==0)
+				{	
+					if(pthis->viewcamera[i].multipleshow)
+						pthis->viewcamera[i].multipleshow=0;
+					continue;
+
+				}
+			else
+				pthis->viewcamera[i].multipleshow=1;
+			//printf("the time %s  multiplecount=%d\n",__func__,pthis->viewcamera[i].multiplecount);
+			pthis->viewcamera[i].multiplecount--;
+			pthis->viewcamera[i].multiplecount=max(0,pthis->viewcamera[i].multiplecount);
+			
+		
+		}
+
+}
+void Render::createdisplaytimer()
+{
+	createdistimeid=DxTimer::getinstance()->createTimer();
+	DxTimer::getinstance()->registerTimer(createdistimeid,displaytimer,0);
+	DxTimer::getinstance()->startTimer(createdistimeid,timerclock);
+
+}
 void Render::registorfun()
 {
 	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_DISMOD,displaymod,0);
@@ -4397,8 +4520,8 @@ void Render::mouseevent(long lParam)
 	else if(lParam==Status::MOUSEROLLER)
 		{	
 			
+			pthis->multipleupdate(Status::getinstance()->rollerstatus);
 			
-			;
 		}
 	
 

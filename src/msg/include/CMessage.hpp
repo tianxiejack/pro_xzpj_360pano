@@ -23,7 +23,7 @@ typedef enum _sys_msg_id_ {
     MSGID_EXT_INPUT_SIGLEinterrupt,
     MSGID_EXT_INPUT_Updatapano,
     MSGID_EXT_INPUT_MouseEvent,
-    MSGID_EXT_INPUT_IrisAndFocusAndExit,
+    MSGID_EXT_INPUT_StoreMod,
     MSGID_EXT_INPUT_TRACKSEARCHCTRL,
     MSGID_EXT_INPUT_FuncMenu,
     MSGID_EXT_INPUT_AxisCtrl,

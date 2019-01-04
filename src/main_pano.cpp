@@ -33,6 +33,7 @@
 #include "CPortBase.hpp"
 #include"RecordManager.hpp"
 #include "DxTimer.hpp"
+#include"store.hpp"
 static GLMain render;
 
 ImageProcess *Imageprocesspt;
@@ -334,7 +335,7 @@ int main_pano(int argc, char **argv)
 
 	
 	RecordManager::getinstance()->create();
-
+	Store::getinstance()->create();
 	
 	
 	GLMain_InitPrm dsInit;

@@ -1,5 +1,6 @@
----- EnableParamBackToDefault Matches (4 in 3 files) ----
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):void CPortBase::EnableParamBackToDefault()
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):                EnableParamBackToDefault();
-CPortBase.hpp (z:\home\wj\cuda-workspace\360pano\src\com\include):    void EnableParamBackToDefault();
-CPortInterface.hpp (z:\home\wj\cuda-workspace\360pano\src\com\include):    virtual void EnableParamBackToDefault(){};
+---- multiplecount Matches (6 in 2 files) ----
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):				viewcamera[j].multiplecount=0;
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):					viewcamera[j].multiplecount=4;
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):			if(pthis->viewcamera[i].multiplecount==0)
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):			pthis->viewcamera[i].multiplecount=max(0,pthis->viewcamera[i].multiplecount--);
+Render.hpp (z:\home\wj\cuda-workspace\360pano\src):	int multiplecount;

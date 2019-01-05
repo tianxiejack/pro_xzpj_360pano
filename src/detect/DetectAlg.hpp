@@ -96,6 +96,8 @@ class DetectAlg
 		void Multicpupanoprocess(Mat& src);
 		void MulticpuLKpanoprocess(Mat& src);
 
+		void registorfun();
+
 
 		void equalize(Mat& src);
 
@@ -161,6 +163,8 @@ class DetectAlg
 		
 			return NULL;
 		}
+	private:
+		static void detectparam(long param);
 
 
 

@@ -3,10 +3,11 @@
 #include"Stich.hpp"
 #include "plantformcontrl.hpp"
 #include"StichAlg.hpp"
-
 #include<dirent.h>
 #include<sys/types.h>
 #include<sys/stat.h>
+#include "CMessage.hpp"
+
 DetectAlg*DetectAlg::instance=NULL;
 
 
@@ -455,6 +456,8 @@ void DetectAlg::create()
 	
 	MAIN_threadCreate();
 
+	registorfun();
+
 }
 
 
@@ -699,6 +702,21 @@ void DetectAlg::MulticpuLKpanoprocess(Mat& src)
 
 exec_time = ((double)getTickCount() - exec_time)*1000./getTickFrequency();
      //  OSA_printf("the %s exec_time=%f\n",__func__,exec_time);
+
+}
+
+
+void DetectAlg::registorfun()
+{
+	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_MoveDetectConfig,detectparam,0);
+	//CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_PlantfromConfig,plantfromcontrl,0);
+	
+}
+
+void DetectAlg::detectparam(long param)
+{
+	
+	
 
 }
 

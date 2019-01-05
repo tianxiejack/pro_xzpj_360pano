@@ -95,7 +95,16 @@ public:
     u_int8_t  sendCheck_sum(uint len, u_int8_t *tmpbuf);
 	u_int8_t package_frame(uint len, u_int8_t *tmpbuf);
 
-
+   void plantformconfig();
+    void sensorconfig();
+    void zeroconfig();
+    void recordconfig();
+    void movedetectconfig();
+    void movedetectareaconfig();
+    void displayconfig();
+    void correcttimeconfig();
+    void panoconfig();
+    
 
 protected:
     int prcRcvFrameBufQue(int method);

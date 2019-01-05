@@ -53,6 +53,18 @@ public:
     virtual CMessage *getpM(){return 0;};
     virtual CGlobalDate* getDate()=0;
     virtual CStatusManager* getStatus()=0;
+
+    virtual void plantformconfig(){};
+    virtual void sensorconfig(){};
+    virtual void zeroconfig(){};
+    virtual void recordconfig(){};
+    virtual void movedetectconfig(){};
+    virtual void movedetectareaconfig(){};
+    virtual void displayconfig(){};
+    virtual void correcttimeconfig(){};
+    virtual void panoconfig(){};
+    
+    
 };
 
 #endif

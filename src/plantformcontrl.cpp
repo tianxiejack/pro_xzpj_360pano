@@ -30,6 +30,7 @@ plantinitflag(0),speedpan(30),speedtitle(30),titlpanangle(-7.3),plantformpanfore
 	memset(callbackpan,0,sizeof(callbackpan));
 	memset(callbacktitle,0,sizeof(callbacktitle));
 	memset(callback,0,sizeof(callbacktitle));
+	OSA_mutexCreate(&lock);
 	
 	
 }
@@ -39,6 +40,7 @@ Plantformpzt::~Plantformpzt()
 	
 	GPIO_close(GPIP485R);
 
+	OSA_mutexDelete(&lock);
 }
 
 Plantformpzt* Plantformpzt::getinstance()
@@ -1151,6 +1153,7 @@ void Plantformpzt::getpanotitlepos()
 void Plantformpzt::registorfun()
 {
 	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_PLATCTRL,ptzcontrl,0);
+	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_PlantfromConfig,plantfromcontrl,0);
 	
 }
 
@@ -1211,6 +1214,31 @@ void Plantformpzt::iriscontrl(long lParam)
 	else if(lParam==Status::PTZIRISUP)
 		;//	PlantformContrl->MakeFocusFar(&instance->PELCO_D, instance->address);
 
+
+}
+
+void Plantformpzt::plantfromcontrl(long lParam)
+{
+	int ptzaddress=Status::getinstance()->ptzaddress;
+	int protocal=Status::getinstance()->ptzprotocal;
+	int brudrate=Status::getinstance()->ptzbaudrate;
+	int speed=Status::getinstance()->ptzspeed;
+
+	if(protocal==0)
+	PlantformContrl=IPelcoFactory::createIpelco(pelco_D);
+	else
+	PlantformContrl=IPelcoFactory::createIpelco(pelco_P);
+
+	OSA_mutexLock(&instance->lock);
+	if(instance->fd!=0)
+		instance->Uart.UartClose(instance->fd);
+	instance->fd=instance->Uart.UartOpen(UART422NAME);
+	instance->Uart.UartSet(instance->fd, brudrate, 8, 'n', 1);
+	instance->address=ptzaddress;
+	OSA_mutexUnlock(&instance->lock);
+	
+	
+	
 
 }
 

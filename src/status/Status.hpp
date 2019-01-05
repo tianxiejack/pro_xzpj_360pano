@@ -7,6 +7,11 @@
 
 #ifndef STATUS_HPP_
 #define STATUS_HPP_
+
+
+#define HELDNUM  2
+#define HELDWEEK  7
+#define HELDHOUR  24
 class Status{
 public:
 	typedef enum {
@@ -62,6 +67,14 @@ public:
 		
 	}STOREMODNUM;
 
+
+	typedef enum {
+		ZEROSTOP,
+		ZEROSTART,
+		ZEROSAVE,
+		
+	}ZeroMod;
+
 	
 
 	int ptzpanodirection;
@@ -85,6 +98,75 @@ public:
 	int storesavenum;
 
 	int storesavemod;
+
+	/******plantform config*******/
+
+	int ptzaddress;
+	int ptzprotocal;
+	int ptzbaudrate;
+	int ptzspeed;
+
+	/******sensor config*******/
+	unsigned char brightness;
+	unsigned char contract;
+	unsigned char autobright;
+	unsigned char backandwrite;
+	unsigned char correct;
+	unsigned char digitfilter;
+	unsigned char digitdenoise;
+	unsigned char mirror;
+	unsigned char crossdisplay;
+	unsigned int crossx;
+	unsigned int crossy;
+
+	unsigned int save;
+
+
+	/******zero config*******/
+
+	unsigned char zeromod;
+
+
+	/******record config*******/
+	int recordpositionheld[HELDNUM][HELDWEEK][HELDHOUR];
+
+	/******movedetect config*******/
+
+	int movedetectalgenable;
+
+	int movedetectmaxnum;
+
+	int speedpriority;
+
+	int sensitivity;
+
+	int movedetectrecord;
+
+	int moverecordtime;
+
+	/******movearea config*******/
+	int detectareanum;
+	int detectareaenable;
+
+
+	/******display config*******/
+
+	int displayresolution;
+
+	/******time config*******/
+	int correctyear;
+	int correctmonth;
+	int correctday;
+	int correcthour;
+	int correctmin;
+	int correctsec;
+
+	/******pano config*******/
+	int panoptzspeed;
+	int panopiexfocus;
+	int panopicturerate;
+
+	
 
 	
 

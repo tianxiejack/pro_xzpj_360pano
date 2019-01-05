@@ -12,6 +12,7 @@
 #include "CUartBase.hpp"
 #include <osa_thr.h>
 #include"osa_sem.h"
+#include"osa_mutex.h"
 #include"config.hpp"
 
 typedef struct {
@@ -110,6 +111,8 @@ class Plantformpzt
 		static void focuscontrl(long lParam);
 		static void iriscontrl(long lParam);
 
+		static void plantfromcontrl(long lParam);
+
 	private:
 		CUartBase Uart;
 		int speedpan;
@@ -130,6 +133,8 @@ class Plantformpzt
 		int mainloop ;
 		int address;
 		int ptzpd;
+
+		OSA_MutexHndl lock;
 
 		double plantformpan;
 		double plantformtitle;

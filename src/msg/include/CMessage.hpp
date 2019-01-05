@@ -48,6 +48,17 @@ typedef enum _sys_msg_id_ {
     MSGID_EXT_INPUT_zoomSpeed,
     MSGID_EXT_INPUT_captureSwitch,
 
+    MSGID_EXT_INPUT_PlantfromConfig,
+    MSGID_EXT_INPUT_SensorConfig,
+    MSGID_EXT_INPUT_ZeroConfig,
+    MSGID_EXT_INPUT_RecordConfig,
+    MSGID_EXT_INPUT_MoveDetectConfig,
+    MSGID_EXT_INPUT_MoveDetectAreaConfig,
+    MSGID_EXT_INPUT_DisplayConfig,
+    
+    MSGID_EXT_INPUT_CorrectTimeConfig,
+    MSGID_EXT_INPUT_PanoConfig,
+
     MSGID_IPC_INPUT_TRACKCTRL,
     MSGID_IPC_INPUT_MTDCTRL,
     MSGID_IPC_INPUT_MMTCRTL,

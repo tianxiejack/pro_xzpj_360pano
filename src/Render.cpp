@@ -4529,3 +4529,26 @@ void Render::mouseevent(long lParam)
 }
 
 
+void Render::zeroconfig(long lParam)
+{
+	if(lParam==Status::ZEROSTOP)
+		{
+			pthis->panomod();
+		}
+	else if(lParam==Status::ZEROSTART)
+		{
+			pthis->zeromod();
+		}
+	else if(lParam==Status::ZEROSAVE)
+		{
+			setstichreset(1);
+			Config::getinstance()->SaveConfig();
+			
+			//printf("panomod SELECTZEROMODE zeroselect=%d\n",zeroselect);
+
+		}
+
+
+}
+
+

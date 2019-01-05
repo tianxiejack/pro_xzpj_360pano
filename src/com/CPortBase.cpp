@@ -97,6 +97,291 @@ void CPortBase::displaymod()
 	//OSA_semSignal(&_globalDate->m_semHndl_socket_s);
   
 }
+
+void CPortBase::plantformconfig()
+{
+	int configchange=0;
+	if(_globalDate->rcvBufQue.at(5)!=Status::getinstance()->ptzaddress)
+		{
+			Status::getinstance()->ptzaddress=_globalDate->rcvBufQue.at(5);
+			configchange=1;
+		}
+	if(_globalDate->rcvBufQue.at(6)!=Status::getinstance()->ptzprotocal)
+		{
+			Status::getinstance()->ptzprotocal=_globalDate->rcvBufQue.at(6);
+			configchange=1;
+		}
+	if(_globalDate->rcvBufQue.at(7)!=Status::getinstance()->ptzbaudrate)
+		{
+			Status::getinstance()->ptzbaudrate=_globalDate->rcvBufQue.at(7);
+			configchange=1;
+		}
+	if(_globalDate->rcvBufQue.at(8)!=Status::getinstance()->ptzspeed)
+		{
+			Status::getinstance()->ptzspeed=_globalDate->rcvBufQue.at(8);
+			configchange=1;
+		}
+	
+	
+	if(configchange)
+		pM->MSGDRIV_send(MSGID_EXT_INPUT_PlantfromConfig, 0);
+	
+}
+
+ void CPortBase::sensorconfig()
+ 	{
+ 		int configchange=0;
+		if(_globalDate->rcvBufQue.at(5)!=Status::getinstance()->brightness)
+			{
+				Status::getinstance()->brightness=_globalDate->rcvBufQue.at(5);
+				configchange=1;
+			}
+		if(_globalDate->rcvBufQue.at(6)!=Status::getinstance()->contract)
+			{
+				Status::getinstance()->contract=_globalDate->rcvBufQue.at(6);
+				configchange=1;
+			}
+		if(_globalDate->rcvBufQue.at(7)!=Status::getinstance()->autobright)
+			{
+				Status::getinstance()->autobright=_globalDate->rcvBufQue.at(7);
+				configchange=1;
+			}
+		if(_globalDate->rcvBufQue.at(8)!=Status::getinstance()->backandwrite)
+			{
+				Status::getinstance()->backandwrite=_globalDate->rcvBufQue.at(8);
+				configchange=1;
+			}
+		if(_globalDate->rcvBufQue.at(9)!=Status::getinstance()->correct)
+			{
+				Status::getinstance()->correct=_globalDate->rcvBufQue.at(9);
+				configchange=1;
+			}
+		if(_globalDate->rcvBufQue.at(10)!=Status::getinstance()->digitfilter)
+			{
+				Status::getinstance()->digitfilter=_globalDate->rcvBufQue.at(10);
+				configchange=1;
+			}
+		if(_globalDate->rcvBufQue.at(11)!=Status::getinstance()->digitdenoise)
+			{
+				Status::getinstance()->digitdenoise=_globalDate->rcvBufQue.at(11);
+				configchange=1;
+			}
+		if(_globalDate->rcvBufQue.at(12)!=Status::getinstance()->mirror)
+			{
+				Status::getinstance()->mirror=_globalDate->rcvBufQue.at(12);
+				configchange=1;
+			}
+		if(_globalDate->rcvBufQue.at(13)!=Status::getinstance()->crossdisplay)
+			{
+				Status::getinstance()->crossdisplay=_globalDate->rcvBufQue.at(13);
+				configchange=1;
+			}
+		if((_globalDate->rcvBufQue.at(14)<<8|_globalDate->rcvBufQue.at(15))!=Status::getinstance()->crossx)
+			{
+				Status::getinstance()->crossx=(_globalDate->rcvBufQue.at(14)<<8|_globalDate->rcvBufQue.at(15));
+				configchange=1;
+			}
+		if((_globalDate->rcvBufQue.at(16)<<8|_globalDate->rcvBufQue.at(17))!=Status::getinstance()->crossy)
+			{
+				Status::getinstance()->crossy=(_globalDate->rcvBufQue.at(16)<<8|_globalDate->rcvBufQue.at(17));
+				configchange=1;
+			}
+		if(_globalDate->rcvBufQue.at(18)!=Status::getinstance()->crossx)
+			{
+				Status::getinstance()->save=_globalDate->rcvBufQue.at(18);
+				configchange=1;
+			}
+		
+		
+		if(configchange)
+			pM->MSGDRIV_send(MSGID_EXT_INPUT_SensorConfig, 0);
+
+
+ 	};
+ void CPortBase::zeroconfig()
+ 	{
+ 		int configchange=0;
+ 		if(_globalDate->rcvBufQue.at(5)!=Status::getinstance()->zeromod)
+			{
+				Status::getinstance()->zeromod=_globalDate->rcvBufQue.at(5);
+				configchange=1;
+			}
+
+		if(configchange)
+			{
+				if(Status::getinstance()->zeromod==0)
+					pM->MSGDRIV_send(MSGID_EXT_INPUT_ZeroConfig, (void *)Status::ZEROSTOP);
+				else if(Status::getinstance()->zeromod==1)
+				pM->MSGDRIV_send(MSGID_EXT_INPUT_ZeroConfig, (void *)Status::ZEROSTART);
+				else if(Status::getinstance()->zeromod==2)
+				pM->MSGDRIV_send(MSGID_EXT_INPUT_ZeroConfig, (void *)Status::ZEROSAVE);
+			}
+
+		
+ 		
+ 	};
+void CPortBase::recordconfig()
+	{
+		int configchange=1;
+		int recordclass=_globalDate->rcvBufQue.at(5);
+
+		int bitnum=8;
+		for(int i=0;i<HELDWEEK;i++)
+			{
+				for(int j=0;j<HELDHOUR;j++)
+					{
+						if(j<8)
+							Status::getinstance()->recordpositionheld[recordclass][i][bitnum-1-j]=(_globalDate->rcvBufQue.at(6+i*3)>>j)&0x01;
+						else if(j<16)
+							Status::getinstance()->recordpositionheld[recordclass][i][2*bitnum-1-j]=(_globalDate->rcvBufQue.at(6+i*3+1)>>(j-bitnum))&0x01;
+						else if(j<24)
+							Status::getinstance()->recordpositionheld[recordclass][i][3*bitnum-1-j]=(_globalDate->rcvBufQue.at(6+i*3+2)>>(j-2*bitnum))&0x01;
+
+						
+					}
+
+			}
+		
+
+		
+		if(configchange)
+			pM->MSGDRIV_send(MSGID_EXT_INPUT_RecordConfig,0);
+	}
+ void CPortBase::movedetectconfig()
+ 	{
+ 		int configchange=0;
+		if(_globalDate->rcvBufQue.at(5)!=Status::getinstance()->movedetectalgenable)
+			{
+				Status::getinstance()->movedetectalgenable=_globalDate->rcvBufQue.at(5);
+				configchange=1;
+			}
+		if((_globalDate->rcvBufQue.at(6)<<8|_globalDate->rcvBufQue.at(7))!=Status::getinstance()->movedetectmaxnum)
+			{
+				Status::getinstance()->movedetectmaxnum=_globalDate->rcvBufQue.at(6)<<8|_globalDate->rcvBufQue.at(7);
+				configchange=1;
+			}
+		if(_globalDate->rcvBufQue.at(8)!=Status::getinstance()->speedpriority)
+			{
+				Status::getinstance()->speedpriority=_globalDate->rcvBufQue.at(8);
+				configchange=1;
+			}
+		if(_globalDate->rcvBufQue.at(9)!=Status::getinstance()->sensitivity)
+			{
+				Status::getinstance()->sensitivity=_globalDate->rcvBufQue.at(9);
+				configchange=1;
+			}
+
+		
+		if(_globalDate->rcvBufQue.at(10)!=Status::getinstance()->movedetectrecord)
+			{
+				Status::getinstance()->movedetectrecord=_globalDate->rcvBufQue.at(10);
+				configchange=1;
+			}
+		if(_globalDate->rcvBufQue.at(11)!=Status::getinstance()->moverecordtime)
+			{
+				Status::getinstance()->moverecordtime=_globalDate->rcvBufQue.at(11);
+				configchange=1;
+			}
+
+		if(configchange)
+			pM->MSGDRIV_send(MSGID_EXT_INPUT_MoveDetectConfig,0);
+		
+
+
+ 	};
+ void CPortBase::movedetectareaconfig()
+ 	{
+		int configchange=0;
+ 		if(_globalDate->rcvBufQue.at(5)!=Status::getinstance()->detectareanum)
+			{
+				Status::getinstance()->detectareanum=_globalDate->rcvBufQue.at(5);
+				configchange=1;
+			}
+		if(_globalDate->rcvBufQue.at(6)!=Status::getinstance()->detectareaenable)
+			{
+				Status::getinstance()->detectareaenable=_globalDate->rcvBufQue.at(6);
+				configchange=1;
+			}
+		if(configchange)
+			pM->MSGDRIV_send(MSGID_EXT_INPUT_MoveDetectAreaConfig,0);
+
+ 	};
+ void CPortBase::displayconfig()
+ 	{
+ 		int configchange=0;
+ 		if(_globalDate->rcvBufQue.at(5)!=Status::getinstance()->displayresolution)
+			{
+				Status::getinstance()->displayresolution=_globalDate->rcvBufQue.at(5);
+				configchange=1;
+			}
+		if(configchange)
+			pM->MSGDRIV_send(MSGID_EXT_INPUT_DisplayConfig,0);
+
+ 	};
+ void CPortBase::correcttimeconfig()
+ 	{
+ 		int configchange=0;
+		if((_globalDate->rcvBufQue.at(5)<<8|_globalDate->rcvBufQue.at(6))!=Status::getinstance()->correctyear)
+			{
+				Status::getinstance()->correctyear=_globalDate->rcvBufQue.at(5)<<8|_globalDate->rcvBufQue.at(6);
+				configchange=1;
+			}
+		if((_globalDate->rcvBufQue.at(7))!=Status::getinstance()->correctmonth)
+			{
+				Status::getinstance()->correctmonth=_globalDate->rcvBufQue.at(7);
+				configchange=1;
+			}
+		if(_globalDate->rcvBufQue.at(8)!=Status::getinstance()->correctday)
+			{
+				Status::getinstance()->correctday=_globalDate->rcvBufQue.at(8);
+				configchange=1;
+			}
+		if(_globalDate->rcvBufQue.at(9)!=Status::getinstance()->correcthour)
+			{
+				Status::getinstance()->correcthour=_globalDate->rcvBufQue.at(9);
+				configchange=1;
+			}
+
+		
+		if(_globalDate->rcvBufQue.at(10)!=Status::getinstance()->correctmin)
+			{
+				Status::getinstance()->correctmin=_globalDate->rcvBufQue.at(10);
+				configchange=1;
+			}
+		if(_globalDate->rcvBufQue.at(11)!=Status::getinstance()->correctsec)
+			{
+				Status::getinstance()->correctsec=_globalDate->rcvBufQue.at(11);
+				configchange=1;
+			}
+
+		if(configchange)
+			pM->MSGDRIV_send(MSGID_EXT_INPUT_CorrectTimeConfig,0);
+ 		
+
+ 	};
+ void CPortBase::panoconfig()
+ 	{
+ 			int configchange=0;
+		if(_globalDate->rcvBufQue.at(5)!=Status::getinstance()->panoptzspeed)
+			{
+				Status::getinstance()->panoptzspeed=_globalDate->rcvBufQue.at(5);
+				configchange=1;
+			}
+		if((_globalDate->rcvBufQue.at(6)<<8|_globalDate->rcvBufQue.at(7))!=Status::getinstance()->panopiexfocus)
+			{
+				Status::getinstance()->panopiexfocus=_globalDate->rcvBufQue.at(6)<<8|_globalDate->rcvBufQue.at(7);
+				configchange=1;
+			}
+		if(_globalDate->rcvBufQue.at(8)!=Status::getinstance()->panopicturerate)
+			{
+				Status::getinstance()->panopicturerate=_globalDate->rcvBufQue.at(8);
+				configchange=1;
+			}
+		if(configchange)
+			pM->MSGDRIV_send(MSGID_EXT_INPUT_PanoConfig,0);
+
+ 	};
+    
 void CPortBase::SetResolution()
 {
 
@@ -457,6 +742,33 @@ int CPortBase::prcRcvFrameBufQue(int method)
             case 0x43:
             	targetCaptureMode();
             	break;
+		case 0x80:
+			plantformconfig();
+			break;
+		case 0x81:
+			sensorconfig();
+			break;
+		case 0x82:
+			zeroconfig();
+			break;
+		case 0x83:
+			recordconfig();
+			break;
+		case 0x84:
+			movedetectconfig();
+			break;
+		case 0x85:
+			movedetectareaconfig();
+			break;
+		case 0x86:
+			displayconfig();
+			break;
+		case 0x87:
+			correcttimeconfig();
+			break;
+		case 0x88:
+			panoconfig();
+			break;
             default:
                 printf("INFO: Unknow  Control Command, please check!!!\r\n ");
                 ret =0;

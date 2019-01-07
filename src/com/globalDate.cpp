@@ -24,6 +24,12 @@ CGlobalDate::CGlobalDate():EXT_Ctrl(Cmd_Mesg_Max), Host_Ctrl(40), commode(0), fe
 	MtdAutoLoop = false;
 	OSA_semCreate(&m_semHndl_socket,1,0);
 	OSA_semCreate(&m_semHndl_socket_s,1,0);
+
+	OSA_semCreate(&m_semHndl,1,0);
+	OSA_semCreate(&m_semHndl_s,1,0);
+
+	//OSA_semCreate(&m_semHndl_retest,1,0);
+	//OSA_semCreate(&m_semHndl_automtd,1,0);
 	memset(&ipc_mouseptz, 0, sizeof(ipc_mouseptz));
 	memset(&mtdconfig, 0, sizeof(mtdconfig));
 	memset(&mainProStat, 0, sizeof(mainProStat));

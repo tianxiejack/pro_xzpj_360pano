@@ -263,8 +263,11 @@ int CUartProcess::sendData()
     int result,retVle;
     struct timeval    sendTimeout;
 	while(m_UartRun){
-		
+		printf("****************************%s**********************************************************\n",__func__);
+		printf("****************************%s**********************************************************\n",__func__);
 		OSA_semWait(&_globalDate->m_semHndl,OSA_TIMEOUT_FOREVER);
+		printf("****************************%s*********start*************************************************\n",__func__);
+		printf("****************************%s*********start*************************************************\n",__func__);
 		getSendInfo(_globalDate->feedback, &_globalDate->repSendBuffer);
 		retVle = write(m_port, &_globalDate->repSendBuffer.sendBuff, _globalDate->repSendBuffer.byteSizeSend);
 		if(_globalDate->feedback == ACK_config_Read)

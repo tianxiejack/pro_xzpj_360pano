@@ -29,6 +29,7 @@
 #include"RecordManager.hpp"
 #include"videorecord.hpp"
 #include "DxTimer.hpp"
+
 //#include"Gyroprocess.hpp"
 
 
@@ -4433,6 +4434,11 @@ void Render::registorfun()
 	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_SIGLEinterrupt,singlecircle,0);
 	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_Updatapano,updatepano,0);
 	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_MouseEvent,mouseevent,0);
+	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_PlayerCtl,playerctl,0);
+	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_PlayerQuerry,playerquerry,0);
+	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_PlayerSelect,playerselect,0);
+	
+	
 	//MSGID_EXT_INPUT_WorkModeCTRL
 }
 void Render::displaymod(long lParam)
@@ -4450,7 +4456,7 @@ void Render::displaymod(long lParam)
 	else if(lParam==Status::PLAYCALLBACK)
 		{
 			Config::getinstance()->setcamsource(1);
-			RecordManager::getinstance()->enableplayer(1);
+			//RecordManager::getinstance()->enableplayer(1);
 			VideoRecord::getinstance()->seteventrecordenable(0);
 			VideoRecord::getinstance()->settimerecordenable(0);
 			
@@ -4549,6 +4555,141 @@ void Render::zeroconfig(long lParam)
 		}
 
 
+}
+
+void Render::playerctl(long lParam)
+{
+	if(lParam==Status::PLAYERSTOP)
+		{
+			RecordManager::getinstance()->enableplayer(0);
+			VideoRecord::getinstance()->seteventrecordenable(0);
+			VideoRecord::getinstance()->settimerecordenable(0);
+			
+			
+			
+		}
+	else if(lParam==Status::PLAYERRUN)
+		{
+			RecordManager::getinstance()->enableplayer(1);
+			VideoRecord::getinstance()->seteventrecordenable(1);
+			
+		}
+	else if(lParam==Status::PLAYERACC)
+		{
+			if(pthis->recordtimer<600)
+				pthis->recordtimer++;
+			RecordManager::getinstance()->setplayertimer(pthis->recordtimer);
+		}
+	else if(lParam==Status::PLAYERDEC)
+		{
+			if(pthis->recordtimer>30)
+				pthis->recordtimer--;
+			RecordManager::getinstance()->setplayertimer(pthis->recordtimer);
+		}
+
+}
+
+void Render::playerquerry(long lParam)
+{
+	int year=Status::getinstance()->playerqueryyear;
+	int mon=Status::getinstance()->playerquerymon;
+	int day=Status::getinstance()->playerqueryday;
+	RecordManager::getinstance()->findrecordnames();
+	Recordtime data;
+	Recordmantime recorddate;
+	CGlobalDate::Instance()->querrytime.clear();
+	for(int i=0;i<RecordManager::getinstance()->recordtime.size();i++)
+		{
+			recorddate=RecordManager::getinstance()->recordtime[i];
+			
+			if(((recorddate.startyear==year)&&(recorddate.startmon==mon)&&(recorddate.startday==day))||\
+				((recorddate.endyear==year)&&(recorddate.endmon==mon)&&(recorddate.endday==day)))
+				{
+					data.startyear=recorddate.startyear;
+					data.startmon=recorddate.startmon;
+					data.startday=recorddate.startday;
+					data.starthour=recorddate.starthour;
+					data.startmin=recorddate.startmin;
+					data.startsec=recorddate.startsec;
+
+					data.endyear=recorddate.endyear;
+					data.endmon=recorddate.endmon;
+					data.endday=recorddate.endday;
+					data.endhour=recorddate.endhour;
+					data.endtmin=recorddate.endtmin;
+					data.endsec=recorddate.endsec;
+					CGlobalDate::Instance()->querrytime.push_back(data);
+				}
+
+		}
+
+	CGlobalDate::Instance()->feedback=ACK_playerquerry;
+	printf("send ok");
+	OSA_semSignal(&CGlobalDate::Instance()->m_semHndl_socket);
+	
+
+	
+	
+}
+
+
+void Render::playerselect(long lParam)
+{
+	int year=Status::getinstance()->playeryear;
+	int mon=Status::getinstance()->playermonth;
+	int day=Status::getinstance()->playerday;
+
+	int hour=Status::getinstance()->playerhour;
+	int min=Status::getinstance()->playermin;
+	int sec=Status::getinstance()->playersec;
+
+	unsigned int time=day*24*60+hour*60+min;
+
+	printf("time=%d\n",time);
+	
+	//RecordManager::getinstance()->findrecordnames();
+	
+	Recordmantime recorddate;
+	int findok=-1;
+	for(int i=0;i<RecordManager::getinstance()->recordtime.size();i++)
+		{
+			recorddate=RecordManager::getinstance()->recordtime[i];
+			
+			if(((recorddate.startyear==year)&&(recorddate.startmon==mon)&&(recorddate.startday==day))||\
+				((recorddate.endyear==year)&&(recorddate.endmon==mon)&&(recorddate.endday==day)))
+				{
+
+					unsigned int starttime=recorddate.startday*24*60+recorddate.starthour*60+recorddate.startmin;
+					unsigned int endtime=recorddate.endday*24*60+recorddate.endhour*60+recorddate.endtmin;
+					//printf("starttime=%d  endtime=%d\n",starttime,endtime);
+					if((starttime<=time)&&(endtime>=time))
+						{	
+
+							findok=i;
+							break;
+
+						}
+
+					
+					
+					
+				}
+
+		}
+
+	if(findok>=0)
+		{
+			
+			RecordManager::getinstance()->setpalyervide(findok);
+
+		}
+
+	//CGlobalDate::Instance()->->feedback=ACK_playerquerry;
+	//OSA_semSignal(&CGlobalDate::Instance()->m_semHndl);
+	
+
+	
+	
 }
 
 

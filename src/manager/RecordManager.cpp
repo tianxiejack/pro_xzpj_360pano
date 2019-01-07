@@ -7,7 +7,7 @@
 #include <string>
 #include"videoload.hpp"
 #include "DxTimer.hpp"
-
+//#include "globalDate.h"
 RecordManager*RecordManager::instance=NULL;
 #define AVHEAD "record"
 #define AVTAIL ".avi"
@@ -97,10 +97,45 @@ void RecordManager::getJustCurrentFile(string  path, vector<string> & video,vect
 
    
  }
+
 void RecordManager::findrecordnames()
 {
 	//string temp;
 	getJustCurrentFile(recordpath, recordvideonames,recordfilenames);
+	Recordmantime data;
+	recordtime.clear();
+	for(int i=0;i<recordvideonames.size();i++)
+		{
+			string videname=recordvideonames[i];
+			sscanf(videname.c_str(),"record_%04d%02d%02d-%02d%02d%02d_%04d%02d%02d-%02d%02d%02d.avi",&data.startyear,&data.startmon,&data.startday,&data.starthour\
+				,&data.startmin,&data.startsec,&data.endyear,&data.endmon,&data.endday,&data.endhour,&data.endtmin,&data.endsec);
+			recordtime.push_back(data);
+		}
+
+}
+
+void RecordManager::setpalyervide(int num)
+{
+	int count=recordvideonames.size();
+	if(num>=count)
+		return ;
+
+
+	string videname=recordvideonames[num];
+	cout<<videname<<endl;
+	VideoLoad::getinstance()->setreadavi(videname);
+	cout<<videname<<endl;
+	string::iterator begin=videname.end()-4;
+	string::iterator end=videname.end();
+	videname.erase(begin,end);//+FILETAIL;
+	videname=videname+FILETAIL;
+	//string filename=videname.erase( 4,4);//+FILETAIL;
+	VideoLoad::getinstance()->setreadname(videname);
+	VideoLoad::getinstance()->setreadnewfile(1);
+
+	cout<<videname<<endl;
+	
+
 
 }
 void RecordManager::getnexvideo()

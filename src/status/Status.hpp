@@ -75,6 +75,15 @@ public:
 		
 	}ZeroMod;
 
+
+	typedef enum {
+		PLAYERSTOP,
+		PLAYERRUN,
+		PLAYERACC,
+		PLAYERDEC,
+		
+	}PlayerCtl;
+
 	
 
 	int ptzpanodirection;
@@ -98,6 +107,23 @@ public:
 	int storesavenum;
 
 	int storesavemod;
+
+	/******player*******/
+	int playercontrl;
+	/******player select*******/
+	int playeryear;
+	int playermonth;
+	int playerday;
+	int playerhour;
+	int playermin;
+	int playersec;
+
+	
+
+	/******player query*******/
+	int playerqueryyear;
+	int playerquerymon;
+	int playerqueryday;
 
 	/******plantform config*******/
 

@@ -18,7 +18,7 @@
 
 using namespace std;
 
-const char MAXSENDSIZE = 136;
+const char MAXSENDSIZE = 8360;
 
 typedef struct
 {
@@ -167,6 +167,24 @@ typedef enum{
 	ManualMtdCapture
 }Capture_Mode;
 
+
+typedef struct {
+	int startyear;
+	int startmon;
+	int startday;
+	int starthour;
+	int startmin;
+	int startsec;
+
+	int endyear;
+	int endmon;
+	int endday;
+	int endhour;
+	int endtmin;
+	int endsec;
+
+}Recordtime;
+
 class CGlobalDate
 {
 public:
@@ -182,8 +200,8 @@ vector <float> Host_Ctrl;
 vector<unsigned char>  rcvBufQue;
 static vector<Read_config_buffer>  readConfigBuffer;
 static vector<int>  defConfigBuffer;
-//static selectCh_t selectch;
-
+//static selectCh_t selectch; 
+vector<Recordtime> querrytime;
 //static osdbuffer_t recvOsdbuf;
 sendInfo repSendBuffer;
 CurrParaStat pParam;

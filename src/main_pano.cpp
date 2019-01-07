@@ -313,7 +313,7 @@ int main_pano(int argc, char **argv)
 	Config::getinstance()->saveconfig();
 	return 0;
 	#endif
-	
+	CGlobalDate::Instance();
 	config=Config::getinstance();
 	config->loadconfig();
 	CMessage::getInstance()->MSGDRIV_create();

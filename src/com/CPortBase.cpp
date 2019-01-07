@@ -79,6 +79,9 @@ void CPortBase::mouseevent(int event)
 
 }
 
+
+
+
 void CPortBase::displaymod()
 {
 	if(_globalDate->rcvBufQue.at(5)!=Status::getinstance()->getdisplaymod())
@@ -97,6 +100,78 @@ void CPortBase::displaymod()
 	//OSA_semSignal(&_globalDate->m_semHndl_socket_s);
   
 }
+
+
+void CPortBase::playercontrl()
+	{
+		if(_globalDate->rcvBufQue.at(5)!=Status::getinstance()->playercontrl)
+		{
+			Status::getinstance()->playercontrl=_globalDate->rcvBufQue.at(5);
+		}
+
+		if(Status::getinstance()->playercontrl==Status::PLAYERSTOP)
+			pM->MSGDRIV_send(MSGID_EXT_INPUT_PlayerCtl, (void *)(Status::PLAYERSTOP));
+		if(Status::getinstance()->playercontrl==Status::PLAYERRUN)
+			pM->MSGDRIV_send(MSGID_EXT_INPUT_PlayerCtl, (void *)(Status::PLAYERRUN));
+		if(Status::getinstance()->playercontrl==Status::PLAYERACC)
+			pM->MSGDRIV_send(MSGID_EXT_INPUT_PlayerCtl, (void *)(Status::PLAYERDEC));
+		if(Status::getinstance()->playercontrl==Status::PLAYERDEC)
+			pM->MSGDRIV_send(MSGID_EXT_INPUT_PlayerCtl, (void *)(Status::PLAYERACC));
+			
+	};
+void CPortBase::playerquery()
+	{
+		
+		if((_globalDate->rcvBufQue.at(5)<<8|_globalDate->rcvBufQue.at(6))!=Status::getinstance()->playerqueryyear)
+		{
+			Status::getinstance()->playerqueryyear=_globalDate->rcvBufQue.at(5)<<8|_globalDate->rcvBufQue.at(6);
+		}
+		if(_globalDate->rcvBufQue.at(7)!=Status::getinstance()->playerquerymon)
+		{
+			Status::getinstance()->playerquerymon=_globalDate->rcvBufQue.at(7);
+		}
+		if(_globalDate->rcvBufQue.at(8)!=Status::getinstance()->playerqueryday)
+		{
+			Status::getinstance()->playerqueryday=_globalDate->rcvBufQue.at(8);
+		}
+
+		OSA_printf("%s the year=%d mon=%d day=%d\n",__func__,Status::getinstance()->playerqueryyear,Status::getinstance()->playerquerymon,Status::getinstance()->playerqueryday);
+
+		pM->MSGDRIV_send(MSGID_EXT_INPUT_PlayerQuerry, 0);
+		
+	};
+void CPortBase::playerselect()
+	{
+		if((_globalDate->rcvBufQue.at(5)<<8|_globalDate->rcvBufQue.at(6))!=Status::getinstance()->playeryear)
+		{
+			Status::getinstance()->playeryear=_globalDate->rcvBufQue.at(5)<<8|_globalDate->rcvBufQue.at(6);
+		}
+		if(_globalDate->rcvBufQue.at(7)!=Status::getinstance()->playermonth)
+		{
+			Status::getinstance()->playermonth=_globalDate->rcvBufQue.at(7);
+		}
+		if(_globalDate->rcvBufQue.at(8)!=Status::getinstance()->playerday)
+		{
+			Status::getinstance()->playerday=_globalDate->rcvBufQue.at(8);
+		}
+		if(_globalDate->rcvBufQue.at(9)!=Status::getinstance()->playerhour)
+		{
+			Status::getinstance()->playerhour=_globalDate->rcvBufQue.at(9);
+		}
+		if(_globalDate->rcvBufQue.at(10)!=Status::getinstance()->playermin)
+		{
+			Status::getinstance()->playermin=_globalDate->rcvBufQue.at(10);
+		}
+		if(_globalDate->rcvBufQue.at(11)!=Status::getinstance()->playersec)
+		{
+			Status::getinstance()->playersec=_globalDate->rcvBufQue.at(11);
+		}
+
+		OSA_printf("%s the h=%d m=%d s=%d\n",__func__,Status::getinstance()->playerhour,Status::getinstance()->playermin,Status::getinstance()->playersec);
+
+		pM->MSGDRIV_send(MSGID_EXT_INPUT_PlayerSelect, 0);
+		
+	};
 
 void CPortBase::plantformconfig()
 {
@@ -662,6 +737,9 @@ int CPortBase::prcRcvFrameBufQue(int method)
 		   StoreMode(Status::STOREGO);
 		   break;
             case 0x08:
+		_globalDate->feedback=ACK_mainVideoStatus;
+		   OSA_semSignal(&_globalDate->m_semHndl_socket);
+		   printf("the_globalDate->feedback =%d\n",_globalDate->feedback);
                 StoreMode(Status::STORESAVE);
                 break;
             case 0x09:
@@ -742,6 +820,15 @@ int CPortBase::prcRcvFrameBufQue(int method)
             case 0x43:
             	targetCaptureMode();
             	break;
+		case 0x60:
+			playercontrl();
+			break;
+		case 0x61:
+			playerselect();
+			break;
+		case 0x62:
+			playerquery();
+			break;
 		case 0x80:
 			plantformconfig();
 			break;
@@ -864,6 +951,11 @@ int  CPortBase::getSendInfo(int  respondId, sendInfo * psendBuf)
 			break;
 		case ACK_param_todef:
 			paramtodef(psendBuf);
+			break;
+		case ACK_playerquerry:
+			recordquerry(psendBuf);
+			break;
+		default:
 			break;
 	}
 	return 0;
@@ -1181,21 +1273,58 @@ void  CPortBase:: paramtodef(sendInfo * spBuf)
 	spBuf->byteSizeSend=0x07;
 }
 
+void  CPortBase:: recordquerry(sendInfo * spBuf)
+{
+	u_int8_t sumCheck;
+	int infosize=14*_globalDate->querrytime.size()+1;
+	spBuf->sendBuff[0]=0xEB;
+	spBuf->sendBuff[1]=0x51;
+	spBuf->sendBuff[2]=infosize&0xff;
+	spBuf->sendBuff[3]=(infosize>>8)&0xff;
+	spBuf->sendBuff[4]=ACK_playerquerry;
+	for(int i=0;i<_globalDate->querrytime.size();i++)
+		{
+			spBuf->sendBuff[5+i*14]=(_globalDate->querrytime[i].startyear>>8)&0xff;
+			spBuf->sendBuff[6+i*14]=_globalDate->querrytime[i].startyear&0xff;
+			spBuf->sendBuff[7+i*14]=_globalDate->querrytime[i].startmon;
+			spBuf->sendBuff[8+i*14]=_globalDate->querrytime[i].startday;
+			spBuf->sendBuff[9+i*14]=_globalDate->querrytime[i].starthour;
+			spBuf->sendBuff[10+i*14]=_globalDate->querrytime[i].startmin;
+			spBuf->sendBuff[11+i*14]=_globalDate->querrytime[i].startsec;
+			spBuf->sendBuff[12+i*14]=(_globalDate->querrytime[i].endyear>>8)&0xff;
+			spBuf->sendBuff[13+i*14]=_globalDate->querrytime[i].endyear&0xff;
+			spBuf->sendBuff[14+i*14]=_globalDate->querrytime[i].endmon;
+			spBuf->sendBuff[15+i*14]=_globalDate->querrytime[i].endday;
+			spBuf->sendBuff[16+i*14]=_globalDate->querrytime[i].endhour;
+			spBuf->sendBuff[17+i*14]=_globalDate->querrytime[i].endtmin;
+			spBuf->sendBuff[18+i*14]=_globalDate->querrytime[i].endsec;
+
+		}
+	//spBuf->sendBuff[5]= (u_int8_t) (_globalDate->mainProStat[ACK_config_Rblock]&0xff);
+	sumCheck=sendCheck_sum(4+14*_globalDate->querrytime.size(),spBuf->sendBuff+1);
+	spBuf->sendBuff[4+14*_globalDate->querrytime.size()+1]=(sumCheck&0xff);
+	spBuf->byteSizeSend=4+14*_globalDate->querrytime.size()+2;
+	printf("%s\n",__func__);
+}
 u_int8_t CPortBase:: sendCheck_sum(uint len, u_int8_t *tmpbuf)
 {
 	u_int8_t  ckeSum=0;
 	for(int n=0;n<len;n++)
+		{
 		ckeSum ^= tmpbuf[n];
+		//printf("crcsum=%d\n",ckeSum);
+		}
 	return ckeSum;
 }
 
 u_int8_t CPortBase:: package_frame(uint len, u_int8_t *tmpbuf)
 {
 	tmpbuf[0] = 0xEB;
-	tmpbuf[1] = 0x53;
+	tmpbuf[1] = 0x51;
 	tmpbuf[2] = len&0xff;
 	tmpbuf[3] = (len>>8)&0xff;
 	tmpbuf[len+4]= sendCheck_sum(len+3,tmpbuf+1);
+	//printf("%s check sum=%d\n",__func__,tmpbuf[len+4]);
 	return 0;
 }
 

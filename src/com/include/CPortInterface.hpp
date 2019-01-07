@@ -54,6 +54,11 @@ public:
     virtual CGlobalDate* getDate()=0;
     virtual CStatusManager* getStatus()=0;
 
+
+    virtual void playercontrl(){};
+    virtual void playerquery(){};
+    virtual void playerselect(){};
+
     virtual void plantformconfig(){};
     virtual void sensorconfig(){};
     virtual void zeroconfig(){};

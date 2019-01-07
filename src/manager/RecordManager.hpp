@@ -12,11 +12,30 @@
 #include <string>
 #include <algorithm>
 using namespace std;
+
+typedef struct {
+	int startyear;
+	int startmon;
+	int startday;
+	int starthour;
+	int startmin;
+	int startsec;
+
+	int endyear;
+	int endmon;
+	int endday;
+	int endhour;
+	int endtmin;
+	int endsec;
+
+}Recordmantime;
 class RecordManager
 {
 public:
 	vector<string> recordvideonames;
 	vector<string> recordfilenames;
+
+	vector<Recordmantime> recordtime;
 	string  recordpath;
 	int nextvideoid;
 	int createplayertimeid;
@@ -31,6 +50,7 @@ public:
 	void createplayertimer();
 	void findrecordnames();
 	void getnexvideo();
+	void setpalyervide(int num);
 	void getJustCurrentFile(string path, vector<string> & video,vector<string> & files);
 	 bool startsWith(const std::string& str, const std::string& substr);
 	 bool endsWith(const std::string& str, const std::string& substr);

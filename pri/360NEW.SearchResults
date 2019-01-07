@@ -1,5 +1,8 @@
----- zeroconfig Matches (4 in 3 files) ----
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com): void CPortBase::zeroconfig()
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):			zeroconfig();
-CPortBase.hpp (z:\home\wj\cuda-workspace\360pano\src\com\include):    void zeroconfig();
-CPortInterface.hpp (z:\home\wj\cuda-workspace\360pano\src\com\include):    virtual void zeroconfig(){};
+---- enableplayer Matches (7 in 2 files) ----
+RecordManager.hpp (z:\home\wj\cuda-workspace\360pano\src\manager):	void enableplayer(int enable){enableplay=enable;};
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):						RecordManager::getinstance()->enableplayer(0);
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):						RecordManager::getinstance()->enableplayer(1);
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):			RecordManager::getinstance()->enableplayer(0);
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):			RecordManager::getinstance()->enableplayer(1);
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):			RecordManager::getinstance()->enableplayer(0);
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):			RecordManager::getinstance()->enableplayer(1);

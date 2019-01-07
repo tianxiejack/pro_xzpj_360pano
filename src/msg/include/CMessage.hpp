@@ -48,6 +48,10 @@ typedef enum _sys_msg_id_ {
     MSGID_EXT_INPUT_zoomSpeed,
     MSGID_EXT_INPUT_captureSwitch,
 
+    MSGID_EXT_INPUT_PlayerCtl,
+    MSGID_EXT_INPUT_PlayerSelect,
+    MSGID_EXT_INPUT_PlayerQuerry,
+
     MSGID_EXT_INPUT_PlantfromConfig,
     MSGID_EXT_INPUT_SensorConfig,
     MSGID_EXT_INPUT_ZeroConfig,
@@ -301,7 +305,11 @@ typedef enum{
 	ACK_config_Read,
 	ACK_jos_Kboard,
 	ACK_upgradefw,
+
+	
 	ACK_param_todef,
+	ACK_playerquerry=0x62,
+	ACK_MAX,
 }ACK_Host_CtrlInput;
 
 typedef struct _Msg_Tab

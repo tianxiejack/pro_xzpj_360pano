@@ -88,12 +88,19 @@ public:
     void extExtraInputResponse(sendInfo * spBuf);
     void upgradefwStat(sendInfo * spBuf);
     void paramtodef(sendInfo * spBuf);
+	void  recordquerry(sendInfo * spBuf);
 	int upgradefw(unsigned char *swap_data_buf, unsigned int swap_data_len);
 	int fw_update_runtar(void);
 	int update_startsh(void);
 	int update_fpga(void);
     u_int8_t  sendCheck_sum(uint len, u_int8_t *tmpbuf);
 	u_int8_t package_frame(uint len, u_int8_t *tmpbuf);
+
+
+
+    void playercontrl();
+    void playerquery();
+    void playerselect();
 
    void plantformconfig();
     void sensorconfig();

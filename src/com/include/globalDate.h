@@ -185,6 +185,24 @@ typedef struct {
 
 }Recordtime;
 
+
+typedef struct{
+	int major;
+	int secmajor;
+	int testversion;
+	int year;
+	int mon;
+	int day;
+	int hour;
+	int min;
+	int sec;
+	int softstage;
+
+
+}SoftVersion;
+#define MAJORVERSION 2
+#define SECVERSION 0
+#define TESTVERSION 2
 class CGlobalDate
 {
 public:
@@ -217,6 +235,10 @@ MtdConfig mtdconfig;
 LinkageParam linkagePos;
 
 disMod dismod;
+
+
+
+SoftVersion softversion;
 
 OSA_SemHndl  m_semHndl;
 OSA_SemHndl  m_semHndl_s;

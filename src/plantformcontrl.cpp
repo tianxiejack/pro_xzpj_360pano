@@ -601,6 +601,44 @@ void Plantformpzt::main_contrl_func()
 					}
 
 
+				if(callbackeable[MVDETECTGO]==1)
+					{
+						double angle=0;
+						getpanopanpos();
+						getpanotitlepos();
+						angle=gettitleangle();
+						double angleoffettitle=angle-callbacktitle[MVDETECTGO];
+						if(angleoffettitle>300)
+							angleoffettitle=angleoffettitle-360;
+						if(angleoffettitle<-300)
+							angleoffettitle=angleoffettitle+360;
+						angle=getpanangle();
+						double angleoffetpan=angle-callbackpan[MVDETECTGO];
+						if(angleoffetpan>300)
+							angleoffetpan=angleoffetpan-360;
+						if(angleoffetpan<-300)
+							angleoffetpan=angleoffetpan+360;
+						
+						if(abs(angleoffetpan)>0.1)
+							setpanopanpos(callbackpan[MVDETECTGO]);
+						else if(abs(angleoffettitle)>0.1)
+							setpanotitlepos(callbacktitle[MVDETECTGO]);
+						
+						if(abs(angleoffetpan)<0.1&&abs(angleoffettitle)<0.1)
+							{
+								callbackeable[MVDETECTGO]=0;
+
+								testangle=angleoffetpan;
+								//timeoutflag[PLANTFORMGETCALLBACK]=0;
+								if(callback[MVDETECTGO]!=NULL)
+									callback[MVDETECTGO](&testangle);
+								
+							}
+						
+
+					}
+
+
 			}
 
 		if(timeoutflag[PLANTFORMINITTITLE]==0&&timeoutflag[PLANTFORMINITPAN]==0)
@@ -755,7 +793,9 @@ void Plantformpzt::setpanoscan()
 		}
 	else
 		{
+			OSA_mutexLock(&instance->lock);
 			len=Uart.UartSend(fd,pelcodbuf,SENDLEN);
+			OSA_mutexUnlock(&instance->lock);
 
 		}
 	scanflag=1;
@@ -783,7 +823,9 @@ void Plantformpzt::setpanoantiscan()
 		}
 	else
 		{
+			OSA_mutexLock(&instance->lock);
 			len=Uart.UartSend(fd,pelcodbuf,SENDLEN);
+			OSA_mutexUnlock(&instance->lock);
 
 		}
 	OSA_waitMsecs(10);
@@ -804,7 +846,9 @@ void Plantformpzt::setpanoscanstop()
 		}
 	else
 		{
+			OSA_mutexLock(&instance->lock);
 			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+			OSA_mutexUnlock(&instance->lock);
 
 		}
 	
@@ -856,8 +900,9 @@ void Plantformpzt::setpanopanpos(double value)
 		}
 	else
 		{
-
+			OSA_mutexLock(&instance->lock);
 			Uart.UartSend(fd,( unsigned char *)& PELCO_D, SENDLEN);
+			OSA_mutexUnlock(&instance->lock);
 		}
 	
 	OSA_waitMsecs(50);
@@ -871,7 +916,7 @@ void Plantformpzt::setpanopanpos(double value)
 void Plantformpzt::setpanotitlepos(double value)
 {
 
-	if(Config::getinstance()->getptzpaninverse())
+	if(Config::getinstance()->getptztitleinverse())
 		{
 			value=-value;
 		}
@@ -896,7 +941,9 @@ void Plantformpzt::setpanotitlepos(double value)
 		}
 	else
 		{
+			OSA_mutexLock(&instance->lock);
 			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+			OSA_mutexUnlock(&instance->lock);
 		}
 	OSA_waitMsecs(50);
 	
@@ -939,7 +986,7 @@ void Plantformpzt::setpanopanforever(double value)
 void Plantformpzt::setpanotitleforever(double value)
 {
 
-	if(Config::getinstance()->getptzpaninverse())
+	if(Config::getinstance()->getptztitleinverse())
 		{
 			value=-value;
 		}
@@ -993,7 +1040,9 @@ void Plantformpzt::initptzpos(double pan,double title)
 		}
 	else
 		{
+			OSA_mutexLock(&instance->lock);
 			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+			OSA_mutexUnlock(&instance->lock);
 		}
 
 	OSA_waitMsecs(10);
@@ -1010,7 +1059,9 @@ void Plantformpzt::initptzpos(double pan,double title)
 		}
 	else
 		{
+			OSA_mutexLock(&instance->lock);
 			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+			OSA_mutexUnlock(&instance->lock);
 
 		}
 	OSA_waitMsecs(10);
@@ -1043,7 +1094,9 @@ double Plantformpzt::getpanopan()
 		}
 	else
 		{
+			OSA_mutexLock(&instance->lock);
 			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+			OSA_mutexUnlock(&instance->lock);
 
 		}
 	timeoutflag[PLANTFORMGETPAN]=0;
@@ -1077,7 +1130,9 @@ double Plantformpzt::getpanotitle()
 		}
 	else
 		{
+			OSA_mutexLock(&instance->lock);
 			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+			OSA_mutexUnlock(&instance->lock);
 
 		}
 	timeoutflag[PLANTFORMGETTITLE]=0;
@@ -1111,7 +1166,9 @@ void Plantformpzt::getpanopanpos()
 		}
 	else
 		{
+			OSA_mutexLock(&instance->lock);
 			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+			OSA_mutexUnlock(&instance->lock);
 
 		}
 	//printf("*******%s*******\n",__func__);
@@ -1143,7 +1200,9 @@ void Plantformpzt::getpanotitlepos()
 		}
 	else
 		{
+			OSA_mutexLock(&instance->lock);
 			Uart.UartSend(fd,( unsigned char *) &PELCO_D, SENDLEN);
+			OSA_mutexUnlock(&instance->lock);
 		}
 	//printf("*******%s*******\n",__func__);
 	OSA_waitMsecs(10);
@@ -1169,8 +1228,10 @@ void Plantformpzt::ptzcontrl(long lParam)
 				     PlantformContrl->MakeMove(&instance->PELCO_D, PTZ_MOVE_Left,Status::getinstance()->ptzpanspeed,true, instance->address);
 			else if(Status::getinstance()->ptzpanodirection==2)
 				     PlantformContrl->MakeMove(&instance->PELCO_D, PTZ_MOVE_Right,Status::getinstance()->ptzpanspeed,true, instance->address);
-
+			
+			OSA_mutexLock(&instance->lock);
 			instance->Uart.UartSend(instance->fd,( unsigned char *) &instance->PELCO_D, SENDLEN);
+			OSA_mutexUnlock(&instance->lock);
 			OSA_waitMsecs(10);
 		}
 	if(lParam==Status::PTZTITLEMOV||lParam==Status::PTZTWOMOV)
@@ -1181,7 +1242,9 @@ void Plantformpzt::ptzcontrl(long lParam)
 				     PlantformContrl->MakeMove(&instance->PELCO_D, PTZ_MOVE_Up,Status::getinstance()->ptztitlespeed,true, instance->address);
 			else if(Status::getinstance()->ptztitledirection==2)
 				     PlantformContrl->MakeMove(&instance->PELCO_D, PTZ_MOVE_Down,Status::getinstance()->ptztitlespeed,true, instance->address);
+			OSA_mutexLock(&instance->lock);
 			instance->Uart.UartSend(instance->fd,( unsigned char *) &instance->PELCO_D, SENDLEN);
+			OSA_mutexUnlock(&instance->lock);
 			OSA_waitMsecs(10);
 		}
 
@@ -1223,6 +1286,8 @@ void Plantformpzt::plantfromcontrl(long lParam)
 	int protocal=Status::getinstance()->ptzprotocal;
 	int brudrate=Status::getinstance()->ptzbaudrate;
 	int speed=Status::getinstance()->ptzspeed;
+	OSA_printf("the ptzaddress=%d protocal=%d brudrate=%d speed=%d\n",ptzaddress,protocal,brudrate,speed);
+	
 
 	if(protocal==0)
 	PlantformContrl=IPelcoFactory::createIpelco(pelco_D);
@@ -1233,7 +1298,7 @@ void Plantformpzt::plantfromcontrl(long lParam)
 	if(instance->fd!=0)
 		instance->Uart.UartClose(instance->fd);
 	instance->fd=instance->Uart.UartOpen(UART422NAME);
-	instance->Uart.UartSet(instance->fd, brudrate, 8, 'n', 1);
+	instance->Uart.UartSet(instance->fd, instance->Boardrate[brudrate], 8, 'n', 1);
 	instance->address=ptzaddress;
 	OSA_mutexUnlock(&instance->lock);
 	

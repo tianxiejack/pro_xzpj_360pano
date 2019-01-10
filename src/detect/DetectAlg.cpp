@@ -7,7 +7,7 @@
 #include<sys/types.h>
 #include<sys/stat.h>
 #include "CMessage.hpp"
-
+#include"Status.hpp"
 DetectAlg*DetectAlg::instance=NULL;
 
 
@@ -149,6 +149,7 @@ void DetectAlg::panomoveprocess()
 							{
 								//setwarndetect(process.cols,process.rows,blocknum);
 								setmvprocessangle(LKprocessangle[blocknum],blocknum);
+								
 							}
 						//if(blocknum==0)
 						if(newmat)
@@ -158,10 +159,10 @@ void DetectAlg::panomoveprocess()
 									lkmove.lkmovdetectpreprocess(process,LKRramegray,blocknum);
 								}
 								else
-									{
-										lkmove.backgroundmov[blocknum]=1;
-										memcpy(LKRramegray.data,process.data,LKRramegray.cols*LKRramegray.rows*LKRramegray.channels());
-									}
+								{
+									lkmove.backgroundmov[blocknum]=1;
+									memcpy(LKRramegray.data,process.data,LKRramegray.cols*LKRramegray.rows*LKRramegray.channels());
+								}
 							//printf("******newmatblocknum=%d prenum=%d\n******",blocknum,prenum);
 							}
 						else
@@ -262,6 +263,7 @@ void DetectAlg::panomoveprocess()
 void DetectAlg::main_proc_func()
 {
 
+	
 	OSA_printf("DetectAlg %s: Main Proc Tsk Is Entering...\n",__func__);
 	unsigned int framecount=0;
 	OSA_BufInfo* info=NULL;
@@ -468,13 +470,15 @@ void DetectAlg::detectprocess(Mat src,OSA_BufInfo* frameinfo)
 	//printf("********8888888888888888888888********\n");
 	
 	double angle=frameinfo->framegyroyaw*1.0/ANGLESCALE+StichAlg::getinstance()->getcamerazeroossfet();
+	
 	if(angle<0)
 		angle+=360;
 	else if(angle>=360)
 		angle-=360;
+	
 	setcurrentcapangle(angle);
 
-
+	
 	if(DETECTTEST)
 		{
 			detectprocesstest(src);
@@ -538,6 +542,86 @@ int DetectAlg::JudgeLk(Mat src)
 			memcpy(dst.data,src.data,dst.cols*dst.rows*dst.channels());
 			ret=postionid;
 		}
+	return ret;
+
+}
+
+int DetectAlg::JudgeLkFastNew(Mat src)
+{
+	int ret=-1;
+	double anglepos[MOVELKBLOCKNUM];
+	memset(anglepos,0,sizeof(anglepos));
+	double angle=getcurrentcapangle();
+	//printf("the cap angle =%f\n",angle);
+	int postionid=-1;
+
+	double angleoffset=0;
+	static double angleoffsetpre=0;
+
+	static int currentid=0;
+
+
+	#if 0
+	for(int i=0;i<MOVELKBLOCKNUM;i++)
+		{
+			anglepos[i]=360.0/MOVELKBLOCKNUM*i;
+
+			angleoffset=abs(angle-anglepos[i]);
+
+			if(angleoffset<LKMOVANGLE)
+				{
+
+					/*
+					if(LKangleoffset[i]<angleoffset)
+						{	
+							LKangleoffset[i]=angleoffset;
+						}
+					else
+						{
+							continue;
+						}
+					*/
+						LKprocessangle[i]=angle;
+						postionid=i;
+						
+						
+				}
+			else
+				LKangleoffset[i]=360;
+
+		}
+	
+	#else
+
+	//double angle=Status::getinstance()->getmvreachangle();
+
+	if(Status::getinstance()->getmvreach())
+		{
+			Status::getinstance()->nextid=Status::getinstance()->getnextmvdetectnum();
+			CMessage::getInstance()->MSGDRIV_send(MSGID_EXT_INPUT_MVDETECTGO,&(Status::getinstance()->nextid));
+			postionid=Status::getinstance()->getmvdetectnum();
+			LKprocessangle[postionid]=angle;
+
+			Status::getinstance()->setmvreach(0);
+			
+			
+			
+			
+		}
+	
+
+	#endif
+	
+	
+	if(postionid!=-1)
+		{
+			printf("[postionid=%d]the [angle =%f pos=%f]\n",postionid,angle,360.0/MOVELKBLOCKNUM*postionid);
+			Mat dst=panoblock[postionid];
+			memcpy(dst.data,src.data,dst.cols*dst.rows*dst.channels());
+			ret=postionid;
+		}
+
+	
 	return ret;
 
 }
@@ -659,6 +743,8 @@ void DetectAlg::MulticpuLKpanoprocess(Mat& src)
 		processsrc=src;
 
 	if(FASTMODE)
+		JudgeLkFastNew(processsrc);
+	else if(1)
 		blucknum=JudgeLkFast(processsrc);
 	else
 		blucknum=JudgeLk(processsrc);

@@ -211,7 +211,7 @@ int OpticalFlowCalculator::calculateOpticalFlowprocess(const cv::Mat &gray_image
     std::vector<cv::Mat> pyramids;
     int num_vectors = 0;
    //  if (MVDETECTALG)
-   if(1)
+   if(0)
      {
 #if 1
 		cv::buildOpticalFlowPyramid(gray_image1, pyramids, winSize, MAX_LEVEL, true);

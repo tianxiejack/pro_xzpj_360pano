@@ -42,6 +42,9 @@ public:
     virtual void EnablewordSize(){};
     virtual void Config_Write_Save(){};
     virtual void Config_Read(){};
+	
+    virtual void GetsoftVersion(){};
+	
     virtual void EnableSavePro(){};
     virtual void plantctl(){};
     virtual void AXIS_Y(){};

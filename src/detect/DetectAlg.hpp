@@ -138,6 +138,7 @@ class DetectAlg
 
 		void Multicpufilepanoprocess(Mat& src);
 		void detectprocesstest(Mat src);
+		int JudgeLkFastNew(Mat src);
 		
 		MAIN_ProcThrDetectObj	mainProcThrdetectObj;
 		

@@ -192,6 +192,38 @@ public:
 	int panopiexfocus;
 	int panopicturerate;
 
+
+	/******detect config*******/
+	int movdetectenable;
+	int panodetectenable;
+
+	
+
+	/***********************/
+	int mvdetectresearch;
+	double researchangle;
+	int mvdetectnum;
+	int nextmvdetectnum;
+
+	int currentid;
+	int nextid;
+
+	//int getcurrentid(int id){int cid=0;cid=id;cid=cid%;};
+	
+	double getmvreachangle(){return researchangle;};
+	void setmvreachangle(double reach){researchangle=reach;};
+
+	int getmvreach(){return mvdetectresearch;};
+	void setmvreach(int reach){mvdetectresearch=reach;};
+
+	
+
+	int getmvdetectnum(){return mvdetectnum;};
+	void setmvdetectnum(int reach){mvdetectnum=reach;};
+
+	int getnextmvdetectnum(){return nextmvdetectnum;};
+	void setnextmvdetectnum(int reach){nextmvdetectnum=reach;};
+
 	
 
 	

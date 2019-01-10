@@ -81,6 +81,7 @@ class Plantformpzt
 		RENDERPANO,
 		RENDERSIGNALPANO,
 		PRESETGO,
+		MVDETECTGO,
 		PLANTFORPANOMMAX,
 		};
 		static Plantformpzt *getinstance();
@@ -154,6 +155,8 @@ class Plantformpzt
 		MAIN_plantfromThrObj	mainRecvThrObj;
 		MAIN_plantfromThrObj	mainContrlThrdetectObj;
 
+		double testangle=0;
+
 
 		void main_Recv_func();
 		int MAIN_threadRecvCreate(void);
@@ -195,6 +198,7 @@ class Plantformpzt
 		int timeout[PLANTFORMMAX];
 		int timeoutflag[PLANTFORMMAX];
 		int plantinitflag;
+		const int Boardrate[4]={2400,4800,9600,19200};
 
 
 	public :

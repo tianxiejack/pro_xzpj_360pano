@@ -48,6 +48,9 @@ typedef enum _sys_msg_id_ {
     MSGID_EXT_INPUT_zoomSpeed,
     MSGID_EXT_INPUT_captureSwitch,
 
+
+    MSGID_EXT_INPUT_Getversion,
+
     MSGID_EXT_INPUT_PlayerCtl,
     MSGID_EXT_INPUT_PlayerSelect,
     MSGID_EXT_INPUT_PlayerQuerry,
@@ -62,6 +65,8 @@ typedef enum _sys_msg_id_ {
     
     MSGID_EXT_INPUT_CorrectTimeConfig,
     MSGID_EXT_INPUT_PanoConfig,
+
+    MSGID_EXT_INPUT_MVDETECTGO,
 
     MSGID_IPC_INPUT_TRACKCTRL,
     MSGID_IPC_INPUT_MTDCTRL,
@@ -285,6 +290,7 @@ typedef enum{
 	NAK_wordType,
 	NAK_wordSize,
 	ACK_mainVideoStatus,
+	ACK_softVersion,
 	ACK_Channel_bindingStatus,  //
 	ACK_avtTrkStatus,
 	ACK_avtTrkType,

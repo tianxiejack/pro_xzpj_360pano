@@ -76,9 +76,9 @@ typedef struct{
 
 
 
+#define mvdetectmaxangle 20
 
-
-
+#define MVDETECTSCAN (1)
 
 class Render{
 #define BRIDGENUM 40
@@ -451,6 +451,7 @@ public:
 	unsigned int Fullscreen;
 	
 	
+	
 public:
 	unsigned int panosrcwidth;
 	unsigned int panosrcheight;
@@ -530,6 +531,9 @@ public:
 	GLBatch	panselectrectBatch;
 	GLfloat vrectBatch[8][3];
 
+	double mvpanangle[mvdetectmaxangle];
+	double mvtitleangle[mvdetectmaxangle];
+
 	GLGeometryTransform	transformPipeline;
 	M3DMatrix44f		shadowMatrix;
 	int renderwidth;
@@ -543,8 +547,13 @@ public:
 		FRONT_AND_BACK_MODE,
 		TOTAL_MODE_COUNT
 		} displayMode; 
+
+private:
+	int currentnum;
 private:
 	static void displaytimer(void *param);
+public:
+	static void callbackmvdetectgo(void *contex);
 public:
 	void registorfun();
 	//static MsgApiFun displaymod();
@@ -557,6 +566,8 @@ public:
 	static void playerctl(long lParam);
 	static void playerquerry(long lParam);
 	static void playerselect(long lParam);
+	static void getsoftvetsion(long lParam);
+	static void mvdetectgo(long lParam);
 	
 };
 

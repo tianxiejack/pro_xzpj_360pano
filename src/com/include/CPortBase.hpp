@@ -57,6 +57,7 @@ public:
     void EnablewordSize();
     void Config_Write_Save();
     void Config_Read();
+    void GetsoftVersion();
     void EnableSavePro();
     void plantctl();
     void AXIS_Y();
@@ -64,6 +65,9 @@ public:
     void workMode();
 	void StoreMode(int mod);
     void targetCaptureMode();
+
+
+	void  softVersion(sendInfo * spBuf);
 //
     int  getSendInfo(int  respondId, sendInfo * psendBuf);
     void mainVedioChannel(sendInfo * spBuf);
@@ -95,6 +99,10 @@ public:
 	int update_fpga(void);
     u_int8_t  sendCheck_sum(uint len, u_int8_t *tmpbuf);
 	u_int8_t package_frame(uint len, u_int8_t *tmpbuf);
+
+
+	char *myStrncpy(char *dest, const char *src, int n);
+	void GetSoftWareBuildTargetTime(void);
 
 
 

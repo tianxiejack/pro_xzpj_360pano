@@ -276,12 +276,13 @@ void CPortBase::plantformconfig()
  void CPortBase::zeroconfig()
  	{
  		int configchange=0;
+		configchange=1;
  		if(_globalDate->rcvBufQue.at(5)!=Status::getinstance()->zeromod)
 			{
 				Status::getinstance()->zeromod=_globalDate->rcvBufQue.at(5);
-				configchange=1;
+				
 			}
-
+		OSA_printf("%s zeromod=%d\n",__func__,Status::getinstance()->zeromod);
 		if(configchange)
 			{
 				if(Status::getinstance()->zeromod==0)
@@ -316,6 +317,43 @@ void CPortBase::recordconfig()
 					}
 
 			}
+		printf("the time\n");
+		for(int i=0;i<HELDWEEK;i++)
+			{
+				for(int j=0;j<HELDHOUR;j++)
+					{
+						if(j<8)
+							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][bitnum-1-j]);
+						else if(j<16)
+							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][2*bitnum-1-j]);
+						else if(j<24)
+							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][3*bitnum-1-j]);
+
+						
+					}
+				printf("\n");
+
+			}
+
+		printf("the mov\n");
+		for(int i=0;i<HELDWEEK;i++)
+			{
+				for(int j=0;j<HELDHOUR;j++)
+					{
+						if(j<8)
+							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][bitnum-1-j]);
+						else if(j<16)
+							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][2*bitnum-1-j]);
+						else if(j<24)
+							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][3*bitnum-1-j]);
+
+						
+					}
+				printf("\n");
+
+			}
+
+		
 		
 
 		
@@ -560,6 +598,14 @@ void CPortBase::Config_Read()
 {
 
 }
+void CPortBase::GetsoftVersion()
+{
+	GetSoftWareBuildTargetTime();
+	pM->MSGDRIV_send(MSGID_EXT_INPUT_Getversion, 0);
+	_globalDate->feedback=ACK_softVersion;
+	OSA_semSignal(&_globalDate->m_semHndl_socket);
+
+}
 
 void CPortBase::EnableSavePro()
 {
@@ -737,9 +783,9 @@ int CPortBase::prcRcvFrameBufQue(int method)
 		   StoreMode(Status::STOREGO);
 		   break;
             case 0x08:
-		_globalDate->feedback=ACK_mainVideoStatus;
-		   OSA_semSignal(&_globalDate->m_semHndl_socket);
-		   printf("the_globalDate->feedback =%d\n",_globalDate->feedback);
+		//_globalDate->feedback=ACK_mainVideoStatus;
+		//   OSA_semSignal(&_globalDate->m_semHndl_socket);
+		//   printf("the_globalDate->feedback =%d\n",_globalDate->feedback);
                 StoreMode(Status::STORESAVE);
                 break;
             case 0x09:
@@ -790,10 +836,10 @@ int CPortBase::prcRcvFrameBufQue(int method)
                 EnablewordSize();
                 break;
             case 0x30:
-                Config_Write_Save();
+                GetsoftVersion();
                 break;
             case 0x31:
-                Config_Read();
+                //Config_Read();
                 break;
             case 0x32:
                 //provided by a single server
@@ -812,13 +858,13 @@ int CPortBase::prcRcvFrameBufQue(int method)
                // AXIS_Y();
                 break;
             case 0x41:
-            	Preset_Mtd();
+            		Preset_Mtd();
             	break;
             case 0x42:
-                workMode();
+               	 workMode();
             	break;
             case 0x43:
-            	targetCaptureMode();
+            		targetCaptureMode();
             	break;
 		case 0x60:
 			playercontrl();
@@ -854,7 +900,7 @@ int CPortBase::prcRcvFrameBufQue(int method)
 			correcttimeconfig();
 			break;
 		case 0x88:
-			panoconfig();
+			//panoconfig();
 			break;
             default:
                 printf("INFO: Unknow  Control Command, please check!!!\r\n ");
@@ -886,6 +932,9 @@ int  CPortBase::getSendInfo(int  respondId, sendInfo * psendBuf)
 		case   NAK_wordType:
 			break;
 		case  NAK_wordSize:
+			break;
+		case ACK_softVersion:
+			softVersion(psendBuf);
 			break;
 		case   ACK_mainVideoStatus:
 			mainVedioChannel(psendBuf);
@@ -970,6 +1019,116 @@ void  CPortBase:: mainVedioChannel(sendInfo * spBuf)
 	package_frame(msg_length, mainVedioChannel);
 	spBuf->byteSizeSend=msg_length+5;
 	memcpy(spBuf->sendBuff,mainVedioChannel,msg_length+5);
+}
+
+
+char *CPortBase::myStrncpy(char *dest, const char *src, int n) 
+{
+    int size = sizeof(char)*(n + 1);
+    char *tmp = (char*)malloc(size);  
+    if (tmp) 
+    {
+        memset(tmp, '\0', size); 
+        memcpy(tmp, src, size - 1);
+        memcpy(dest, tmp, size);
+        free(tmp);
+        return dest;
+    }
+    else 
+    {
+        return NULL;
+    }
+}
+
+
+void CPortBase::GetSoftWareBuildTargetTime(void)
+{
+    char arrDate[20]; //Jul 03 2018
+    char arrTime[20]; //06:17:05
+    char pDest[20];
+
+    _globalDate->softversion;
+    
+   // RTC_TIME_DEF stTime;
+
+    sprintf(arrDate,"%s",__DATE__);//Jul 03 2018
+    sprintf(arrTime,"%s",__TIME__);//06:17:05
+    
+    //char *strncpy(char *dest, const char *src, int n)
+    //(char*)(&(pDest[0])) = myStrncpy(pDest, arrDate, 3);
+    sprintf(pDest, "%s", myStrncpy(pDest, arrDate, 3));
+
+    if (strcmp(pDest, "Jan") == 0) _globalDate->softversion.mon= 1;
+    else if (strcmp(pDest, "Feb") == 0) _globalDate->softversion.mon= 2;
+    else if (strcmp(pDest, "Mar") == 0) _globalDate->softversion.mon = 3;
+    else if (strcmp(pDest, "Apr") == 0) _globalDate->softversion.mon = 4;
+    else if (strcmp(pDest, "May") == 0) _globalDate->softversion.mon = 5;
+    else if (strcmp(pDest, "Jun") == 0) _globalDate->softversion.mon = 6;
+    else if (strcmp(pDest, "Jul") == 0) _globalDate->softversion.mon = 7;
+    else if (strcmp(pDest, "Aug") == 0) _globalDate->softversion.mon = 8;
+    else if (strcmp(pDest, "Sep") == 0) _globalDate->softversion.mon = 9;
+    else if (strcmp(pDest, "Oct") == 0) _globalDate->softversion.mon = 10;
+    else if (strcmp(pDest, "Nov") == 0) _globalDate->softversion.mon = 11;
+    else if (strcmp(pDest, "Dec") == 0) _globalDate->softversion.mon = 12;
+    else _globalDate->softversion.mon = 1;
+
+	
+
+
+     sprintf(pDest, "%s", myStrncpy(pDest, arrDate+4, 2));
+    //int atoi(const char *nptr);
+   _globalDate->softversion.day= atoi(pDest);
+    sprintf(pDest, "%s", myStrncpy(pDest, arrDate + 4 + 3, 4));
+    //int atoi(const char *nptr);
+    _globalDate->softversion.year= atoi(pDest);
+
+    _globalDate->softversion.year=_globalDate->softversion.year%100;
+    //time
+    
+    sprintf(pDest, "%s", myStrncpy(pDest, arrTime, 2));
+   _globalDate->softversion.hour= atoi(pDest);
+    sprintf(pDest, "%s", myStrncpy(pDest, arrTime+3, 2));
+    _globalDate->softversion.min= atoi(pDest);
+    sprintf(pDest, "%s", myStrncpy(pDest, arrTime + 3 + 3, 2));
+    _globalDate->softversion.sec= atoi(pDest);
+
+	_globalDate->softversion.major=MAJORVERSION;
+	_globalDate->softversion.secmajor=MAJORVERSION;
+	_globalDate->softversion.testversion=MAJORVERSION;
+	_globalDate->softversion.softstage=0;
+    return ;
+}
+
+
+
+void  CPortBase:: softVersion(sendInfo * spBuf)
+{
+	
+	
+	int msg_length = 11;
+	u_int8_t  mainVedioChannel[msg_length+5];
+	mainVedioChannel[4] = 0x30;
+	mainVedioChannel[5]=_globalDate->softversion.major;
+	mainVedioChannel[6]=_globalDate->softversion.secmajor;
+	mainVedioChannel[7]=_globalDate->softversion.testversion;
+	mainVedioChannel[8]=_globalDate->softversion.year;
+	mainVedioChannel[9]=_globalDate->softversion.mon;
+	mainVedioChannel[10]=_globalDate->softversion.day;
+	mainVedioChannel[11]=_globalDate->softversion.hour;
+	mainVedioChannel[12]=_globalDate->softversion.min;
+	mainVedioChannel[13]=_globalDate->softversion.sec;
+	mainVedioChannel[14]=_globalDate->softversion.softstage;
+	
+	//mainVedioChannel[5]=_globalDate->avt_status.SensorStat;
+	package_frame(msg_length, mainVedioChannel);
+	spBuf->byteSizeSend=msg_length+5;
+	memcpy(spBuf->sendBuff,mainVedioChannel,msg_length+5);
+
+	
+	
+	
+	
+	
 }
 
 void  CPortBase:: bindVedioChannel(sendInfo * spBuf)

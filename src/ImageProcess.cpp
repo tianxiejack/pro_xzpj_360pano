@@ -13,6 +13,7 @@
 #include"Queuebuffer.hpp"
 #include"StichAlg.hpp"
 #include"DetectAlg.hpp"
+#include"Status.hpp"
 #define IMAGEQUEUESIZE 4
 #define IMAGCAPEQUEUESIZE 2
 #define IMAGEQUEUEWIDTH 1920
@@ -164,6 +165,7 @@ void ImageProcess::CaptureThreadProcess(Mat src,OSA_BufInfo* frameinfo)
 	
 	int queueid=0;
 	Plantformpzt::getinstance()->setplantformcalibration(frameinfo->calibration);
+	
 #if 0
 	int frameid=getImagePinpang();
 	int preframeid=getImagePrePinpang();
@@ -227,6 +229,7 @@ void ImageProcess::CaptureThreadProcess(Mat src,OSA_BufInfo* frameinfo)
 			return;
 			}
 
+	
 	
 	memcpy(info->virtAddr,src.data,src.rows*src.cols*src.channels());
 	//OSA_printf("the w=%d h=%d c=%d\n",src.cols,src.rows,src.channels());
@@ -1173,7 +1176,7 @@ void ImageProcess::cpupanoprocess(Mat& src)
 int ImageProcess::detectenable(OSA_BufInfo* info)
 {
 	int ret=0;
-	ret=0;
+	ret=Status::getinstance()->movdetectenable;
 	return ret;
 }
 
@@ -1269,6 +1272,9 @@ void ImageProcess::main_proc_func()
 		 queuebuf->putfull(Queue::TOPANOSTICH,0,outputif);
 		 image_queue_putEmpty(&mcap_bufQue[queueid],infocap);
 	continue;
+
+
+	#if 0
 	/******************************************/
 		settailcut(0);
 	
@@ -1429,7 +1435,7 @@ void ImageProcess::main_proc_func()
 		 
 		 image_queue_putEmpty(&mcap_bufQue[queueid],infocap);
 		//OSA_printf("2****************************\n");
-
+	#endif
 	}
 }
 

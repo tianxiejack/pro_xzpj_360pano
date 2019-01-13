@@ -54,6 +54,8 @@ typedef enum _sys_msg_id_ {
     MSGID_EXT_INPUT_PlayerCtl,
     MSGID_EXT_INPUT_PlayerSelect,
     MSGID_EXT_INPUT_PlayerQuerry,
+    MSGID_EXT_INPUT_MVCONFIGENABLE,
+    
 
     MSGID_EXT_INPUT_PlantfromConfig,
     MSGID_EXT_INPUT_SensorConfig,
@@ -315,6 +317,15 @@ typedef enum{
 	
 	ACK_param_todef,
 	ACK_playerquerry=0x62,
+	ACK_plantformconfig=0x80,
+	ACK_sensorconfig,
+	ACK_zeroconfig,
+	ACK_recordconfig,
+	ACK_mvconfig,
+	ACK_mvareaconfig,
+	ACK_displayconfig,
+	ACK_correcttimeconfig,
+	ACK_panoconfig,
 	ACK_MAX,
 }ACK_Host_CtrlInput;
 

@@ -109,6 +109,7 @@ public:
     void playercontrl();
     void playerquery();
     void playerselect();
+	void panoenable();
 
    void plantformconfig();
     void sensorconfig();

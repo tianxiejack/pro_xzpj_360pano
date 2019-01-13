@@ -21,7 +21,7 @@
 <panoalg>
   <panoprocesswidth>1920</panoprocesswidth>
   <panoprocessheight>1080</panoprocessheight>
-  <panozeroptz>0</panozeroptz>
+  <panozeroptz>1.2104199940316323e+02</panozeroptz>
   <panozeroptztitle>0.</panozeroptztitle>
   <panoprocessshift>0</panoprocessshift>
   <panoprocesstailcut>128</panoprocesstailcut>

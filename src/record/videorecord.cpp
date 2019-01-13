@@ -4,7 +4,8 @@
 
 VideoRecord* VideoRecord::instance=NULL;
 #define SAVEDIR "/home/ubuntu/calib/video"
-VideoRecord::VideoRecord():timeenable(1),eventenable(0),tm_year(0),tm_mon(0),tm_mday(0),tm_hour(0),tm_min(0),tm_sec(0),videorecordfb(NULL),aviheadenable(1)
+VideoRecord::VideoRecord():timeenable(1),eventenable(0),tm_year(0),tm_mon(0),tm_mday(0),tm_hour(0),tm_min(0),tm_sec(0),videorecordfb(NULL),aviheadenable(1),
+timerdelayenable(0)
 {
 
 
@@ -19,6 +20,48 @@ void VideoRecord::create()
 {
 	_syncdata=new queue<SyncDate>;
 	
+}
+
+void VideoRecord::heldrecord()
+{
+	struct tm tm_set;
+	struct timeval tv_set;
+	struct timezone tz_set;
+	time_t tt_set=0;
+	gettimeofday(&tv_set, &tz_set);
+	tt_set = tv_set.tv_sec;
+	memcpy(&tm_set, localtime(&tt_set), sizeof(struct tm));
+
+	int week=tm_set.tm_wday;
+	week=week%7;
+	int hour=tm_set.tm_hour;
+	hour=hour%24;
+	int timeenableweek=0;
+	int movenableweek=0;
+
+	timeenableweek=recordpositionheld[0][week][hour];
+	movenableweek=recordpositionheld[1][week][hour];
+
+	settimerecordenable(timeenableweek);
+
+	if(movenableweek)
+		{	
+			//if(getmovtimedelay())
+			seteventrecordenable(getmovtimedelay());
+
+		}
+
+	
+		
+	
+//	 for(int i=0;i<EVENTRECORD;i++)
+	 	//for(int j=0;j<WEEKRECORD;j++)
+		//	for(int k=0;k<HOURSRECORD;k++)
+			
+//				recordpositionheld[EVENTRECORD][WEEKRECORD][HOURSRECORD];
+	 
+	 
+
 }
 void VideoRecord::recordvideo(void *data,void* size)
 {
@@ -69,6 +112,8 @@ void VideoRecord::recordvideo(void *data,void* size)
 	int mint=tm_set.tm_min;
 	int sect=tm_set.tm_sec;
 	//printf("instance->getrecordflag()=%d\n",instance->getrecordflag());
+
+	instance->heldrecord();
 	if(instance->getrecordflag()==0)
 		{
 			if((instance->videorecordfb!=NULL))

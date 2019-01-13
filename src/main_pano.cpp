@@ -34,6 +34,7 @@
 #include"RecordManager.hpp"
 #include "DxTimer.hpp"
 #include"store.hpp"
+#include"configfile.hpp"
 static GLMain render;
 
 ImageProcess *Imageprocesspt;
@@ -317,7 +318,7 @@ int main_pano(int argc, char **argv)
 	config=Config::getinstance();
 	config->loadconfig();
 	CMessage::getInstance()->MSGDRIV_create();
-	
+	ConfigFile::getinstance()->create();
 	Queue::getinstance()->create();
 	DxTimer::getinstance()->create();
 	DetectAlg::getinstance()->create();

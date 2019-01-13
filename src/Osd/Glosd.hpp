@@ -10,7 +10,7 @@
 
 
 
-#define POINTNUMMAX 500
+#define POINTNUMMAX 1000
 
 enum
 {
@@ -68,6 +68,7 @@ public:
 	bool desteryunicode();
 	bool drawunicodebegin();
 	bool drawunicodeend();
+	void drawloopsscreen(std::vector<OSDPoint> points);
 	
 	GLfloat Unicodecolor[4];
 	FreeTypeFont *freetype;

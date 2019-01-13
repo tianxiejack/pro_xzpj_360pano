@@ -30,6 +30,7 @@ RM := rm -rf
 -include src/gpio/subdir.mk
 -include src/file/subdir.mk
 -include src/detect/subdir.mk
+-include src/configfile/subdir.mk
 -include src/config/subdir.mk
 -include src/compress/subdir.mk
 -include src/com/subdir.mk

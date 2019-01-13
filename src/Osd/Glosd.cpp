@@ -160,6 +160,31 @@ void GLOSD::drawloops(std::vector<OSDPoint> points)
 }
 
 
+void GLOSD::drawloopsscreen(std::vector<OSDPoint> points)
+{
+	GLfloat point[3];
+	
+	if(points.size()==0)
+		return;
+	
+	 GLBatch			         rectBatch;
+	 
+	 for(int i=0;i<points.size();i++)
+		{
+			point[0]=points[i].x;
+			point[1]=points[i].y;
+			point[3]=0;
+			windowtoglcenter(point,i);
+		}
+	 rectBatch.Begin(GL_LINE_LOOP, points.size());
+        rectBatch.CopyVertexData3f(Vpoints);
+        rectBatch.End();
+        rectBatch.Draw();
+
+	
+}
+
+
 void GLOSD::drawrectfill(int x,int y,int w,int h)
 {
 	GLfloat point[3];

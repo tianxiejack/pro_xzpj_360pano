@@ -25,7 +25,7 @@
 #include"Gststreamercontrl.hpp"
 #include"videorecord.hpp"
 #include "globalDate.h"
-#include"Status.hpp"
+
 #include"RecordManager.hpp"
 #include"videorecord.hpp"
 #include "DxTimer.hpp"
@@ -124,7 +124,8 @@ Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),
 	CameraFov(0),maxtexture(0),pano360texturenum(0),pano360texturewidth(0),pano360textureheight(0),selecttexture(0),shotcutnum(0),
 	movviewx(0),movviewy(0),movvieww(0),movviewh(0),menumode(0),tailcut(0),radarinner(3.0),radaroutter(10),viewfov(90),viewfocus(10),
 	osdmenushow(0),osdmenushowpre(0),screenpiex(NULL),screenenable(1),recordscreen(0),zeroselect(0),poisitionreach(0),poisitionreachpan(0),
-	poisitionreachtitle(0),criticalmode(0),debuggl(0),recordtimer(60),singleenable(0),singleangle(0),siglecircle(0),timerclock(600),currentnum(0)
+	poisitionreachtitle(0),criticalmode(0),debuggl(0),recordtimer(60),singleenable(0),singleangle(0),siglecircle(0),timerclock(600),currentnum(0),
+	movareaflag(1),movupdown(0)
 	{
 		displayMode=SINGLE_VIDEO_VIEW_MODE;
 		
@@ -203,7 +204,9 @@ Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),
 		//memset(mvpanangle,0,strlen(mvpanangle));
 		//memset(mvtitleangle,0,strlen(mvtitleangle));
 		for(int i=0;i< mvdetectmaxangle;i++)
-			mvpanangle[i]=i*360.0/mvdetectmaxangle;
+			mvpanangle[i]=i*(360.0/mvdetectmaxangle);
+
+		memset(movarearect,0,sizeof(MovDetectAreaRect)*16);
 		//OSA_mutexCreate
 		//viewcamera[RENDERCAMERA1].updownselcectrect=
 
@@ -320,6 +323,10 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 	screenshotinit();
 	createfile();
 	writefilehead();
+	ConfigFile::getinstance()->detectload();
+	ConfigFile::getinstance()->getdetectdate(movarearect);
+
+	loadmvarea();
 	Fullscreen = true;
 	glutFullScreen();
 	registorfun();
@@ -394,7 +401,10 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 	//else if(getmenumode()==PANOMODE)
 		Mouse2Select();
 	if(getmenumode()==PANOMODE)
-		viewcameraprocess();
+		{
+			viewcameraprocess();
+			mousemovrect();
+		}
 	if(Plantformpzt::getinstance()->getplantformcalibration())
 		Mousemenu();
 	OSA_mutexUnlock(&renderlock);
@@ -932,7 +942,7 @@ void Render::panomod()
 			setfusionenalge(Config::getinstance()->getpanofusion());
 			setscanpanflag(1);
 
-			if(MVDETECTSCAN)
+			if(Status::getinstance()->getusestepdetect())
 			CMessage::getInstance()->MSGDRIV_send(MSGID_EXT_INPUT_MVDETECTGO,&currentnum);
 			else
 			Plantformpzt::getinstance()->setpanoscan();
@@ -1286,6 +1296,7 @@ void Render::Pano360fun()
 	//OSA_printf("[F=%s L=%d] x=%d y=%d w=%d h=%d p=%p\n",__func__,__LINE__,xoffset,yoffset,width,height,pBits);
 	if(Config::getinstance()->getpanocalibration()==0)
 		{
+			;
 /*
 			int panangle=getPanoAngle()*1000;
 			int chid=panangle/22500;
@@ -1721,6 +1732,63 @@ void Render::Drawosdcamera()
 
 }
 
+void Render::Drawmvconfig()
+{
+	if(movareaflag==0)
+		return ;
+	glViewport(0,0,renderwidth,renderheight);
+	Glosdhandle.setwindow(renderwidth,renderheight);
+	mvconfigarea[0].clear();
+	
+	//	return ;
+	//cout<<"************************"<<endl;
+	for(int i=0;i<movdrawpoints.size();i++)
+		{
+			OSDPoint point;
+			point.x=movdrawpoints[i].point.x;//*1.0/renderwidth;
+			point.y=movdrawpoints[i].point.y;//*1.0/renderheight;
+
+			//cout<<movdrawpoints[i].point<<endl;
+			mvconfigarea[0].push_back(point);
+		}
+
+	if(movdrawpoints.size()>0)
+		{
+			if(movdrawpoints.size()==4)
+			Glosdhandle.setcolorline(GLRED);	
+			else 
+			Glosdhandle.setcolorline(WIRTE);	
+			Glosdhandle.drawbegin();
+			Glosdhandle.setlinewidth(2);
+			//cout<<"************************"<<mvconfigarea[0].size()<<endl;
+			Glosdhandle.drawloopsscreen(mvconfigarea[0]);
+			//Glosdhandle.drawrect(10,10,100,100);
+			Glosdhandle.drawend();
+		}
+
+
+	Glosdhandle.setcolorline(GLBLUE);	
+	Glosdhandle.drawbegin();
+	Glosdhandle.setlinewidth(2);
+	for(int i=0;i<16;i++)
+		{
+			if(movarearect[i].detectflag==0)
+				continue;
+			mvconfigarea[i].clear();
+			for(int j=0;j<4;j++)
+			{
+				OSDPoint point;
+				point.x=movarearect[i].area[j].point.x;//*1.0/renderwidth;
+				point.y=movarearect[i].area[j].point.y;//*1.0/renderheight;
+				mvconfigarea[i].push_back(point);
+			}
+			Glosdhandle.drawloopsscreen(mvconfigarea[i]);
+
+		}
+	Glosdhandle.drawend();
+
+}
+
 void Render::DrawSelectrect()
 {
 
@@ -1867,21 +1935,110 @@ void Render::Drawlines()
 }
 void Render::movMultidetectrect()
 {
-	std::vector<cv::Rect>	detect_temp;	
+	int filter=1;
+	std::vector<cv::Rect>	detect_temp;
+	std::vector<cv::Rect>	detect_temp180;
+	std::vector<cv::Rect>	detect_temp360;
+
+	std::vector<cv::Rect>	detect_tempfilter;
 	std::vector<cv::Rect>	detect_vectcombination;
+	
 	detect_vect180.clear();
 	detect_vect360.clear();
+	Rect recttemp;
+	Rect camrect;
+	Point point;
 	for(int i=0;i<MULTICPUPANONUM;i++)
 		{
 			getmvdetect(detect_temp,i);
 			mvdetectup(detect_temp);
 			Multipotionto360(detect_temp,i);
-			mvclassification(detect_temp,detect_vect180,detect_vect360);
-			//detect_vect360.insert(detect_vect360.end(),detect_temp.begin(),detect_temp.end());
+			
+			if(filter==0)
+				mvclassification(detect_temp,detect_vect180,detect_vect360);
+			else
+				mvclassification(detect_temp,detect_temp180,detect_temp360);
 		}
+
+	if(filter)
+		{
+			for(int i=0;i<detect_temp180.size();i++)
+				{
+					recttemp=detect_temp180[i];
+					point.x=recttemp.x+recttemp.width/2;
+					point.y=recttemp.y+recttemp.height/2;
+					camrect.x=viewcamera[RENDER180].leftdownrect.x;
+					camrect.width=viewcamera[RENDER180].leftdownrect.width;
+					camrect.height=viewcamera[RENDER180].leftdownrect.height;
+					camrect.y=renderheight-(viewcamera[RENDER180].leftdownrect.y+viewcamera[RENDER180].leftdownrect.height);
+					point.x=point.x*camrect.width/pano360texturew;
+					point.y=point.y*camrect.height/pano360textureh;
+					if(findinmvarea(point)==1)
+						detect_vect180.push_back(detect_temp180[i]);
+					
+				}
+			for(int i=0;i<detect_temp360.size();i++)
+				{
+					recttemp=detect_temp360[i];
+					point.x=recttemp.x+recttemp.width/2;
+					point.y=recttemp.y+recttemp.height/2;
+					camrect.x=viewcamera[RENDER360].leftdownrect.x;
+					camrect.width=viewcamera[RENDER360].leftdownrect.width;
+					camrect.height=viewcamera[RENDER360].leftdownrect.height;
+					camrect.y=renderheight-(viewcamera[RENDER360].leftdownrect.y+viewcamera[RENDER180].leftdownrect.height);
+					point.x=point.x*camrect.width/pano360texturew;
+					point.y=point.y*camrect.height/pano360textureh+camrect.y;
+					if(findinmvarea(point)==1)
+						detect_vect360.push_back(detect_temp360[i]);
+					
+				}
+			
+
+
+		}
+
+	
 
 }
 
+void Render::loadmvarea()
+{
+	for(int i=0;i<16;i++)
+	{
+		//if(movarearect[i].detectflag==0)
+		//	continue;
+		
+		
+		for(int j=0;j<4;j++)
+		{
+			mvcontours[i].push_back(movarearect[i].area[j].point);
+		}
+		
+
+	}
+	
+
+}
+int Render::findinmvarea(Point p)
+{
+	int status=-1;
+
+	for(int i=0;i<16;i++)
+		{
+			
+			if (pointPolygonTest(mvcontours[i],p,false) == 1)
+				{
+					   status =1;
+					   break;
+				}
+			
+		}
+	
+
+
+	return status;
+
+}
 void Render::DrawmovMultidetect()
 {
 	unsigned int pan360w=pano360texturew;
@@ -2262,9 +2419,17 @@ void Render::Drawosd()
 		Drawmovdetect();
 	if(getmenumode()==SINGLEMODE)
 		Drawmov();
+
+
+	
 	Drawmenu();
 	Drawlines();
 	Drawosdmenu();
+
+	if(getmenumode()==PANOMODE)
+		{
+			Drawmvconfig();
+		}
 
 	DrawSelectrect();
 
@@ -3740,6 +3905,40 @@ void Render::fixrectupdate()
 
 
 }
+
+int Render::mousemovrect()
+{
+	if(movareaflag==0)
+		return -1;
+	int areapoint=0;
+	if(MOUSEST==MOUSEPRESS&&BUTTON==MOUSELEFT)
+		{
+			Point point=Point(MOUSEx,MOUSEy);
+			areapoint=getpointarea(point);
+			//printf("%s areapoint=%d\n",__func__,areapoint);
+			if(areapoint==-1)
+				return -1;
+			int size=movdrawpoints.size();
+			if(size==0||size==4)
+				movupdown=areapoint;
+			//printf("%s size=%d\n",__func__,size);
+			if((movupdown==areapoint))
+				{
+					MovDetectAreaPoint mvpoint;
+					mvpoint.point=point;
+					//printf("%s : %d\n",__func__,__LINE__);
+					if(size<4)
+						{
+							movdrawpoints.push_back(mvpoint);
+						}
+					else
+						{
+							movdrawpoints.clear();
+							movdrawpoints.push_back(mvpoint);
+						}
+				}
+		}
+}
 void Render::viewcameraprocess()
 {
 	Rect leftuprect;
@@ -4036,7 +4235,27 @@ void Render::MouseSelectpos()
 
 }
 
+int Render::getpointarea(Point p)
+{
+	int status=-1;
 
+	Rect camrect;
+	for(int i=RENDER180;i<=RENDER360;i++)
+		{	
+			camrect.x=viewcamera[i].leftdownrect.x;
+			camrect.width=viewcamera[i].leftdownrect.width;
+			camrect.height=viewcamera[i].leftdownrect.height;
+			camrect.y=renderheight-(viewcamera[i].leftdownrect.y+viewcamera[i].leftdownrect.height);
+
+
+			if(p.y>camrect.y+PANOEXTRAH/2*viewcamera[i].leftdownrect.height/renderheight&&p.y<camrect.y+camrect.height-PANOEXTRAH/2*viewcamera[i].leftdownrect.height/renderheight)
+				{
+						status=i;
+						break;
+				}
+		}
+	return status;
+}
 
 int Render::selectareaok(Rect &rect)
 {
@@ -4456,6 +4675,16 @@ void Render::registorfun()
 	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_PlayerSelect,playerselect,0);
 	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_ZeroConfig,zeroconfig,0);
 	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_MVDETECTGO,mvdetectgo,0);
+	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_RecordConfig,recordconfig,0);
+	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_MoveDetectAreaConfig,detectconfig,0);
+	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_CorrectTimeConfig,correcttimeconfig,0);
+	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_PanoConfig,panoconfig,0);
+	CMessage::getInstance()->MSGDRIV_register(MSGID_EXT_INPUT_MVCONFIGENABLE,nvconfigenable,0);
+	
+	
+	
+	
+	
 	
 	
 	//MSGID_EXT_INPUT_WorkModeCTRL
@@ -4718,20 +4947,22 @@ void Render::getsoftvetsion(long lParam)
 
 void Render::mvdetectgo(long lParam)
 {
-	int num=lParam;
+	int num=Status::getinstance()->nextid;
 	num=num%mvdetectmaxangle;
 	double panangle=pthis->mvpanangle[num];
 	double zeroanglepan=panangle;
 	if(zeroanglepan<0)
 		zeroanglepan+=360;
 	Plantformpzt::getinstance()->setpanopanpos(zeroanglepan);
+	
 	double zeroangletitle=getptzzerotitleangle();
 	if(zeroangletitle<0)
 		zeroangletitle+=360;
 	Plantformpzt::getinstance()->setpanotitlepos(zeroangletitle);
+	
 	Plantformpzt::getinstance()->getpanopanpos();
 	Plantformpzt::getinstance()->getpanotitlepos();
-	printf("******zeroanglepan=%f*************zeroangletitle=%f******\n",zeroanglepan,zeroangletitle);
+	//printf("******zeroanglepan=%f********zeroangletitle=%f******panangle=%f   num=%d\n",zeroanglepan,zeroangletitle,panangle,num);
 	
 	Status::getinstance()->setmvreach(0);
 	Plantformpzt::getinstance()->Enbalecallback(Plantformpzt::MVDETECTGO,zeroanglepan,zeroangletitle);
@@ -4742,30 +4973,127 @@ void Render::mvdetectgo(long lParam)
 void Render::callbackmvdetectgo(void *contex)
 {
 	double angle=0;
-	int id=0;
-	OSA_printf("%s begin\n",__func__);
+	int id=-1;
+	
 	if(contex!=NULL)
 		angle=*(double *)contex;
+	if(angle>=360)
+		angle=angle-360;
+
+	//OSA_printf("%s begin  angle=%f\n",__func__,angle);
 	for(int i=0;i<mvdetectmaxangle;i++)
 		{
 			double panangle=pthis->mvpanangle[i];
-			if((panangle-angle)<0.1)
+			double diss=(panangle-angle+360);
+			if(diss>=360)
+				diss=diss-360;
+			if(abs(diss)<1.0)
 				{
 					id=i;
 					break;
 				}
 
 		}
+	if(id<0)
+		return ;
+	//printf("the id=%d \n",id);
 	Status::getinstance()->setmvreachangle(angle);
 	Status::getinstance()->setmvdetectnum(id);
-	id=(id+1)%mvdetectmaxangle;
+	id++;
+	id=(id)%mvdetectmaxangle;
 	Status::getinstance()->setnextmvdetectnum(id);
 	Status::getinstance()->setmvreach(1);
 
-	OSA_printf("%s end\n",__func__);
+	//OSA_printf("%s end\n",__func__);
 	
 	//CMessage::getInstance()->MSGDRIV_send(MSGID_EXT_INPUT_MVDETECTGO,&currentnum);
 	
 }
 
+
+void Render::recordconfig(long lparam)
+{
+	
+	RecordManager::getinstance()->setdataheldrecord(Status::getinstance()->recordpositionheld);
+	//RecordManager::getinstance()->setdataheldrecord(NULL);
+
+}
+
+void Render::detectconfig(long lparam)
+{
+	
+	int detectareaenable=Status::getinstance()->detectareaenable;
+	int detectareanum=Status::getinstance()->detectareanum;
+
+	printf("%s:%d detectareaenable=%d detectareanum=%d\n",__func__,__LINE__,detectareaenable,detectareanum);
+
+	if(detectareaenable==2)
+		{
+			pthis->movarearect[detectareanum].detectflag=0;
+			
+			ConfigFile::getinstance()->setdetectdate(pthis->movarearect);
+			ConfigFile::getinstance()->detectsave();
+		}
+	else if(detectareaenable==1)
+		{
+				if(pthis->movdrawpoints.size()!=4)
+					return ;
+				pthis->mvcontours[detectareanum].clear();
+				
+				for(int i=0;i<pthis->movdrawpoints.size();i++)
+					{
+						pthis->movarearect[detectareanum].area[i].point=pthis->movdrawpoints[i].point;
+						pthis->mvcontours[detectareanum].push_back(pthis->movarearect[detectareanum].area[i].point);
+					}
+					pthis->movarearect[detectareanum].detectflag=1;
+
+				ConfigFile::getinstance()->setdetectdate(pthis->movarearect);
+				ConfigFile::getinstance()->detectsave();
+
+	
+
+			
+		}
+	
+
+}
+
+void Render::correcttimeconfig(long lparam)
+{	
+	
+	int year=Status::getinstance()->correctyear;
+	int mon=Status::getinstance()->correctmonth;
+	int day=Status::getinstance()->correctday;
+	int hour=Status::getinstance()->correcthour;
+	int min=Status::getinstance()->correctmin;
+	int sec=Status::getinstance()->correctsec;
+
+	sprintf(pthis->correcttimebuff,"date -s \"%d-%d-%d %d:%d:%d\"",year,mon,day,hour,min,sec);
+	system(pthis->correcttimebuff);
+	sprintf(pthis->correcttimebuff,"hwclock --systohc");
+	system(pthis->correcttimebuff);
+	
+}
+
+
+void Render::panoconfig(long lparam)
+{
+	int focus=Status::getinstance()->panopiexfocus;
+	int speed=Status::getinstance()->panoptzspeed;
+	int framerate=Status::getinstance()->panopicturerate;
+
+	
+
+	Config::getinstance()->setptzspeed(speed);
+	Config::getinstance()->setcamfx(focus);
+
+	Config::getinstance()->SaveConfig();
+	Plantformpzt::getinstance()->setspeed(speed);
+	
+}
+void Render::nvconfigenable(long lparam)
+{
+	int enable=Status::getinstance()->mvconfigenable;
+	pthis->movareaflag=enable;
+}
 

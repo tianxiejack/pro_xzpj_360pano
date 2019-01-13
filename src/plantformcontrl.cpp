@@ -628,7 +628,7 @@ void Plantformpzt::main_contrl_func()
 							{
 								callbackeable[MVDETECTGO]=0;
 
-								testangle=angleoffetpan;
+								testangle=angle;
 								//timeoutflag[PLANTFORMGETCALLBACK]=0;
 								if(callback[MVDETECTGO]!=NULL)
 									callback[MVDETECTGO](&testangle);

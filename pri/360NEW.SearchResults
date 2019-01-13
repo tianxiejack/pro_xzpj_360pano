@@ -1,5 +1,3 @@
----- Config_Read Matches (4 in 3 files) ----
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):void CPortBase::Config_Read()
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):                //Config_Read();
-CPortBase.hpp (z:\home\wj\cuda-workspace\360pano\src\com\include):    void Config_Read();
-CPortInterface.hpp (z:\home\wj\cuda-workspace\360pano\src\com\include):    virtual void Config_Read(){};
+---- MSGID_EXT_INPUT_CorrectTimeConfig Matches (2 in 2 files) ----
+CMessage.hpp (z:\home\wj\cuda-workspace\360pano\src\msg\include):    MSGID_EXT_INPUT_CorrectTimeConfig,
+CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):			pM->MSGDRIV_send(MSGID_EXT_INPUT_CorrectTimeConfig,0);

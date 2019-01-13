@@ -57,6 +57,9 @@ public:
 	static void recordplaycallback(void *arg);
 	void setplayertimer(unsigned int timer);
 
+	void setdataheldrecord(int a[2][7][24]);
+		
+
 private:
 	RecordManager();
 	~RecordManager();

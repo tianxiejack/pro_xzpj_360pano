@@ -84,6 +84,27 @@ public:
 		
 	}PlayerCtl;
 
+
+	typedef enum {
+		MOVSENSERTITYHIGH,
+		MOVSENSERTITYMID,
+		MOVSENSERTITYLOW,
+		
+	}MOVSENSERTITY;
+
+
+	typedef enum {
+		SPEEDEXTRAHIGH,
+		SPEEDHIGH,
+		SPEEDMIDDLE,
+		SPEEDLOW,
+		SPEEDEXTRALOW
+		
+	}MOVSPEED;
+
+
+	const int mvconfignum=16;
+
 	
 
 	int ptzpanodirection;
@@ -118,7 +139,8 @@ public:
 	int playermin;
 	int playersec;
 
-	
+	/************************/
+	int mvconfigenable;
 
 	/******player query*******/
 	int playerqueryyear;
@@ -160,13 +182,17 @@ public:
 
 	int movedetectalgenable;
 
-	int movedetectmaxnum;
-
+	//int movedetectmaxnum;
+	int sensitivity;
+	
 	int speedpriority;
 
-	int sensitivity;
-
-	int movedetectrecord;
+	
+	int movmaxwidth;
+	int movmaxheight;
+	int movminwidth;
+	int movminheight;
+	//int movedetectrecord;
 
 	int moverecordtime;
 
@@ -208,6 +234,8 @@ public:
 	int currentid;
 	int nextid;
 
+	int usestepdetect;
+
 	//int getcurrentid(int id){int cid=0;cid=id;cid=cid%;};
 	
 	double getmvreachangle(){return researchangle;};
@@ -223,6 +251,9 @@ public:
 
 	int getnextmvdetectnum(){return nextmvdetectnum;};
 	void setnextmvdetectnum(int reach){nextmvdetectnum=reach;};
+
+	int getusestepdetect(){return usestepdetect;};
+	void setusestepdetect(int reach){usestepdetect=reach;};
 
 	
 

@@ -114,10 +114,18 @@ class Plantformpzt
 
 		static void plantfromcontrl(long lParam);
 
+
+	public:
+		void setspeed(int speed)
+			{
+				speedpan=speedtitle=speed;
+			}
+
 	private:
 		CUartBase Uart;
 		int speedpan;
 		int speedtitle;
+		
 		double titlpanangle;
 		ComObj platformcom;
 		unsigned char recvbuf[2000];

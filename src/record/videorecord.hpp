@@ -102,7 +102,9 @@ public :
   }
 };
 class VideoRecord{
-
+	#define EVENTRECORD 2
+	#define WEEKRECORD 7
+	#define HOURSRECORD 24
 	public:
 		void create();
 		static VideoRecord*getinstance();
@@ -114,8 +116,22 @@ class VideoRecord{
 		void seteventrecordenable(int enable){eventenable=enable;};
 
 		int getrecordflag(){return timeenable||eventenable;};
-	private:
 
+		void setmovtimedelay(int enable){timerdelayenable=enable;};
+		int getmovtimedelay(){return timerdelayenable;};
+
+		void setdataheldrecord(int a[2][7][24])
+			{
+				 for(int i=0;i<EVENTRECORD;i++)
+	 				for(int j=0;j<WEEKRECORD;j++)
+						for(int k=0;k<HOURSRECORD;k++)
+							recordpositionheld[i][j][k]=a[i][j][k];
+				
+			};
+	private:
+		void heldrecord();
+	private:
+		int timerdelayenable;
 		int timeenable;
 		int eventenable;
 		VideoRecord();
@@ -124,6 +140,9 @@ class VideoRecord{
 		int aviheadlen;
 		int aviheadenable;
 		static VideoRecord* instance;
+
+
+		int recordpositionheld[EVENTRECORD][WEEKRECORD][HOURSRECORD];
 		
 
 		 FILE *videorecordfb;

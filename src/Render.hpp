@@ -32,6 +32,8 @@
 #include"menu.hpp"
 #include "CMessage.hpp"
 #include <osa_mutex.h>
+#include"Status.hpp"
+#include"configfile.hpp"
 //#include "mvdectInterface.hpp"
 //static const int ALPHA_MASK_HEIGHT= DEFAULT_IMAGE_HEIGHT;
 //static const int ALPHA_MASK_WIDTH = (DEFAULT_IMAGE_WIDTH/16);
@@ -73,6 +75,10 @@ typedef struct{
 
 
 }ViewCamera;
+
+
+
+
 
 
 
@@ -212,7 +218,29 @@ public:
 	VideoWriter videowriter;
 	int createdistimeid;
 	int timerclock;
+	/**************correct time**************************/
+	char correcttimebuff[100];
 
+	/**************mov config**************************/
+	int movareaflag;
+	int movupdown;
+	vector<MovDetectAreaPoint> movdrawpoints;
+	
+	//vector<MovDetectAreaRect> movarearect;
+	MovDetectAreaRect movarearect[16];
+	std::vector<OSDPoint>  mvconfigarea[16];
+
+	int getpointarea(Point p);
+
+	int mousemovrect();
+
+	void Drawmvconfig();
+
+	int  findinmvarea(Point p);
+
+	void loadmvarea();
+
+	std::vector<cv::Point>  mvcontours[16];
 	/***********************************************/
 	int recordtimer;
 
@@ -275,7 +303,7 @@ public:
 	std::vector<cv::Rect>	detect_vect360;
 
 	//std::vector<OSDPoint>	detect_vectradarpoints;
-	std::vector<OSDPoint>  detect_vectradarpoints[500];
+	std::vector<OSDPoint>  detect_vectradarpoints[1000];
 	void movMultidetectrect();
 	void setmenumode(int mod){menumode=mod;};
 	int getmenumode(){return menumode;};
@@ -568,6 +596,13 @@ public:
 	static void playerselect(long lParam);
 	static void getsoftvetsion(long lParam);
 	static void mvdetectgo(long lParam);
+	static void recordconfig(long lparam);
+	static void detectconfig(long lparam);
+
+	static void correcttimeconfig(long lparam);
+	static void panoconfig(long lparam);
+
+	static void nvconfigenable(long lparam);
 	
 };
 

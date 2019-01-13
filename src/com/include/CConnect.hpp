@@ -37,6 +37,8 @@ private:
 
     int NETRecv(void *rcv_buf,int data_len);
 
+    int expconfig(unsigned char *swap_data_buf, unsigned int swap_data_len);
+
 	
 protected:
     static void *getDataThrFun(void * mContext)

@@ -5,7 +5,8 @@
 #include"Status.hpp"
 #include "plantformcontrl.hpp"
 Store*Store::instance=NULL;
-#define DIRRECTDIR  "/home/ubuntu/calib/store.xml"
+//#define DIRRECTDIR  "/home/ubuntu/calib/store.xml"
+#define DIRRECTDIR "/home/ubuntu/config/store.xml"
 Store::Store()
 {
 	OSA_mutexCreate(&filelock);

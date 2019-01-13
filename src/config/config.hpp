@@ -42,6 +42,8 @@ class Config{
      inline int getcamchannel(){return cam_channel;};
      inline double getcamfx(){return cam_fx;};
 
+     void setcamfx(int fx){ cam_fx=fx;};
+
     /*display*/
 	 int display_width;
 	 int display_height;
@@ -121,6 +123,7 @@ class Config{
 	 inline  int getptzdp(){return ptzdp;};
 
 	 inline int getptzspeed(){return ptzspeed;};
+	 void setptzspeed(int speed){ ptzspeed=speed;};
 
 
 

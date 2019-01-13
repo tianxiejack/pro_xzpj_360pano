@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string>
 #include"videoload.hpp"
+#include"videorecord.hpp"
 #include "DxTimer.hpp"
 //#include "globalDate.h"
 RecordManager*RecordManager::instance=NULL;
@@ -158,6 +159,15 @@ void RecordManager::getnexvideo()
 	VideoLoad::getinstance()->setreadnewfile(1);
 
 	cout<<videname<<endl;
+
+}
+
+void RecordManager::setdataheldrecord(int a[2][7][24])
+{
+	if(a==NULL)
+		return ;
+	
+	VideoRecord::getinstance()->setdataheldrecord(a);
 
 }
 RecordManager*RecordManager::getinstance()

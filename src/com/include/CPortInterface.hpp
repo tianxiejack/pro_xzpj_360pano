@@ -62,6 +62,8 @@ public:
     virtual void playerquery(){};
     virtual void playerselect(){};
 
+    virtual void panoenable(){};
+
     virtual void plantformconfig(){};
     virtual void sensorconfig(){};
     virtual void zeroconfig(){};

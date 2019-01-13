@@ -173,6 +173,16 @@ void CPortBase::playerselect()
 		
 	};
 
+void CPortBase::panoenable()
+{
+	if((_globalDate->rcvBufQue.at(5))!=Status::getinstance()->mvconfigenable)
+		{
+			Status::getinstance()->mvconfigenable=_globalDate->rcvBufQue.at(5);
+		}
+	//printf("Status::getinstance()->mvconfigenable=%d\n",Status::getinstance()->mvconfigenable);
+	pM->MSGDRIV_send(MSGID_EXT_INPUT_MVCONFIGENABLE, 0);
+}
+
 void CPortBase::plantformconfig()
 {
 	int configchange=0;
@@ -306,15 +316,21 @@ void CPortBase::recordconfig()
 			{
 				for(int j=0;j<HELDHOUR;j++)
 					{
+						//printf("%d \t",_globalDate->rcvBufQue.at(6+i*3));
 						if(j<8)
+							{
 							Status::getinstance()->recordpositionheld[recordclass][i][bitnum-1-j]=(_globalDate->rcvBufQue.at(6+i*3)>>j)&0x01;
+							//printf("test%d \t",Status::getinstance()->recordpositionheld[recordclass][i][bitnum-1-j]);
+							}
 						else if(j<16)
-							Status::getinstance()->recordpositionheld[recordclass][i][2*bitnum-1-j]=(_globalDate->rcvBufQue.at(6+i*3+1)>>(j-bitnum))&0x01;
+							Status::getinstance()->recordpositionheld[recordclass][i][2*bitnum-1-(j-8)]=(_globalDate->rcvBufQue.at(6+i*3+1)>>(j-bitnum))&0x01;
 						else if(j<24)
-							Status::getinstance()->recordpositionheld[recordclass][i][3*bitnum-1-j]=(_globalDate->rcvBufQue.at(6+i*3+2)>>(j-2*bitnum))&0x01;
-
-						
+							{
+							Status::getinstance()->recordpositionheld[recordclass][i][3*bitnum-1-(j-16)]=(_globalDate->rcvBufQue.at(6+i*3+2)>>(j-2*bitnum))&0x01;
+							//printf("test_%d \t",Status::getinstance()->recordpositionheld[recordclass][i][3*bitnum-1-(j-24)]);
+							}
 					}
+				printf("\n");
 
 			}
 		printf("the time\n");
@@ -323,13 +339,11 @@ void CPortBase::recordconfig()
 				for(int j=0;j<HELDHOUR;j++)
 					{
 						if(j<8)
-							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][bitnum-1-j]);
+							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);
 						else if(j<16)
-							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][2*bitnum-1-j]);
+							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);
 						else if(j<24)
-							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][3*bitnum-1-j]);
-
-						
+							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);					
 					}
 				printf("\n");
 
@@ -341,11 +355,11 @@ void CPortBase::recordconfig()
 				for(int j=0;j<HELDHOUR;j++)
 					{
 						if(j<8)
-							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][bitnum-1-j]);
+							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);
 						else if(j<16)
-							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][2*bitnum-1-j]);
+							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);
 						else if(j<24)
-							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][3*bitnum-1-j]);
+							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);
 
 						
 					}
@@ -368,33 +382,50 @@ void CPortBase::recordconfig()
 				Status::getinstance()->movedetectalgenable=_globalDate->rcvBufQue.at(5);
 				configchange=1;
 			}
-		if((_globalDate->rcvBufQue.at(6)<<8|_globalDate->rcvBufQue.at(7))!=Status::getinstance()->movedetectmaxnum)
+		if((_globalDate->rcvBufQue.at(6))!=Status::getinstance()->sensitivity)
 			{
-				Status::getinstance()->movedetectmaxnum=_globalDate->rcvBufQue.at(6)<<8|_globalDate->rcvBufQue.at(7);
+				Status::getinstance()->sensitivity=_globalDate->rcvBufQue.at(6);
 				configchange=1;
 			}
-		if(_globalDate->rcvBufQue.at(8)!=Status::getinstance()->speedpriority)
+		if(_globalDate->rcvBufQue.at(7)!=Status::getinstance()->speedpriority)
 			{
-				Status::getinstance()->speedpriority=_globalDate->rcvBufQue.at(8);
+				Status::getinstance()->speedpriority=_globalDate->rcvBufQue.at(7);
 				configchange=1;
 			}
-		if(_globalDate->rcvBufQue.at(9)!=Status::getinstance()->sensitivity)
+		if((_globalDate->rcvBufQue.at(8)<<8|_globalDate->rcvBufQue.at(9))!=Status::getinstance()->movmaxwidth)
 			{
-				Status::getinstance()->sensitivity=_globalDate->rcvBufQue.at(9);
+				Status::getinstance()->movmaxwidth=_globalDate->rcvBufQue.at(8)<<8|_globalDate->rcvBufQue.at(9);
+				configchange=1;
+			}
+		if((_globalDate->rcvBufQue.at(10)<<8|_globalDate->rcvBufQue.at(11))!=Status::getinstance()->movmaxheight)
+			{
+				Status::getinstance()->movmaxheight=_globalDate->rcvBufQue.at(10)<<8|_globalDate->rcvBufQue.at(11);
+				configchange=1;
+			}
+
+		if((_globalDate->rcvBufQue.at(12)<<8|_globalDate->rcvBufQue.at(13))!=Status::getinstance()->movminwidth)
+			{
+				Status::getinstance()->movminwidth=_globalDate->rcvBufQue.at(12)<<8|_globalDate->rcvBufQue.at(13);
+				configchange=1;
+			}
+		if((_globalDate->rcvBufQue.at(14)<<8|_globalDate->rcvBufQue.at(15))!=Status::getinstance()->movminheight)
+			{
+				Status::getinstance()->movminheight=_globalDate->rcvBufQue.at(14)<<8|_globalDate->rcvBufQue.at(15);
 				configchange=1;
 			}
 
 		
-		if(_globalDate->rcvBufQue.at(10)!=Status::getinstance()->movedetectrecord)
+
+		if((_globalDate->rcvBufQue.at(16)<<8|_globalDate->rcvBufQue.at(17))!=Status::getinstance()->moverecordtime)
 			{
-				Status::getinstance()->movedetectrecord=_globalDate->rcvBufQue.at(10);
+				Status::getinstance()->moverecordtime=_globalDate->rcvBufQue.at(16)<<8|_globalDate->rcvBufQue.at(17);
 				configchange=1;
 			}
-		if(_globalDate->rcvBufQue.at(11)!=Status::getinstance()->moverecordtime)
-			{
-				Status::getinstance()->moverecordtime=_globalDate->rcvBufQue.at(11);
-				configchange=1;
-			}
+
+		
+
+		OSA_printf("movedetectalgenable=%d  sensitivity=%d  speedpriority=%d movminwidth=%d movminheight=%d moverecordtime=%d\n",Status::getinstance()->movedetectalgenable,Status::getinstance()->sensitivity,Status::getinstance()->speedpriority,\
+			Status::getinstance()->movminwidth,Status::getinstance()->movminheight,Status::getinstance()->moverecordtime);
 
 		if(configchange)
 			pM->MSGDRIV_send(MSGID_EXT_INPUT_MoveDetectConfig,0);
@@ -404,10 +435,10 @@ void CPortBase::recordconfig()
  	};
  void CPortBase::movedetectareaconfig()
  	{
-		int configchange=0;
- 		if(_globalDate->rcvBufQue.at(5)!=Status::getinstance()->detectareanum)
+		int configchange=1;
+ 		if(_globalDate->rcvBufQue.at(5)!=Status::getinstance()->detectareanum+1)
 			{
-				Status::getinstance()->detectareanum=_globalDate->rcvBufQue.at(5);
+				Status::getinstance()->detectareanum=_globalDate->rcvBufQue.at(5)-1;
 				configchange=1;
 			}
 		if(_globalDate->rcvBufQue.at(6)!=Status::getinstance()->detectareaenable)
@@ -419,6 +450,7 @@ void CPortBase::recordconfig()
 			pM->MSGDRIV_send(MSGID_EXT_INPUT_MoveDetectAreaConfig,0);
 
  	};
+ 
  void CPortBase::displayconfig()
  	{
  		int configchange=0;
@@ -466,6 +498,7 @@ void CPortBase::recordconfig()
 				Status::getinstance()->correctsec=_globalDate->rcvBufQue.at(11);
 				configchange=1;
 			}
+		
 
 		if(configchange)
 			pM->MSGDRIV_send(MSGID_EXT_INPUT_CorrectTimeConfig,0);
@@ -490,6 +523,7 @@ void CPortBase::recordconfig()
 				Status::getinstance()->panopicturerate=_globalDate->rcvBufQue.at(8);
 				configchange=1;
 			}
+		OSA_printf("%s:%d panoptzspeed=%d panopiexfocus=%d panopicturerate=%d\n",__func__,__LINE__,Status::getinstance()->panoptzspeed,Status::getinstance()->panopiexfocus,Status::getinstance()->panopicturerate);
 		if(configchange)
 			pM->MSGDRIV_send(MSGID_EXT_INPUT_PanoConfig,0);
 
@@ -875,6 +909,9 @@ int CPortBase::prcRcvFrameBufQue(int method)
 		case 0x62:
 			playerquery();
 			break;
+		case 0x65:
+			panoenable();
+			break;
 		case 0x80:
 			plantformconfig();
 			break;
@@ -900,7 +937,7 @@ int CPortBase::prcRcvFrameBufQue(int method)
 			correcttimeconfig();
 			break;
 		case 0x88:
-			//panoconfig();
+			panoconfig();
 			break;
             default:
                 printf("INFO: Unknow  Control Command, please check!!!\r\n ");
@@ -1003,6 +1040,33 @@ int  CPortBase::getSendInfo(int  respondId, sendInfo * psendBuf)
 			break;
 		case ACK_playerquerry:
 			recordquerry(psendBuf);
+			break;
+		case ACK_plantformconfig:
+			;//recordquerry(psendBuf);
+			break;
+		case ACK_sensorconfig:
+			//recordquerry(psendBuf);
+			break;
+		case ACK_zeroconfig:
+			//recordquerry(psendBuf);
+			break;
+		case ACK_recordconfig:
+			//recordquerry(psendBuf);
+			break;
+		case ACK_mvconfig:
+			//recordquerry(psendBuf);
+			break;
+		case ACK_mvareaconfig:
+			//recordquerry(psendBuf);
+			break;
+		case ACK_displayconfig:
+			//recordquerry(psendBuf);
+			break;
+		case ACK_correcttimeconfig:
+			//recordquerry(psendBuf);
+			break;
+		case ACK_panoconfig:
+			//recordquerry(psendBuf);
 			break;
 		default:
 			break;
@@ -1408,7 +1472,7 @@ void  CPortBase:: upgradefwStat(sendInfo * spBuf)
 	u_int8_t sumCheck;
 	u_int8_t trackStatus[3];
 	spBuf->sendBuff[0]=0xEB;
-	spBuf->sendBuff[1]=0x53;
+	spBuf->sendBuff[1]=0x51;
 	spBuf->sendBuff[2]=0x03;
 	spBuf->sendBuff[3]=0x00;
 	spBuf->sendBuff[4]=0x35;
@@ -1564,14 +1628,14 @@ int CPortBase::upgradefw(unsigned char *swap_data_buf, unsigned int swap_data_le
 		system("sync");
 		
 		_globalDate->feedback=ACK_upgradefw;
-		OSA_semSignal(&_globalDate->m_semHndl);
+		OSA_semSignal(&_globalDate->m_semHndl_socket);
 	}
 	else
 	{
 		_globalDate->respupgradefw_stat= 0x00;
 		_globalDate->respupgradefw_perc = current_len*100/file_len;
 		_globalDate->feedback=ACK_upgradefw;
-		OSA_semSignal(&_globalDate->m_semHndl);
+		OSA_semSignal(&_globalDate->m_semHndl_socket);
 	}
 
 }
@@ -1590,7 +1654,7 @@ int CPortBase::update_startsh(void)
 	printf("update start.sh...\r\n"); 
 	int iRtn=-1;
 	char cmdBuf[128];	
-	sprintf(cmdBuf, "mv ~/dss_pkt/start.sh ~/");
+	sprintf(cmdBuf, "mv ~/Release/start.sh ~/");
 	iRtn = system(cmdBuf);
 	return iRtn;
 }
@@ -1600,7 +1664,7 @@ int CPortBase::update_fpga(void)
 	printf("update load_fpga.ko...\r\n"); 
 	int iRtn=-1;
 	char cmdBuf[128];	
-	sprintf(cmdBuf, "mv ~/dss_pkt/load_fpga.ko ~/dss_bin/");
+	sprintf(cmdBuf, "mv ~/Release/load_fpga.ko ~/dss_bin/");
 	iRtn = system(cmdBuf);
 	return iRtn;
 }

@@ -4,7 +4,7 @@
   <cam_width>1920</cam_width>
   <cam_height>1080</cam_height>
   <cam_channel>3</cam_channel>
-  <cam_fx>8900.</cam_fx>
+  <cam_fx>4800.</cam_fx>
   <cam_fy>1800.</cam_fy>
   <cam_ox>960.</cam_ox>
   <cam_oy>540.</cam_oy>
@@ -12,8 +12,8 @@
   <cam_k2>0.</cam_k2>
   <cam_k3>0.</cam_k3>
   <cam_k4>0.</cam_k4>
-  <cam_readfromfile>1</cam_readfromfile>
-  <cam_fixcamereafov>9</cam_fixcamereafov></camera>
+  <cam_readfromfile>0</cam_readfromfile>
+  <cam_fixcamereafov>18</cam_fixcamereafov></camera>
 <display>
   <display_width>1920</display_width>
   <display_height>1080</display_height>
@@ -21,14 +21,14 @@
 <panoalg>
   <panoprocesswidth>1920</panoprocesswidth>
   <panoprocessheight>1080</panoprocessheight>
-  <panozeroptz>1.6186463150030858e+02</panozeroptz>
+  <panozeroptz>0</panozeroptz>
   <panozeroptztitle>0.</panozeroptztitle>
   <panoprocessshift>0</panoprocessshift>
-  <panoprocesstailcut>515</panoprocesstailcut>
+  <panoprocesstailcut>128</panoprocesstailcut>
   <panocylinder>0</panocylinder>
   <panofusion>1</panofusion>
   <angleinterval>1.</angleinterval>
-  <panocalibration>0</panocalibration></panoalg>
+  <panocalibration>1</panocalibration></panoalg>
 <mvdetect>
   <mvprocesswidth>1920</mvprocesswidth>
   <mvprocessheight>1080</mvprocessheight>

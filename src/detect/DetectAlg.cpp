@@ -192,13 +192,13 @@ void DetectAlg::panomoveprocess()
 								LKRramegray(blackrect).copyTo(LKRramegrayblackboard(blackrect));
 							}
 
-						/*
+						
 						//int num=getmodelnum(blocknum);
 						if(getmodeling()==0)
 							videowriter[blocknum]<<LKRramegrayblackboard;
 						else
 							videowriter[blocknum]<<Modelframe[blocknum][premodelnum];
-						*/
+						
 						/*
 						if(blocknum==1)
 							{
@@ -597,12 +597,14 @@ int DetectAlg::JudgeLkFastNew(Mat src)
 
 	if(Status::getinstance()->getmvreach())
 		{
+			Status::getinstance()->setmvreach(0);
 			Status::getinstance()->nextid=Status::getinstance()->getnextmvdetectnum();
-			CMessage::getInstance()->MSGDRIV_send(MSGID_EXT_INPUT_MVDETECTGO,&(Status::getinstance()->nextid));
+			//OSA_printf("*****the reach nexid=%d\n",Status::getinstance()->nextid);
+			CMessage::getInstance()->MSGDRIV_send(MSGID_EXT_INPUT_MVDETECTGO,0);
 			postionid=Status::getinstance()->getmvdetectnum();
 			LKprocessangle[postionid]=angle;
 
-			Status::getinstance()->setmvreach(0);
+			
 			
 			
 			
@@ -615,7 +617,7 @@ int DetectAlg::JudgeLkFastNew(Mat src)
 	
 	if(postionid!=-1)
 		{
-			printf("[postionid=%d]the [angle =%f pos=%f]\n",postionid,angle,360.0/MOVELKBLOCKNUM*postionid);
+			//printf("[postionid=%d]the [angle =%f pos=%f]\n",postionid,angle,360.0/MOVELKBLOCKNUM*postionid);
 			Mat dst=panoblock[postionid];
 			memcpy(dst.data,src.data,dst.cols*dst.rows*dst.channels());
 			ret=postionid;
@@ -742,8 +744,8 @@ void DetectAlg::MulticpuLKpanoprocess(Mat& src)
 	else
 		processsrc=src;
 
-	if(FASTMODE)
-		JudgeLkFastNew(processsrc);
+	if(Status::getinstance()->getusestepdetect())
+		blucknum=JudgeLkFastNew(processsrc);
 	else if(1)
 		blucknum=JudgeLkFast(processsrc);
 	else

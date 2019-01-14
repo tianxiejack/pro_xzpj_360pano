@@ -1,3 +1,5 @@
----- MSGID_EXT_INPUT_CorrectTimeConfig Matches (2 in 2 files) ----
-CMessage.hpp (z:\home\wj\cuda-workspace\360pano\src\msg\include):    MSGID_EXT_INPUT_CorrectTimeConfig,
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):			pM->MSGDRIV_send(MSGID_EXT_INPUT_CorrectTimeConfig,0);
+---- panoconfigenable Matches (4 in 3 files) ----
+CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):	if((_globalDate->rcvBufQue.at(5))!=Status::getinstance()->panoconfigenable)
+CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):			Status::getinstance()->panoconfigenable=_globalDate->rcvBufQue.at(5);
+Status.cpp (z:\home\wj\cuda-workspace\360pano\src\status):	mvdetectresearch(0),usestepdetect(0),panoconfigenable(0)
+Status.hpp (z:\home\wj\cuda-workspace\360pano\src\status):	int panoconfigenable;

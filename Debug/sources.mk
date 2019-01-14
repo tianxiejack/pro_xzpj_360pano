@@ -46,6 +46,7 @@ src/live555/BasicUsageEnvironment \
 src/gpio \
 src/file \
 src/detect \
+src/configfile \
 src/config \
 src/compress \
 src/com \

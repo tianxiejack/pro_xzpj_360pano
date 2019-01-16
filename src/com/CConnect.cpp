@@ -135,8 +135,8 @@ int CConnect::sendData()
 		retVle = write(m_connect, &_globalDate->repSendBuffer.sendBuff,_globalDate->repSendBuffer.byteSizeSend);
 		if(_globalDate->feedback == ACK_config_Read || _globalDate->feedback == ACK_param_todef)
 			OSA_semSignal(&_globalDate->m_semHndl_socket_s);
-		printf("\n");
-		printf("%s,%d, write to socket %d bytes:\n", __FILE__,__LINE__,retVle);
+		//printf("\n");
+		//printf("%s,%d, write to socket %d bytes:\n", __FILE__,__LINE__,retVle);
 #if 0
 		for(int i = 0; i < retVle; i++)
 		{

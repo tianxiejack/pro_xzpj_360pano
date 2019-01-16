@@ -233,6 +233,7 @@ void CPortBase::plantformconfig()
 			}
 		if(_globalDate->rcvBufQue.at(8)!=Status::getinstance()->backandwrite)
 			{
+				
 				Status::getinstance()->backandwrite=_globalDate->rcvBufQue.at(8);
 				configchange=1;
 			}
@@ -261,19 +262,20 @@ void CPortBase::plantformconfig()
 				Status::getinstance()->crossdisplay=_globalDate->rcvBufQue.at(13);
 				configchange=1;
 			}
-		if((_globalDate->rcvBufQue.at(14)<<8|_globalDate->rcvBufQue.at(15))!=Status::getinstance()->crossx)
+		
+		if(_globalDate->rcvBufQue.at(14)!=Status::getinstance()->crossx)
 			{
-				Status::getinstance()->crossx=(_globalDate->rcvBufQue.at(14)<<8|_globalDate->rcvBufQue.at(15));
+				Status::getinstance()->crossx=_globalDate->rcvBufQue.at(14);
 				configchange=1;
 			}
-		if((_globalDate->rcvBufQue.at(16)<<8|_globalDate->rcvBufQue.at(17))!=Status::getinstance()->crossy)
+		if(_globalDate->rcvBufQue.at(15)!=Status::getinstance()->crossy)
 			{
-				Status::getinstance()->crossy=(_globalDate->rcvBufQue.at(16)<<8|_globalDate->rcvBufQue.at(17));
+				Status::getinstance()->crossy=_globalDate->rcvBufQue.at(15);
 				configchange=1;
 			}
-		if(_globalDate->rcvBufQue.at(18)!=Status::getinstance()->crossx)
+		if(_globalDate->rcvBufQue.at(16)!=Status::getinstance()->save)
 			{
-				Status::getinstance()->save=_globalDate->rcvBufQue.at(18);
+				Status::getinstance()->save=_globalDate->rcvBufQue.at(16);
 				configchange=1;
 			}
 		
@@ -286,11 +288,11 @@ void CPortBase::plantformconfig()
  void CPortBase::zeroconfig()
  	{
  		int configchange=0;
-		configchange=1;
+		configchange=0;
  		if(_globalDate->rcvBufQue.at(5)!=Status::getinstance()->zeromod)
 			{
 				Status::getinstance()->zeromod=_globalDate->rcvBufQue.at(5);
-				
+				configchange=1;
 			}
 		OSA_printf("%s zeromod=%d\n",__func__,Status::getinstance()->zeromod);
 		if(configchange)
@@ -330,9 +332,11 @@ void CPortBase::recordconfig()
 							//printf("test_%d \t",Status::getinstance()->recordpositionheld[recordclass][i][3*bitnum-1-(j-24)]);
 							}
 					}
-				printf("\n");
+				//printf("\n");
 
 			}
+
+		/*
 		printf("the time\n");
 		for(int i=0;i<HELDWEEK;i++)
 			{
@@ -368,7 +372,7 @@ void CPortBase::recordconfig()
 			}
 
 		
-		
+		*/
 
 		
 		if(configchange)
@@ -526,6 +530,51 @@ void CPortBase::recordconfig()
 		OSA_printf("%s:%d panoptzspeed=%d panopiexfocus=%d panopicturerate=%d\n",__func__,__LINE__,Status::getinstance()->panoptzspeed,Status::getinstance()->panopiexfocus,Status::getinstance()->panopicturerate);
 		if(configchange)
 			pM->MSGDRIV_send(MSGID_EXT_INPUT_PanoConfig,0);
+
+ 	};
+
+ void  CPortBase::rebootconfig()
+ 	{
+ 		char cmdBuf[128];
+		sprintf(cmdBuf, "reboot");
+		system(cmdBuf);
+
+ 	}
+  void CPortBase::querryconfig()
+ 	{
+ 			int configchange=0;
+		if(_globalDate->rcvBufQue.at(5)!=Status::getinstance()->querryconfig)
+			{
+				Status::getinstance()->querryconfig=_globalDate->rcvBufQue.at(5);
+				configchange=1;
+			}
+		
+		switch(Status::getinstance()->querryconfig)
+			{
+				case 0:
+					CGlobalDate::Instance()->feedback=ACK_plantformconfig;
+					OSA_semSignal(&CGlobalDate::Instance()->m_semHndl_socket);	
+					break;
+				case 3:
+					CGlobalDate::Instance()->feedback=ACK_recordconfig;
+					OSA_semSignal(&CGlobalDate::Instance()->m_semHndl_socket);	
+					break;
+				case 10:
+					CGlobalDate::Instance()->feedback=ACK_recordconfigmv;
+					OSA_semSignal(&CGlobalDate::Instance()->m_semHndl_socket);	
+					break;
+				case 7:
+					CGlobalDate::Instance()->feedback=ACK_panoconfig;
+					OSA_semSignal(&CGlobalDate::Instance()->m_semHndl_socket);	
+					break;
+				default:
+					break;
+
+
+
+			}
+		
+	
 
  	};
     
@@ -793,7 +842,11 @@ int CPortBase::prcRcvFrameBufQue(int method)
     {	
     	_globalDate->commode = method;
 	printf("the id=%d \n",_globalDate->rcvBufQue.at(4));
-        switch(_globalDate->rcvBufQue.at(4))
+	int cmdid=_globalDate->rcvBufQue.at(4);
+	if(Status::getinstance()==0)
+		cmdid=0;
+		
+        switch(cmdid)
         {
             case 0x01:
                 //startSelfCheak();
@@ -939,6 +992,17 @@ int CPortBase::prcRcvFrameBufQue(int method)
 		case 0x88:
 			panoconfig();
 			break;
+			/*
+		case 0x88:
+			panoconfig();
+			break;
+			*/
+		case 0x8a:
+			rebootconfig();
+			break;
+		case 0x90:
+			querryconfig();
+			break;
             default:
                 printf("INFO: Unknow  Control Command, please check!!!\r\n ");
                 ret =0;
@@ -953,7 +1017,7 @@ int CPortBase::prcRcvFrameBufQue(int method)
 
 int  CPortBase::getSendInfo(int  respondId, sendInfo * psendBuf)
 {
-	printf("respondId = %d\n", respondId);
+	//printf("respondId = %d\n", respondId);
 	switch(respondId){
 		case ACK_selfTest:
 			//startCheckAnswer(psendBuf);
@@ -1032,7 +1096,7 @@ int  CPortBase::getSendInfo(int  respondId, sendInfo * psendBuf)
 			extExtraInputResponse(psendBuf);
 			break;
 		case ACK_upgradefw:
-			printf("%s,%d, upgradefw response!!!\n",__FILE__,__LINE__);
+			//printf("%s,%d, upgradefw response!!!\n",__FILE__,__LINE__);
 			upgradefwStat(psendBuf);
 			break;
 		case ACK_param_todef:
@@ -1042,19 +1106,19 @@ int  CPortBase::getSendInfo(int  respondId, sendInfo * psendBuf)
 			recordquerry(psendBuf);
 			break;
 		case ACK_plantformconfig:
-			;//recordquerry(psendBuf);
+			ackplantformconfig(psendBuf);
 			break;
 		case ACK_sensorconfig:
-			//recordquerry(psendBuf);
+			acksensorconfig(psendBuf);
 			break;
 		case ACK_zeroconfig:
 			//recordquerry(psendBuf);
 			break;
 		case ACK_recordconfig:
-			//recordquerry(psendBuf);
+			ackrecordconfig(psendBuf,0);
 			break;
 		case ACK_mvconfig:
-			//recordquerry(psendBuf);
+			ackmvconfig(psendBuf);
 			break;
 		case ACK_mvareaconfig:
 			//recordquerry(psendBuf);
@@ -1065,7 +1129,11 @@ int  CPortBase::getSendInfo(int  respondId, sendInfo * psendBuf)
 		case ACK_correcttimeconfig:
 			//recordquerry(psendBuf);
 			break;
+		case ACK_recordconfigmv:
+			ackrecordconfig(psendBuf,1);
+			break;
 		case ACK_panoconfig:
+			ackpanoconfig(psendBuf);
 			//recordquerry(psendBuf);
 			break;
 		default:
@@ -1458,7 +1526,7 @@ void CPortBase::readConfigSetting(sendInfo * spBuf)
 		_globalDate->ACK_read.erase(_globalDate->ACK_read.begin());
 	}
 
-	printf("read <=====> is  back\n");
+	//printf("read <=====> is  back\n");
 }
 
 void CPortBase::extExtraInputResponse(sendInfo * spBuf)
@@ -1529,6 +1597,150 @@ void  CPortBase:: recordquerry(sendInfo * spBuf)
 	spBuf->byteSizeSend=4+14*_globalDate->querrytime.size()+2;
 	printf("%s\n",__func__);
 }
+
+
+void  CPortBase:: ackplantformconfig(sendInfo * spBuf)
+{
+	u_int8_t sumCheck;
+	int infosize=5;
+	spBuf->sendBuff[0]=0xEB;
+	spBuf->sendBuff[1]=0x51;
+	spBuf->sendBuff[2]=infosize&0xff;
+	spBuf->sendBuff[3]=(infosize>>8)&0xff;
+	spBuf->sendBuff[4]=ACK_plantformconfig;
+	spBuf->sendBuff[5]=Status::getinstance()->ptzaddress&0xff;
+	spBuf->sendBuff[6]=Status::getinstance()->ptzprotocal&0xff;
+	spBuf->sendBuff[7]=Status::getinstance()->ptzbaudrate&0xff;
+	spBuf->sendBuff[8]=Status::getinstance()->ptzspeed&0xff;
+	
+	sumCheck=sendCheck_sum(infosize+3,spBuf->sendBuff+1);
+	
+	spBuf->sendBuff[infosize+4]=(sumCheck&0xff);
+	spBuf->byteSizeSend=infosize+5;
+	printf("%s\n",__func__);
+}
+
+void  CPortBase:: acksensorconfig(sendInfo * spBuf)
+{
+	u_int8_t sumCheck;
+	int infosize=13;
+	
+	spBuf->sendBuff[0]=0xEB;
+	spBuf->sendBuff[1]=0x51;
+	spBuf->sendBuff[2]=infosize&0xff;
+	spBuf->sendBuff[3]=(infosize>>8)&0xff;
+	spBuf->sendBuff[4]=ACK_sensorconfig;
+	
+	spBuf->sendBuff[5]=Status::getinstance()->brightness&0xff;
+	spBuf->sendBuff[6]=Status::getinstance()->contract&0xff;
+	spBuf->sendBuff[7]=Status::getinstance()->autobright&0xff;
+	spBuf->sendBuff[8]=Status::getinstance()->backandwrite&0xff;
+	
+	spBuf->sendBuff[5]=Status::getinstance()->correct&0xff;
+	spBuf->sendBuff[6]=Status::getinstance()->digitfilter&0xff;
+	spBuf->sendBuff[7]=Status::getinstance()->digitdenoise&0xff;
+	spBuf->sendBuff[8]=Status::getinstance()->mirror&0xff;
+	
+	spBuf->sendBuff[5]=Status::getinstance()->crossdisplay&0xff;
+	spBuf->sendBuff[6]=Status::getinstance()->crossx&0xff;
+	spBuf->sendBuff[7]=Status::getinstance()->crossy&0xff;
+	spBuf->sendBuff[8]=Status::getinstance()->save&0xff;
+	
+	sumCheck=sendCheck_sum(infosize+3,spBuf->sendBuff+1);
+	
+	spBuf->sendBuff[infosize+4]=(sumCheck&0xff);
+	spBuf->byteSizeSend=infosize+5;
+	printf("%s\n",__func__);
+}
+
+void  CPortBase:: ackrecordconfig(sendInfo * spBuf,int classid)
+{
+	u_int8_t sumCheck;
+	int infosize=23;
+	//int classid=0;
+	spBuf->sendBuff[0]=0xEB;
+	spBuf->sendBuff[1]=0x51;
+	spBuf->sendBuff[2]=infosize&0xff;
+	spBuf->sendBuff[3]=(infosize>>8)&0xff;
+	spBuf->sendBuff[4]=ACK_recordconfig;
+	spBuf->sendBuff[5]=classid&0xff;
+	
+	for(int k=0;k<7;k++)
+		{
+			spBuf->sendBuff[6+k*3+0]=0;
+			spBuf->sendBuff[6+k*3+1]=0;
+			for(int i=0;i<24;i++)
+				{
+					if(i<8)
+						spBuf->sendBuff[6+k*3+0]|=Status::getinstance()->recordpositionheld[classid][k][i]<<i;
+					else if(i<16)
+						spBuf->sendBuff[6+k*3+1]|=Status::getinstance()->recordpositionheld[classid][k][i]<<(i-8);
+					else if(i<24)
+						spBuf->sendBuff[6+k*3+2]|=Status::getinstance()->recordpositionheld[classid][k][i]<<(i-16);
+				}
+
+		}
+	
+	//spBuf->sendBuff[5]= (u_int8_t) (_globalDate->mainProStat[ACK_config_Rblock]&0xff);
+	sumCheck=sendCheck_sum(infosize+3,spBuf->sendBuff+1);
+	spBuf->sendBuff[infosize+4]=(sumCheck&0xff);
+	spBuf->byteSizeSend=infosize+5;
+	printf("%s\n",__func__);
+}
+
+void  CPortBase:: ackmvconfig(sendInfo * spBuf)
+{
+	u_int8_t sumCheck;
+	int infosize=14;
+	spBuf->sendBuff[0]=0xEB;
+	spBuf->sendBuff[1]=0x51;
+	spBuf->sendBuff[2]=infosize&0xff;
+	spBuf->sendBuff[3]=(infosize>>8)&0xff;
+	spBuf->sendBuff[4]=ACK_mvconfig;
+	spBuf->sendBuff[5]=Status::getinstance()->movedetectalgenable&0xff;
+	spBuf->sendBuff[6]=Status::getinstance()->sensitivity&0xff;
+	spBuf->sendBuff[7]=Status::getinstance()->speedpriority&0xff;
+	spBuf->sendBuff[8]=(Status::getinstance()->movmaxwidth>>8)&0xff;
+	spBuf->sendBuff[9]=Status::getinstance()->movmaxwidth&0xff;
+	spBuf->sendBuff[10]=(Status::getinstance()->movmaxheight>>8)&0xff;
+	spBuf->sendBuff[11]=Status::getinstance()->movmaxheight&0xff;
+	spBuf->sendBuff[12]=(Status::getinstance()->movminwidth>>8)&0xff;
+	spBuf->sendBuff[13]=Status::getinstance()->movminwidth&0xff;
+	spBuf->sendBuff[14]=(Status::getinstance()->movminheight>>8)&0xff;
+	spBuf->sendBuff[15]=Status::getinstance()->movminheight&0xff;
+	spBuf->sendBuff[16]=(Status::getinstance()->moverecordtime>>8)&0xff;
+	spBuf->sendBuff[17]=Status::getinstance()->moverecordtime&0xff;
+	
+	
+	sumCheck=sendCheck_sum(infosize+3,spBuf->sendBuff+1);
+	
+	spBuf->sendBuff[infosize+4]=(sumCheck&0xff);
+	spBuf->byteSizeSend=infosize+5;
+	printf("%s\n",__func__);
+}
+
+
+void  CPortBase:: ackpanoconfig(sendInfo * spBuf)
+{
+	u_int8_t sumCheck;
+	int infosize=8;
+	spBuf->sendBuff[0]=0xEB;
+	spBuf->sendBuff[1]=0x51;
+	spBuf->sendBuff[2]=infosize&0xff;
+	spBuf->sendBuff[3]=(infosize>>8)&0xff;
+	spBuf->sendBuff[4]=ACK_panoconfig;
+	spBuf->sendBuff[5]=Status::getinstance()->panoptzspeed&0xff;
+	spBuf->sendBuff[6]=(Status::getinstance()->panopiexfocus>>8)&0xff;
+	spBuf->sendBuff[7]=Status::getinstance()->panopiexfocus&0xff;
+	spBuf->sendBuff[8]=(Status::getinstance()->panopicturerate)&0xff;
+	
+	sumCheck=sendCheck_sum(infosize+3,spBuf->sendBuff+1);
+	
+	spBuf->sendBuff[infosize+4]=(sumCheck&0xff);
+	spBuf->byteSizeSend=infosize+5;
+	printf("%s\n",__func__);
+}
+
 u_int8_t CPortBase:: sendCheck_sum(uint len, u_int8_t *tmpbuf)
 {
 	u_int8_t  ckeSum=0;
@@ -1563,13 +1775,13 @@ unsigned char CPortBase::check_sum(int len_t)
 
 FILE *fp = NULL;
 FILE *fp2 = NULL;
-int current_len = 0;
-int current_len2 = 0;
+unsigned int current_len = 0;
+unsigned int current_len2 = 0;
 int CPortBase::upgradefw(unsigned char *swap_data_buf, unsigned int swap_data_len)
 {
 	int status;
 	int write_len;
-	int file_len;
+	unsigned int file_len;
 
 	int recv_len = swap_data_len-13;
 	unsigned char buf[8] = {0xEB,0x53,0x03,0x00,0x35,0x00,0x00,0x00};
@@ -1633,10 +1845,12 @@ int CPortBase::upgradefw(unsigned char *swap_data_buf, unsigned int swap_data_le
 	else
 	{
 		_globalDate->respupgradefw_stat= 0x00;
-		_globalDate->respupgradefw_perc = current_len*100/file_len;
+		_globalDate->respupgradefw_perc = (current_len*1.0/file_len)*100;
 		_globalDate->feedback=ACK_upgradefw;
 		OSA_semSignal(&_globalDate->m_semHndl_socket);
 	}
+
+	//printf("_globalDate->respupgradefw_perc=%d__%d__ %d\n",_globalDate->respupgradefw_perc,current_len,file_len);
 
 }
 int CPortBase::fw_update_runtar(void)

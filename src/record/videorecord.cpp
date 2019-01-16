@@ -5,7 +5,7 @@
 VideoRecord* VideoRecord::instance=NULL;
 #define SAVEDIR "/home/ubuntu/calib/video"
 VideoRecord::VideoRecord():timeenable(1),eventenable(0),tm_year(0),tm_mon(0),tm_mday(0),tm_hour(0),tm_min(0),tm_sec(0),videorecordfb(NULL),aviheadenable(1),
-timerdelayenable(0)
+timerdelayenable(0),callback(NULL)
 {
 
 
@@ -100,7 +100,8 @@ void VideoRecord::recordvideo(void *data,void* size)
 			return;
 		}
 	
-
+	if(instance->callback!=NULL)
+		instance->callback();
 	//printf("the  size=%d \n",videolen);
 
 	//return ;

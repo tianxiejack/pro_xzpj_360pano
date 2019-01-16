@@ -125,7 +125,7 @@ Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),
 	movviewx(0),movviewy(0),movvieww(0),movviewh(0),menumode(0),tailcut(0),radarinner(3.0),radaroutter(10),viewfov(90),viewfocus(10),
 	osdmenushow(0),osdmenushowpre(0),screenpiex(NULL),screenenable(1),recordscreen(0),zeroselect(0),poisitionreach(0),poisitionreachpan(0),
 	poisitionreachtitle(0),criticalmode(0),debuggl(0),recordtimer(60),singleenable(0),singleangle(0),siglecircle(0),timerclock(600),currentnum(0),
-	movareaflag(1),movupdown(0)
+	movareaflag(0),movupdown(0),movconfignum(0)
 	{
 		displayMode=SINGLE_VIDEO_VIEW_MODE;
 		
@@ -200,7 +200,7 @@ Render::Render():selectx(0),selecty(0),selectw(0),selecth(0),pano360texturew(0),
 		pthis=this;
 		OSA_mutexCreate(&renderlock);
 		OSA_mutexCreate(&modelock);
-
+		OSA_mutexCreate(&mvlock);
 		//memset(mvpanangle,0,strlen(mvpanangle));
 		//memset(mvtitleangle,0,strlen(mvtitleangle));
 		for(int i=0;i< mvdetectmaxangle;i++)
@@ -217,6 +217,7 @@ Render::~Render()
 	{
 		OSA_mutexDelete(&renderlock);
 		OSA_mutexDelete(&modelock);
+		OSA_mutexDelete(&mvlock);
 
 	}
 bool Render::LoadTGATexture(const char *szFileName, GLenum minFilter, GLenum magFilter, GLenum wrapMode)
@@ -281,6 +282,41 @@ void Render::screenshotinit()
 	screenpiexframe=Mat(renderheight,renderwidth,CV_8UC3,cv::Scalar(0));
 
 }
+
+void Render::configloadtoglobal()
+{
+	
+	Status::getinstance()->panopiexfocus=Config::getinstance()->getcamfx();
+	Status::getinstance()->panoptzspeed=Config::getinstance()->getptzspeed();
+
+	Status::getinstance()->ptzaddress=Config::getinstance()->getptzaddres();
+	Status::getinstance()->ptzprotocal=Config::getinstance()->getptzdp();
+	//Status::getinstance()->ptzbaudrate=
+	int board=Config::getinstance()->getptzbroad();
+	if(board==2400)
+		Status::getinstance()->ptzbaudrate=0;
+	else if(board==4800)
+		Status::getinstance()->ptzbaudrate=1;
+	else if(board==9600)
+		Status::getinstance()->ptzbaudrate=2;
+	else if(board==19200)
+		Status::getinstance()->ptzbaudrate=3;
+	Status::getinstance()->ptzspeed=Config::getinstance()->getptzspeed();
+
+
+	//Status::getinstance()->movmaxwidth=Config::getinstance()->getptzbroad();
+	//Status::getinstance()->movmaxheight=Status::getinstance()->movmaxwidth;
+	//Status::getinstance()->movminwidth=Config::getinstance()->getptzspeed();
+	//Status::getinstance()->movminheight=Status::getinstance()->movminwidth;
+
+
+	
+
+
+	
+	//int framerate=Status::getinstance()->panopicturerate;
+
+}
 void Render::SetupRC(int windowWidth, int windowHeight)
 {
 		// Blue background
@@ -323,11 +359,55 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 	screenshotinit();
 	createfile();
 	writefilehead();
+	
 	ConfigFile::getinstance()->detectload();
 	ConfigFile::getinstance()->getdetectdate(movarearect);
 
+	ConfigFile::getinstance()->recordload();
+	ConfigFile::getinstance()->getdataheldrecord(Status::getinstance()->recordpositionheld);
+
+	VideoRecord::getinstance()->setdataheldrecord(Status::getinstance()->recordpositionheld);
+	/*
+	int recordclass=0;
+		printf("the time\n");
+		for(int i=0;i<7;i++)
+			{
+				for(int j=0;j<24;j++)
+					{
+						if(j<8)
+							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);
+						else if(j<16)
+							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);
+						else if(j<24)
+							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);					
+					}
+				printf("\n");
+
+			}
+		recordclass=1;
+		printf("the mov\n");
+		for(int i=0;i<7;i++)
+			{
+				for(int j=0;j<24;j++)
+					{
+						if(j<8)
+							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);
+						else if(j<16)
+							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);
+						else if(j<24)
+							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);
+
+						
+					}
+				printf("\n");
+
+			}
+
+	*/
+
 	loadmvarea();
 	Fullscreen = true;
+	configloadtoglobal();
 	glutFullScreen();
 	registorfun();
 	//
@@ -353,13 +433,15 @@ void Render::ShutdownRC()
 
     // Produce the perspective projection
 	viewFrustum.SetPerspective(viewfov,fAspect,1.0,120.0);
-   	 projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+   	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
     	transformPipeline.SetMatrixStacks(modelViewMatrix, projectionMatrix);
+	
 }
 
  
 void Render::mouseButtonPress(int button, int state, int x, int y)
 {
+	
 	OSA_mutexLock(&renderlock);
 	printf(" mouse--> %i %i %i %i\n", button, state, x, y);
 	setMouseCor(x,y);
@@ -405,8 +487,10 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 			viewcameraprocess();
 			mousemovrect();
 		}
+	/*
 	if(Plantformpzt::getinstance()->getplantformcalibration())
 		Mousemenu();
+		*/
 	OSA_mutexUnlock(&renderlock);
 }
  void Render::specialkeyPressed (int key, int x, int y)
@@ -842,9 +926,13 @@ void Render::signalpanomod()
 	double angle=0;
 	bool enable=1;
 	if(getsingleenable())
+		{
+		OSA_mutexUnlock(&modelock);
 		return ;
+		}
 	if(getmenumode()==SELECTMODE)
 		{
+			setsingleenable(1);
 			setcriticalmode(1);
 			double zeroanglepan=getptzzeroangle()-1;
 			if(zeroanglepan<0)
@@ -857,6 +945,7 @@ void Render::signalpanomod()
 			
 			Plantformpzt::getinstance()->Enbalecallback(Plantformpzt::RENDERSIGNALPANO,zeroanglepan,zeroangletitle);
 			enable=0;
+			
 		} 
 /*
 	if(enable)
@@ -885,7 +974,7 @@ void Render::panomod()
 	bool enable=1;
 	
 	
-	if(getmenumode()==SELECTMODE)
+	if(getmenumode()==SELECTMODE||getmenumode()==SINGLEMODE)
 		{
 			setcriticalmode(1);
 			double zeroanglepan=getptzzeroangle()-1;
@@ -902,6 +991,7 @@ void Render::panomod()
 			//printf("panomod SELECTMODE\n");
 			
 		} 
+	
 	if(getmenumode()==SELECTZEROMODE)
 		{
 			setcriticalmode(1);
@@ -1742,12 +1832,13 @@ void Render::Drawmvconfig()
 	
 	//	return ;
 	//cout<<"************************"<<endl;
+	//vector<MovDetectAreaPoint> movdrawpointstemp=movdrawpoints;
+	OSA_mutexLock(&mvlock);
 	for(int i=0;i<movdrawpoints.size();i++)
 		{
 			OSDPoint point;
 			point.x=movdrawpoints[i].point.x;//*1.0/renderwidth;
 			point.y=movdrawpoints[i].point.y;//*1.0/renderheight;
-
 			//cout<<movdrawpoints[i].point<<endl;
 			mvconfigarea[0].push_back(point);
 		}
@@ -1765,14 +1856,34 @@ void Render::Drawmvconfig()
 			//Glosdhandle.drawrect(10,10,100,100);
 			Glosdhandle.drawend();
 		}
-
+	OSA_mutexUnlock(&mvlock);
 
 	Glosdhandle.setcolorline(GLBLUE);	
 	Glosdhandle.drawbegin();
 	Glosdhandle.setlinewidth(2);
+	;
+	/*
+	
+	if((movarearect[movconfignum].detectflag==1)&&)
+		{
+			mvconfigarea[movconfignum].clear();
+			for(int j=0;j<4;j++)
+			{
+				OSDPoint point;
+				point.x=movarearect[movconfignum].area[j].point.x;//*1.0/renderwidth;
+				point.y=movarearect[movconfignum].area[j].point.y;//*1.0/renderheight;
+				mvconfigarea[movconfignum].push_back(point);
+			}
+			Glosdhandle.drawloopsscreen(mvconfigarea[movconfignum]);
+			
+		}
+	
+	*/
+		
+	
 	for(int i=0;i<16;i++)
 		{
-			if(movarearect[i].detectflag==0)
+			if(movarearect[i].detectflag==0||movarearect[i].singleshowflag==0)
 				continue;
 			mvconfigarea[i].clear();
 			for(int j=0;j<4;j++)
@@ -1785,6 +1896,7 @@ void Render::Drawmvconfig()
 			Glosdhandle.drawloopsscreen(mvconfigarea[i]);
 
 		}
+		
 	Glosdhandle.drawend();
 
 }
@@ -2421,8 +2533,8 @@ void Render::Drawosd()
 		Drawmov();
 
 
-	
-	Drawmenu();
+	if(Status::getinstance()->calibration==0)
+		Drawmenu();
 	Drawlines();
 	Drawosdmenu();
 
@@ -3938,6 +4050,24 @@ int Render::mousemovrect()
 						}
 				}
 		}
+	
+	
+	if(MOUSEST==MOUSEPRESS&&BUTTON==MOUSERIGHT)
+		{
+			if(movdrawpoints.size()!=4)
+					return 0;
+				mvcontours[movconfignum].clear();
+				
+				for(int i=0;i<movdrawpoints.size();i++)
+					{
+						movarearect[movconfignum].area[i].point=movdrawpoints[i].point;
+						mvcontours[movconfignum].push_back(movarearect[movconfignum].area[i].point);
+					}
+					movarearect[movconfignum].detectflag=1;
+
+				ConfigFile::getinstance()->setdetectdate(movarearect);
+				ConfigFile::getinstance()->detectsave();
+		}
 }
 void Render::viewcameraprocess()
 {
@@ -4215,7 +4345,7 @@ void Render::MouseSelectpos()
 				mousetitleangle=mousetitleangle-360;
 			else if(mousetitleangle<0)
 				mousetitleangle=mousetitleangle+360;
-			//printf("the angle =%f \n",mouseangle);
+			printf("the angle =%f   zero tile=%f \n",mousetitleangle,getptzzerotitleangle());
 			setscanpanflag(0);
 			Plantformpzt::getinstance()->setpanopanpos(mouseangle);
 			Plantformpzt::getinstance()->setpanotitlepos(mousetitleangle);
@@ -5012,9 +5142,12 @@ void Render::callbackmvdetectgo(void *contex)
 
 
 void Render::recordconfig(long lparam)
-{
+{	
 	
 	RecordManager::getinstance()->setdataheldrecord(Status::getinstance()->recordpositionheld);
+
+	ConfigFile::getinstance()->setdataheldrecord(Status::getinstance()->recordpositionheld);
+	ConfigFile::getinstance()->recordsave();
 	//RecordManager::getinstance()->setdataheldrecord(NULL);
 
 }
@@ -5024,9 +5157,7 @@ void Render::detectconfig(long lparam)
 	
 	int detectareaenable=Status::getinstance()->detectareaenable;
 	int detectareanum=Status::getinstance()->detectareanum;
-
 	printf("%s:%d detectareaenable=%d detectareanum=%d\n",__func__,__LINE__,detectareaenable,detectareanum);
-
 	if(detectareaenable==2)
 		{
 			pthis->movarearect[detectareanum].detectflag=0;
@@ -5036,6 +5167,16 @@ void Render::detectconfig(long lparam)
 		}
 	else if(detectareaenable==1)
 		{
+			OSA_mutexLock(&pthis->mvlock);
+			pthis->movdrawpoints.clear();
+			OSA_mutexUnlock(&pthis->mvlock);
+			for(int i=0;i<16;i++)
+				{
+					pthis->movarearect[i].singleshowflag=0;
+				}
+			pthis->movarearect[detectareanum].singleshowflag=1;
+			pthis->movconfignum=detectareanum;
+			#if 0
 				if(pthis->movdrawpoints.size()!=4)
 					return ;
 				pthis->mvcontours[detectareanum].clear();
@@ -5049,10 +5190,7 @@ void Render::detectconfig(long lparam)
 
 				ConfigFile::getinstance()->setdetectdate(pthis->movarearect);
 				ConfigFile::getinstance()->detectsave();
-
-	
-
-			
+			#endif
 		}
 	
 

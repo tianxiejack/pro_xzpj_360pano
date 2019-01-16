@@ -101,6 +101,8 @@ public :
    
   }
 };
+
+typedef void (*Callbackvideorecord) ();
 class VideoRecord{
 	#define EVENTRECORD 2
 	#define WEEKRECORD 7
@@ -128,6 +130,11 @@ class VideoRecord{
 							recordpositionheld[i][j][k]=a[i][j][k];
 				
 			};
+		void registermanagercall(Callbackvideorecord call)
+					{
+						callback=call;
+
+					}
 	private:
 		void heldrecord();
 	private:
@@ -140,8 +147,12 @@ class VideoRecord{
 		int aviheadlen;
 		int aviheadenable;
 		static VideoRecord* instance;
+		
+		Callbackvideorecord callback;
 
-
+		
+		
+		
 		int recordpositionheld[EVENTRECORD][WEEKRECORD][HOURSRECORD];
 		
 

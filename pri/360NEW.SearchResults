@@ -1,5 +1,10 @@
----- panoconfigenable Matches (4 in 3 files) ----
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):	if((_globalDate->rcvBufQue.at(5))!=Status::getinstance()->panoconfigenable)
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):			Status::getinstance()->panoconfigenable=_globalDate->rcvBufQue.at(5);
-Status.cpp (z:\home\wj\cuda-workspace\360pano\src\status):	mvdetectresearch(0),usestepdetect(0),panoconfigenable(0)
-Status.hpp (z:\home\wj\cuda-workspace\360pano\src\status):	int panoconfigenable;
+---- detectflag Matches (9 in 3 files) ----
+Configfile.cpp (z:\home\wj\cuda-workspace\360pano\src\configfile):					sscanf(buffer,"%d:%d,%d:%d,%d:%d,%d:%d,%d:",&movarearect[id].detectflag,&movarearect[id].area[0].point.x,&movarearect[id].area[0].point.y,\
+Configfile.cpp (z:\home\wj\cuda-workspace\360pano\src\configfile):			sprintf(buffer,"%d:%d,%d:%d,%d:%d,%d:%d,%d:",movarearect[id].detectflag,movarearect[id].area[0].point.x,movarearect[id].area[0].point.y,\
+Configfile.hpp (z:\home\wj\cuda-workspace\360pano\src\configfile):	int  detectflag;
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):			if(movarearect[i].detectflag==0)
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):		//if(movarearect[i].detectflag==0)
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):			pthis->movarearect[detectareanum].detectflag=0;
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):					pthis->movarearect[i].detectflag=0;
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):			pthis->movarearect[detectareanum].detectflag=1;
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):					pthis->movarearect[detectareanum].detectflag=1;

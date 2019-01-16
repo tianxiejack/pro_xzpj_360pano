@@ -94,6 +94,12 @@ public:
     void paramtodef(sendInfo * spBuf);
 	void  recordquerry(sendInfo * spBuf);
 	int upgradefw(unsigned char *swap_data_buf, unsigned int swap_data_len);
+	void  ackplantformconfig(sendInfo * spBuf);
+	void  ackrecordconfig(sendInfo * spBuf);
+	void  ackmvconfig(sendInfo * spBuf);
+	void  ackpanoconfig(sendInfo * spBuf);
+	void  acksensorconfig(sendInfo * spBuf);
+	void  ackrecordconfig(sendInfo * spBuf,int classid);
 	int fw_update_runtar(void);
 	int update_startsh(void);
 	int update_fpga(void);
@@ -120,7 +126,8 @@ public:
     void displayconfig();
     void correcttimeconfig();
     void panoconfig();
-    
+    void querryconfig();
+    void  rebootconfig();
 
 protected:
     int prcRcvFrameBufQue(int method);

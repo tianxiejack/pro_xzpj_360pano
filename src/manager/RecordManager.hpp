@@ -11,6 +11,8 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <sys/statfs.h>
+#include <sys/vfs.h>
 using namespace std;
 
 typedef struct {
@@ -43,7 +45,7 @@ public:
 	int enableplay;
 public:
 	void create();
-	
+	typedef  struct statfs DISK,*pDISK;
 	void enableplayer(int enable){enableplay=enable;};
 	int getableplayer(){return enableplay;};
 	
@@ -56,9 +58,20 @@ public:
 	 bool endsWith(const std::string& str, const std::string& substr);
 	static void recordplaycallback(void *arg);
 	void setplayertimer(unsigned int timer);
+	int getDiskInfo(pDISK diskInfo,const char *path);
+	int calDiskInfo(int *diskTotal,int *diskAvail,int *diskFree,pDISK diskInfo);
+	static void ringrecord();
 
 	void setdataheldrecord(int a[2][7][24]);
-		
+
+	string recordnameerase;
+	string recordavierase;
+	string recorddirerase;
+	
+private:
+	 DISK diskInfo;
+	 Recordmantime earlyestdata_;
+	 int earlyestnum;
 
 private:
 	RecordManager();

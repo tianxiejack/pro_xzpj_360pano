@@ -918,14 +918,16 @@ void Plantformpzt::setpanotitlepos(double value)
 
 	if(Config::getinstance()->getptztitleinverse())
 		{
-			value=-value;
+			;//value=-value;
 		}
 	if(value>360)
 		value=value-360;
 	if(value<0)
 		value=value+360;
 
-//printf("******%s******value=%f*****************\n",__func__,value);
+	
+      printf("******%s******value=%f*****************\n",__func__,value);
+	
 	if(getplantformcalibration()==0)
 		return ;
 	unsigned short panvalue=value*100;
@@ -995,7 +997,7 @@ void Plantformpzt::setpanotitleforever(double value)
 	if(value<0)
 		value=value+360;
 
-
+	printf("******%s******value=%f*****************\n",__func__,value);
 	if(getplantformcalibration()==0)
 		return ;
 	

@@ -208,6 +208,7 @@ public:
 	int debuggl;
 	OSA_MutexHndl renderlock;
 	OSA_MutexHndl modelock;
+	OSA_MutexHndl mvlock;
 	Mat viewWarningarea[MAXCAMER];
 	unsigned char *viewWarningdata[MAXCAMER];
 	void viewcameraprocess();
@@ -224,6 +225,7 @@ public:
 	/**************mov config**************************/
 	int movareaflag;
 	int movupdown;
+	int movconfignum;
 	vector<MovDetectAreaPoint> movdrawpoints;
 	
 	//vector<MovDetectAreaRect> movarearect;
@@ -603,6 +605,8 @@ public:
 	static void panoconfig(long lparam);
 
 	static void nvconfigenable(long lparam);
+
+	void configloadtoglobal();
 	
 };
 

@@ -128,7 +128,8 @@ public:
 	int storesavenum;
 
 	int storesavemod;
-
+	/******jiaozhun*******/
+	int calibration;
 	/******player*******/
 	int playercontrl;
 	/******player select*******/
@@ -159,17 +160,18 @@ public:
 	unsigned char contract;
 	unsigned char autobright;
 	unsigned char backandwrite;
+	
 	unsigned char correct;
 	unsigned char digitfilter;
 	unsigned char digitdenoise;
 	unsigned char mirror;
+	
 	unsigned char crossdisplay;
 	unsigned int crossx;
 	unsigned int crossy;
-
 	unsigned int save;
 
-
+	
 	/******zero config*******/
 
 	unsigned char zeromod;
@@ -223,7 +225,9 @@ public:
 	int movdetectenable;
 	int panodetectenable;
 
-	
+	/***********************/
+
+	int querryconfig;
 
 	/***********************/
 	int mvdetectresearch;

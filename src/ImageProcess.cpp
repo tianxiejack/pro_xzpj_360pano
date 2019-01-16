@@ -14,6 +14,7 @@
 #include"StichAlg.hpp"
 #include"DetectAlg.hpp"
 #include"Status.hpp"
+
 #define IMAGEQUEUESIZE 4
 #define IMAGCAPEQUEUESIZE 2
 #define IMAGEQUEUEWIDTH 1920
@@ -165,7 +166,7 @@ void ImageProcess::CaptureThreadProcess(Mat src,OSA_BufInfo* frameinfo)
 	
 	int queueid=0;
 	Plantformpzt::getinstance()->setplantformcalibration(frameinfo->calibration);
-	
+	Status::getinstance()->calibration=frameinfo->calibration;
 #if 0
 	int frameid=getImagePinpang();
 	int preframeid=getImagePrePinpang();

@@ -326,6 +326,8 @@ typedef enum{
 	ACK_displayconfig,
 	ACK_correcttimeconfig,
 	ACK_panoconfig,
+	ACK_recordconfigmv,
+	
 	ACK_MAX,
 }ACK_Host_CtrlInput;
 

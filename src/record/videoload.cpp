@@ -6,6 +6,8 @@ VideoLoad* VideoLoad::instance=NULL;
 #define DIRRECTDIR  "/home/ubuntu/calib/video/"
 
 #define OPENCVAVI (1)
+
+#define RTSPURL (1)
 VideoLoad::VideoLoad():callfun(NULL),readnewfile(0),readname("1.xml"),readavi("1.avi"),readdir(DIRRECTDIR)
 {
 
@@ -173,11 +175,123 @@ void VideoLoad::uninitgstreamer()
       gst_object_unref (pipeline);
 
 }
+//static int eos = 0;
+void VideoLoad::appsink_eos(GstAppSink * appsink, gpointer user_data)
+{
+    printf("app sink receive eos\n");
+   // eos = 1;
+//    g_main_loop_quit (hpipe->loop);
+}
+
+GstFlowReturn VideoLoad::new_buffer(GstAppSink *appsink, gpointer user_data)
+{
+    GstSample *sample = NULL;
+    cv::Mat show;
+	cv::Mat showrgb;
+    g_signal_emit_by_name (appsink, "pull-sample", &sample,NULL);
+	VideoLoadData loaddata;
+  //  printf("****************************\n");
+    if (sample)
+    {
+        GstBuffer *buffer = NULL;
+        GstCaps   *caps   = NULL;
+        GstMapInfo map    = {0};
+
+        caps = gst_sample_get_caps (sample);
+        if (!caps)
+        {
+            printf("could not get snapshot format\n");
+        }
+        gst_caps_get_structure (caps, 0);
+        buffer = gst_sample_get_buffer (sample);
+        gst_buffer_map (buffer, &map, GST_MAP_READ);
+        memcpy(instance->rtspdata,map.data,map.size);
+		
+        printf("map.size = %lu\n", map.size);
+        //cv::Mat frame_in(1920, 1080, CV_8UC3);
+        
+        show = Mat(1080, 1920, CV_8UC2, instance->rtspdata);
+	 showrgb = Mat(1080, 1920, CV_8UC3, instance->rtspdatargb);
+        cvtColor(show,showrgb,cv::COLOR_YUV420p2RGB);
+	//rtspdatelen=map.size;
+      	if(instance->callfun!=NULL)
+	{
+		if(RTSPURL)
+		instance->callfun(instance->rtspdatargb,&loaddata);
+	}
+
+        gst_buffer_unmap(buffer, &map);
+
+        gst_sample_unref (sample);
+    }
+    else
+    {
+        g_print ("could not make snapshot\n");
+    }
+
+    return GST_FLOW_OK;
+}
+
+
+void VideoLoad::initgstreamerrtsp()
+{
+	GMainLoop *main_loop;
+    main_loop = g_main_loop_new (NULL, FALSE);
+    ostringstream launch_stream;
+    int w = 1920;
+    int h = 1080;
+    rtspdata=(unsigned char *)malloc(w*h*3);
+    rtspdatargb=(unsigned char *)malloc(w*h*3);
+    GstAppSinkCallbacks callbacks = {appsink_eos, NULL, new_buffer};
+
+    launch_stream
+//    << "nvcamerasrc ! "
+//    << "video/x-raw(memory:NVMM), width="<< w <<", height="<< h <<", framerate=30/1 ! " 
+    << "rtspsrc location=rtsp://192.168.1.188:8554/test.264 latency=0 ! "
+    //<< "filesrc 1.avi ! decodebin ! "
+    << "decodebin ! "
+    << "nvvidconv ! "
+    << "video/x-raw, format=I420, width="<< w <<", height="<< h <<" ! "
+   // <<" videoconvert  ! "
+  //  <<"video/x-raw, format=(string)BGR !"
+    << "appsink name=mysink ";
+
+    launch_string = launch_stream.str();
+
+    g_print("Using launch string: %s\n", launch_string.c_str());
+
+    GError *error = NULL;
+    gst_pipeline  = (GstPipeline*) gst_parse_launch(launch_string.c_str(), &error);
+
+    if (gst_pipeline == NULL) {
+        g_print( "Failed to parse launch: %s\n", error->message);
+        return ;
+    }
+    if(error) g_error_free(error);
+
+    GstElement *appsink_ = gst_bin_get_by_name(GST_BIN(gst_pipeline), "mysink");
+    gst_app_sink_set_callbacks (GST_APP_SINK(appsink_), &callbacks, NULL, NULL);
+
+    gst_element_set_state((GstElement*)gst_pipeline, GST_STATE_PLAYING); 
+
+  
+    //sleep(90);
+    //g_main_loop_run (main_loop);
+/*
+    gst_element_set_state((GstElement*)gst_pipeline, GST_STATE_NULL);
+    gst_object_unref(GST_OBJECT(gst_pipeline));
+    g_main_loop_unref(main_loop);
+*/
+    //g_print("going to exit, decode %d frames in %d seconds \n", frame_count, sleep_count);
+
+
+}
 void VideoLoad::create()
 {
 	record=Mat(1080,1920,CV_8UC3,cv::Scalar(0));
 	MAIN_threadRecvCreate();
 	OSA_semCreate(&loadsem,1,0);
+	initgstreamerrtsp();
 	//initgstreamer();
 
 }
@@ -304,7 +418,7 @@ void VideoLoad::main_Recv_func()
 		//printf("********%s end******\n",__func__);
 		if(callfun!=NULL)
 			{
-
+				if(RTSPURL==0)
 				callfun(fileframe.data,&loaddata);
 			}
 		if(OPENCVAVI)

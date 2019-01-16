@@ -367,6 +367,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 	ConfigFile::getinstance()->getdataheldrecord(Status::getinstance()->recordpositionheld);
 
 	VideoRecord::getinstance()->setdataheldrecord(Status::getinstance()->recordpositionheld);
+	
 	/*
 	int recordclass=0;
 		printf("the time\n");

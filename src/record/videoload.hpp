@@ -18,6 +18,8 @@
 #include <string>
 #include <gst/gst.h>
 #include <gst/app/gstappsink.h>
+#include <gst/gstinfo.h>
+#include <gst/app/gstappsink.h>
 using namespace std;
 typedef struct {
 	bool bTrack;
@@ -227,6 +229,19 @@ class VideoLoad{
 		string getreadavi(){return readavi;};
 	public:
 		void initvideo();
+		static GstFlowReturn new_buffer(GstAppSink *appsink, gpointer user_data);
+		static void appsink_eos(GstAppSink * appsink, gpointer user_data);
+	public:
+		void initgstreamerrtsp();
+	private:
+		 GstPipeline *gst_pipeline = NULL;
+		 string launch_string;
+		 int frame_count = 0;
+		 int sleep_count = 0;
+		 unsigned char *rtspdata=NULL;
+		 unsigned char *rtspdatargb=NULL;
+		 int rtspdatelen=0;
+		
 	public:
 		//MyTDataLoad mydata;
 		MAIN_VideoLoadCaptureThrObj	mainRecvThrObj;

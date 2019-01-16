@@ -535,6 +535,7 @@ void CPortBase::recordconfig()
 
  void  CPortBase::rebootconfig()
  	{
+ 		printf("%s\n",__func__);
  		char cmdBuf[128];
 		sprintf(cmdBuf, "reboot");
 		system(cmdBuf);
@@ -992,11 +993,6 @@ int CPortBase::prcRcvFrameBufQue(int method)
 		case 0x88:
 			panoconfig();
 			break;
-			/*
-		case 0x88:
-			panoconfig();
-			break;
-			*/
 		case 0x8a:
 			rebootconfig();
 			break;

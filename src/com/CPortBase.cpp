@@ -736,8 +736,10 @@ void CPortBase::plantctl()
 			Status::getinstance()->ptztitlespeed=_globalDate->rcvBufQue.at(8);
 			change=1;
 		}
+	/*
 	OSA_printf("pandirction=%d  titledirection=%d panspeed=%d titlespeed=%d\n",Status::getinstance()->ptzpanodirection,Status::getinstance()->ptztitledirection,Status::getinstance()->ptzpanspeed,
 		Status::getinstance()->ptztitlespeed);
+		*/
 	if(change)
 		{
 			if(mod==0&&mod1==0)

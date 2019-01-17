@@ -482,6 +482,8 @@ void Render::mouseButtonPress(int button, int state, int x, int y)
 	if(getmenumode()==SELECTZEROMODE)
 		Mousezeropos();
 	//else if(getmenumode()==PANOMODE)
+	//if(getsingleenable()&&getmenumode()==SELECTMODE)
+
 		Mouse2Select();
 	if(getmenumode()==PANOMODE)
 		{
@@ -2030,7 +2032,7 @@ void Render::Drawlines()
 	Glosdhandle.drawbegin();
 
 
-	if(getmenumode()==SELECTMODE)
+	if(getmenumode()==SELECTMODE&&getsingleenable()==0)
 		Glosdhandle.drawrect(selectx,selecty,selectw,selecth);
 	/*
 	if(getmenumode()==PANOMODE)
@@ -4306,6 +4308,12 @@ void Render::MouseSelectpos()
 			selectw=rect.width;
 			selecth=rect.height;
 		}
+
+	if(getsingleenable())
+		{
+			return;
+
+		}
 	
 	if(MOUSEST==MOUSEUP&&BUTTON==MOUSELEFT)
 		{
@@ -4853,11 +4861,12 @@ void Render::workmod(long lParam)
 	
 	if(lParam==Status::PANOAUTO)
 		{
+			pthis->setsingleenable(0);
 			pthis->panomod();
 		}
 	else if(lParam==Status::PANOPTZ)
 		{
-			
+			pthis->setsingleenable(0);
 			pthis->signalmod();
 		}	
 	else if(lParam==Status::PANOSELECT)

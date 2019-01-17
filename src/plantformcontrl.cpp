@@ -1220,8 +1220,10 @@ void Plantformpzt::registorfun()
 
 void Plantformpzt::ptzcontrl(long lParam)
 {
+/*
 	printf("*******%s*****lParam=%d**ptzpanspeed=%d  ptzpanodirection=%d ptztitledirection=%d ptztitlespeed=%d\n",__func__,lParam,Status::getinstance()->ptzpanspeed,Status::getinstance()->ptzpanodirection,
 		Status::getinstance()->ptztitledirection,Status::getinstance()->ptztitlespeed);
+		*/
 	if(lParam==Status::PTZPANOMOV||lParam==Status::PTZTWOMOV)
 		{
 			if(Status::getinstance()->ptzpanodirection==0)
@@ -1234,7 +1236,7 @@ void Plantformpzt::ptzcontrl(long lParam)
 			OSA_mutexLock(&instance->lock);
 			instance->Uart.UartSend(instance->fd,( unsigned char *) &instance->PELCO_D, SENDLEN);
 			OSA_mutexUnlock(&instance->lock);
-			OSA_waitMsecs(10);
+			OSA_waitMsecs(50);
 		}
 	if(lParam==Status::PTZTITLEMOV||lParam==Status::PTZTWOMOV)
 		{

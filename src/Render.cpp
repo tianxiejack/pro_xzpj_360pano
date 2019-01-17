@@ -4830,6 +4830,7 @@ void Render::displaymod(long lParam)
 			Config::getinstance()->setcamsource(0);
 			RecordManager::getinstance()->enableplayer(0);
 			VideoRecord::getinstance()->seteventrecordenable(1);
+			VideoRecord::getinstance()->setforceclose(0);
 		
 		}
 	else if(lParam==Status::PLAYCALLBACK)
@@ -4838,6 +4839,7 @@ void Render::displaymod(long lParam)
 			//RecordManager::getinstance()->enableplayer(1);
 			VideoRecord::getinstance()->seteventrecordenable(0);
 			VideoRecord::getinstance()->settimerecordenable(0);
+			VideoRecord::getinstance()->setforceclose(1);
 			
 		}
 
@@ -5207,6 +5209,7 @@ void Render::correcttimeconfig(long lparam)
 	int min=Status::getinstance()->correctmin;
 	int sec=Status::getinstance()->correctsec;
 
+	VideoRecord::getinstance()->setforcecloseonece(0);
 	sprintf(pthis->correcttimebuff,"date -s \"%d-%d-%d %d:%d:%d\"",year,mon,day,hour,min,sec);
 	system(pthis->correcttimebuff);
 	sprintf(pthis->correcttimebuff,"hwclock --systohc");

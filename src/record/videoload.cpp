@@ -7,7 +7,7 @@ VideoLoad* VideoLoad::instance=NULL;
 
 #define OPENCVAVI (1)
 
-#define RTSPURL (1)
+#define RTSPURL (0)
 VideoLoad::VideoLoad():callfun(NULL),readnewfile(0),readname("1.xml"),readavi("1.avi"),readdir(DIRRECTDIR)
 {
 
@@ -204,9 +204,9 @@ void NV212BGR( unsigned char *imgY, unsigned char *imgDst,int width, int height 
 	{
 		for ( w = 0; w < width; w +=2 )
 		{
-			v1 = *pUV-128;
-			pUV++;
 			u1 = *pUV-128;
+			pUV++;
+			v1 = *pUV-128;
 			pUV++;
  
 			
@@ -305,7 +305,77 @@ GstFlowReturn VideoLoad::new_buffer(GstAppSink *appsink, gpointer user_data)
     return GST_FLOW_OK;
 }
 
+void VideoLoad::initgstreamerfile()
+{
+    GMainLoop *main_loop;
+    main_loop = g_main_loop_new (NULL, FALSE);
+    ostringstream launch_stream;
+    int w = 1920;
+    int h = 1080;
+    rtspdata=(unsigned char *)malloc(w*h*3);
+    rtspdatargb=(unsigned char *)malloc(w*h*3);
+    GstAppSinkCallbacks callbacks = {appsink_eos, NULL, new_buffer};
 
+    launch_stream
+	//<< "nvcamerasrc ! "
+	//<< "video/x-raw(memory:NVMM), width="<< w <<", height="<< h <<", framerate=30/1 ! " 
+    <<"filesrc  location=/home/ubuntu/calib/video/1.avi !"
+   // << "rtspsrc location=rtsp://192.168.1.188:8554/test.264 latency=0 ! "
+    //<< "filesrc 1.avi ! decodebin ! "
+    << "avidemux name=demux !"
+    <<" queue !"
+    <<"h264parse !"
+    <<"omxh264dec !"
+    << "videoconvert !"
+    <<"video/x-raw, format=(string)NV12 ! "
+   // <<"video/x-raw, format=(string)RGB !"
+  //  << "video/x-raw, format=NV12, width="<< w <<", height="<< h <<" ! "
+  // <<"video/x-raw, format=NV12 !"
+   // <<" videoconvert  ! "
+  
+   // <<"video/x-raw, format=(string)NV12 !"
+    << "appsink name=mysink ";
+
+/*
+	 descr =
+             //g_strdup_printf ("filesrc location=%s ! qtdemux name=demux ! queue ! h264parse ! omxh264dec ! videoconvert ! appsink name=sink sync=false "
+    		  g_strdup_printf ("filesrc  location=/home/ubuntu/calib/video/1.avi ! avidemux name=demux ! queue ! h264parse ! omxh264dec ! videoconvert  ! video/x-raw, format=(string)BGR !  appsink name=sink sync=false "
+    		//  g_strdup_printf ("appsrc name=source ! avidemux name=demux ! queue ! h264parse ! omxh264dec ! videoconvert ! 'video/x-raw, format=RGB' ! appsink name=sink sync=false "
+    	  );
+    	  */
+//
+   //   pipeline = gst_parse_launch (descr, &error);
+
+    launch_string = launch_stream.str();
+
+    g_print("Using launch string: %s\n", launch_string.c_str());
+
+    GError *error = NULL;
+    gst_pipeline  = (GstPipeline*) gst_parse_launch(launch_string.c_str(), &error);
+
+    if (gst_pipeline == NULL) {
+        g_print( "Failed to parse launch: %s\n", error->message);
+        return ;
+    }
+    if(error) g_error_free(error);
+
+    GstElement *appsink_ = gst_bin_get_by_name(GST_BIN(gst_pipeline), "mysink");
+    gst_app_sink_set_callbacks (GST_APP_SINK(appsink_), &callbacks, NULL, NULL);
+
+    gst_element_set_state((GstElement*)gst_pipeline, GST_STATE_PLAYING); 
+
+  
+    //sleep(90);
+    //g_main_loop_run (main_loop);
+/*
+    gst_element_set_state((GstElement*)gst_pipeline, GST_STATE_NULL);
+    gst_object_unref(GST_OBJECT(gst_pipeline));
+    g_main_loop_unref(main_loop);
+*/
+    //g_print("going to exit, decode %d frames in %d seconds \n", frame_count, sleep_count);
+
+
+}
 void VideoLoad::initgstreamerrtsp()
 {
 	GMainLoop *main_loop;
@@ -318,8 +388,8 @@ void VideoLoad::initgstreamerrtsp()
     GstAppSinkCallbacks callbacks = {appsink_eos, NULL, new_buffer};
 
     launch_stream
-//    << "nvcamerasrc ! "
-//    << "video/x-raw(memory:NVMM), width="<< w <<", height="<< h <<", framerate=30/1 ! " 
+	//<< "nvcamerasrc ! "
+	//<< "video/x-raw(memory:NVMM), width="<< w <<", height="<< h <<", framerate=30/1 ! " 
     <<"rtspsrc location=rtsp://admin:abc12345@192.168.1.26:554/h264/ch0/main/av_stream latency=0 !"
    // << "rtspsrc location=rtsp://192.168.1.188:8554/test.264 latency=0 ! "
     //<< "filesrc 1.avi ! decodebin ! "
@@ -369,7 +439,8 @@ void VideoLoad::create()
 	MAIN_threadRecvCreate();
 	MAIN_threadRecvCreatedata();
 	OSA_semCreate(&loadsem,1,0);
-	initgstreamerrtsp();
+	//initgstreamerrtsp();
+	//initgstreamerfile();
 	//initgstreamer();
 
 }
@@ -420,6 +491,7 @@ void VideoLoad::main_Recv_func()
 	
 	while(mainRecvThrObj.exitProcThread ==  false)
 	{	
+		
 		int capangle=0;
 		//OSA_waitMsecs(30);
 		OSA_semWait(&loadsem,OSA_TIMEOUT_FOREVER);
@@ -435,6 +507,7 @@ void VideoLoad::main_Recv_func()
 				videocapture.release();
 				else
 				uninitgstreamer();
+				
 				mydata.close();
 				if(OPENCVAVI)
 				videocapture.open(aviname);

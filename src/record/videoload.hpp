@@ -233,6 +233,7 @@ class VideoLoad{
 		static void appsink_eos(GstAppSink * appsink, gpointer user_data);
 	public:
 		void initgstreamerrtsp();
+		void initgstreamerfile();
 	private:
 		 GstPipeline *gst_pipeline = NULL;
 		 string launch_string;

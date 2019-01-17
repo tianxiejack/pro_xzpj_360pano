@@ -119,6 +119,13 @@ class VideoRecord{
 
 		int getrecordflag(){return timeenable||eventenable;};
 
+		int getforceclose(){return forceclose_;};
+		void setforceclose(int flag){forceclose_=flag;};
+
+		int getforcecloseonece(){return forcecloseonece_;};
+		
+		void setforcecloseonece(int flag){forcecloseonece_=flag;};
+
 		void setmovtimedelay(int enable){timerdelayenable=enable;};
 		int getmovtimedelay(){return timerdelayenable;};
 
@@ -141,6 +148,8 @@ class VideoRecord{
 		int timerdelayenable;
 		int timeenable;
 		int eventenable;
+		int forceclose_;
+		int forcecloseonece_;
 		VideoRecord();
 		~VideoRecord();
 		char avihead[1000];

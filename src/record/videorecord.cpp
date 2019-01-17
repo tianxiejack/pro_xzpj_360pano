@@ -5,7 +5,7 @@
 VideoRecord* VideoRecord::instance=NULL;
 #define SAVEDIR "/home/ubuntu/calib/video"
 VideoRecord::VideoRecord():timeenable(1),eventenable(0),tm_year(0),tm_mon(0),tm_mday(0),tm_hour(0),tm_min(0),tm_sec(0),videorecordfb(NULL),aviheadenable(1),
-timerdelayenable(0),callback(NULL)
+timerdelayenable(0),callback(NULL),forceclose_(0),forcecloseonece_(0)
 {
 
 
@@ -115,21 +115,23 @@ void VideoRecord::recordvideo(void *data,void* size)
 	//printf("instance->getrecordflag()=%d\n",instance->getrecordflag());
 
 	instance->heldrecord();
-	if(instance->getrecordflag()==0)
+	if(instance->getrecordflag()==0||instance->getforceclose()||instance->getforcecloseonece())
 		{
+			//setforceclose(0);
+			instance->setforcecloseonece(0);
 			if((instance->videorecordfb!=NULL))
 				{
+					
 					sprintf(filenamestart, "%s/local_%04d%02d%02d-%02d%02d%02d.avi", 
 						SAVEDIR, 
 						instance->tm_year, instance->tm_mon, instance->tm_mday,
 					      instance->tm_hour, instance->tm_min,instance->tm_sec);
+					
 					sprintf(filedatanamestart, "%s/local_%04d%02d%02d-%02d%02d%02d.xml", 
 						SAVEDIR, 
 						instance->tm_year, instance->tm_mon, instance->tm_mday,
 						instance->tm_hour, instance->tm_min,instance->tm_sec);
-
-					
-					
+				
 					sprintf(filename, "%s/record_%04d%02d%02d-%02d%02d%02d_%04d%02d%02d-%02d%02d%02d.avi", 
 					SAVEDIR, 
 					instance->tm_year, instance->tm_mon, instance->tm_mday,
@@ -153,6 +155,10 @@ void VideoRecord::recordvideo(void *data,void* size)
 
 				}
 			return ;
+		}
+	else {
+			if(instance->getforcecloseonece())
+				instance->setforcecloseonece(0);
 		}
 		if((instance->videorecordfb == NULL)&&(videolen==8))
 		{

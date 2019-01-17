@@ -20,7 +20,12 @@ void Queue::create()
 		image_queue_create(&bufQue[FROMEPANOSTICH][chId], PROCESSQUEUENUM,
 				Config::getinstance()->getcamwidth()*Config::getinstance()->getcamheight()*Config::getinstance()->getcamchannel(),
 				memtype_normal);
-
+	
+	for(int chId=0; chId<IMAGEQUEUE; chId++)
+		image_queue_create(&bufQue[VIDEOLOADRTSP][chId], 2,
+				Config::getinstance()->getcamwidth()*Config::getinstance()->getcamheight()*Config::getinstance()->getcamchannel(),
+				memtype_malloc);
+	
 	for(int chId=0; chId<IMAGEQUEUE; chId++)
 		image_queue_create(&bufQue[DISPALYTORTP][chId], 3,
 				Config::getinstance()->getdiswidth()*Config::getinstance()->getdisheight()*Config::getinstance()->getdischannel(),

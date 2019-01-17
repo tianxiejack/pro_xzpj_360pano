@@ -264,6 +264,26 @@ class VideoLoad{
 		}
 
 
+		MAIN_VideoLoadCaptureThrObj	mainRecvThrObjdata;
+		void main_Recv_funcdata();
+		int MAIN_threadRecvCreatedata(void);
+		int MAIN_threadRecvDestroydata(void);
+		static void *mainRecvTskdata(void *context)
+		{
+			MAIN_VideoLoadCaptureThrObj  * pObj= (MAIN_VideoLoadCaptureThrObj*) context;
+			if(pObj==NULL)
+				{
+
+				printf("++++++++++++++++++++++++++\n");
+
+				}
+			VideoLoad *ctxHdl = (VideoLoad *) pObj->pParent;
+			ctxHdl->main_Recv_funcdata();
+			
+			return NULL;
+		}
+
+
 
 };
 

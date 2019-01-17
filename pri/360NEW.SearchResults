@@ -1,51 +1,7 @@
----- recordpositionheld Matches (86 in 7 files) ----
-Configfile.cpp (z:\home\wj\cuda-workspace\360pano\src\configfile):						&recordpositionheld[classid][weekid][0],&recordpositionheld[classid][weekid][1],&recordpositionheld[classid][weekid][2],&recordpositionheld[classid][weekid][3],\
-Configfile.cpp (z:\home\wj\cuda-workspace\360pano\src\configfile):						&recordpositionheld[classid][weekid][4],&recordpositionheld[classid][weekid][5],&recordpositionheld[classid][weekid][6],&recordpositionheld[classid][weekid][7],\
-Configfile.cpp (z:\home\wj\cuda-workspace\360pano\src\configfile):						&recordpositionheld[classid][weekid][8],&recordpositionheld[classid][weekid][9],&recordpositionheld[classid][weekid][10],&recordpositionheld[classid][weekid][11],\
-Configfile.cpp (z:\home\wj\cuda-workspace\360pano\src\configfile):						&recordpositionheld[classid][weekid][12],&recordpositionheld[classid][weekid][13],&recordpositionheld[classid][weekid][14],&recordpositionheld[classid][weekid][15],\
-Configfile.cpp (z:\home\wj\cuda-workspace\360pano\src\configfile):						&recordpositionheld[classid][weekid][16],&recordpositionheld[classid][weekid][17],&recordpositionheld[classid][weekid][18],&recordpositionheld[classid][weekid][19],\
-Configfile.cpp (z:\home\wj\cuda-workspace\360pano\src\configfile):						&recordpositionheld[classid][weekid][20],&recordpositionheld[classid][weekid][21],&recordpositionheld[classid][weekid][22],&recordpositionheld[classid][weekid][23]\
-Configfile.cpp (z:\home\wj\cuda-workspace\360pano\src\configfile):							printf("%d \t",recordpositionheld[recordclass][i][j]);
-Configfile.cpp (z:\home\wj\cuda-workspace\360pano\src\configfile):							printf("%d \t",recordpositionheld[recordclass][i][j]);
-Configfile.cpp (z:\home\wj\cuda-workspace\360pano\src\configfile):							printf("%d \t",recordpositionheld[recordclass][i][j]);					
-Configfile.cpp (z:\home\wj\cuda-workspace\360pano\src\configfile):							printf("%d \t",recordpositionheld[recordclass][i][j]);
-Configfile.cpp (z:\home\wj\cuda-workspace\360pano\src\configfile):							printf("%d \t",recordpositionheld[recordclass][i][j]);
-Configfile.cpp (z:\home\wj\cuda-workspace\360pano\src\configfile):							printf("%d \t",recordpositionheld[recordclass][i][j]);
-Configfile.cpp (z:\home\wj\cuda-workspace\360pano\src\configfile):								recordpositionheld[classid][weekid][0],recordpositionheld[classid][weekid][1],recordpositionheld[classid][weekid][2],recordpositionheld[classid][weekid][3],\
-Configfile.cpp (z:\home\wj\cuda-workspace\360pano\src\configfile):								recordpositionheld[classid][weekid][4],recordpositionheld[classid][weekid][5],recordpositionheld[classid][weekid][6],recordpositionheld[classid][weekid][7],\
-Configfile.cpp (z:\home\wj\cuda-workspace\360pano\src\configfile):								recordpositionheld[classid][weekid][8],recordpositionheld[classid][weekid][9],recordpositionheld[classid][weekid][10],recordpositionheld[classid][weekid][11],\
-Configfile.cpp (z:\home\wj\cuda-workspace\360pano\src\configfile):								recordpositionheld[classid][weekid][12],recordpositionheld[classid][weekid][13],recordpositionheld[classid][weekid][14],recordpositionheld[classid][weekid][15],\
-Configfile.cpp (z:\home\wj\cuda-workspace\360pano\src\configfile):								recordpositionheld[classid][weekid][16],recordpositionheld[classid][weekid][17],recordpositionheld[classid][weekid][18],recordpositionheld[classid][weekid][19],\
-Configfile.cpp (z:\home\wj\cuda-workspace\360pano\src\configfile):								recordpositionheld[classid][weekid][20],recordpositionheld[classid][weekid][21],recordpositionheld[classid][weekid][22],recordpositionheld[classid][weekid][23]\
-Configfile.hpp (z:\home\wj\cuda-workspace\360pano\src\configfile):	int recordpositionheld[2][7][24];
-Configfile.hpp (z:\home\wj\cuda-workspace\360pano\src\configfile):							recordpositionheld[i][j][k]=a[i][j][k];
-Configfile.hpp (z:\home\wj\cuda-workspace\360pano\src\configfile):							a[i][j][k]=recordpositionheld[i][j][k] ;
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):							Status::getinstance()->recordpositionheld[recordclass][i][bitnum-1-j]=(_globalDate->rcvBufQue.at(6+i*3)>>j)&0x01;
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):							//printf("test%d \t",Status::getinstance()->recordpositionheld[recordclass][i][bitnum-1-j]);
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):							Status::getinstance()->recordpositionheld[recordclass][i][2*bitnum-1-(j-8)]=(_globalDate->rcvBufQue.at(6+i*3+1)>>(j-bitnum))&0x01;
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):							Status::getinstance()->recordpositionheld[recordclass][i][3*bitnum-1-(j-16)]=(_globalDate->rcvBufQue.at(6+i*3+2)>>(j-2*bitnum))&0x01;
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):							//printf("test_%d \t",Status::getinstance()->recordpositionheld[recordclass][i][3*bitnum-1-(j-24)]);
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);					
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):						spBuf->sendBuff[6+k*3+0]|=Status::getinstance()->recordpositionheld[classid][k][i]<<i;
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):						spBuf->sendBuff[6+k*3+1]|=Status::getinstance()->recordpositionheld[classid][k][i]<<(i-8);
-CPortBase.cpp (z:\home\wj\cuda-workspace\360pano\src\com):						spBuf->sendBuff[6+k*3+2]|=Status::getinstance()->recordpositionheld[classid][k][i]<<(i-16);
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	ConfigFile::getinstance()->getdataheldrecord(Status::getinstance()->recordpositionheld);
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);					
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):							printf("%d \t",Status::getinstance()->recordpositionheld[recordclass][i][j]);
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	RecordManager::getinstance()->setdataheldrecord(Status::getinstance()->recordpositionheld);
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	ConfigFile::getinstance()->setdataheldrecord(Status::getinstance()->recordpositionheld);
-Status.hpp (z:\home\wj\cuda-workspace\360pano\src\status):	int recordpositionheld[HELDNUM][HELDWEEK][HELDHOUR];
-Videorecord.cpp (z:\home\wj\cuda-workspace\360pano\src\record):	timeenableweek=recordpositionheld[0][week][hour];
-Videorecord.cpp (z:\home\wj\cuda-workspace\360pano\src\record):	movenableweek=recordpositionheld[1][week][hour];
-Videorecord.cpp (z:\home\wj\cuda-workspace\360pano\src\record)://				recordpositionheld[EVENTRECORD][WEEKRECORD][HOURSRECORD];
-Videorecord.hpp (z:\home\wj\cuda-workspace\360pano\src\record):							recordpositionheld[i][j][k]=a[i][j][k];
-Videorecord.hpp (z:\home\wj\cuda-workspace\360pano\src\record):		int recordpositionheld[EVENTRECORD][WEEKRECORD][HOURSRECORD];
+---- getempty Matches (6 in 6 files) ----
+ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):				outputif=(OSA_BufInfo *)queuebuf->getempty(Queue::TOPANOSTICH,0,OSA_TIMEOUT_NONE);
+Queuebuffer.cpp (z:\home\wj\cuda-workspace\360pano\src\buffer):void *Queue::getempty(int index,int chid ,int forever)
+Queuebuffer.hpp (z:\home\wj\cuda-workspace\360pano\src\buffer):		void *getempty(int index,int chid ,int forever);
+Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	OSA_BufInfo *info=(OSA_BufInfo *)queue->getempty(Queue::DISPALYTORTP, 0,OSA_TIMEOUT_NONE);
+StichAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\stich):		OSA_BufInfo *outputif=(OSA_BufInfo *)queuebuf->getempty(Queue::FROMEPANOSTICH,0,OSA_TIMEOUT_NONE);
+Videoload.cpp (z:\home\wj\cuda-workspace\360pano\src\record):	  bufinfo=(OSA_BufInfo*)Queue::getinstance()->getempty(Queue::VIDEOLOADRTSP,0,OSA_TIMEOUT_NONE);

@@ -1,6 +1,6 @@
 #include"videoload.hpp"
 #include<stdio.h>
-
+#include"Queuebuffer.hpp"
 
 VideoLoad* VideoLoad::instance=NULL;
 #define DIRRECTDIR  "/home/ubuntu/calib/video/"
@@ -182,6 +182,66 @@ void VideoLoad::appsink_eos(GstAppSink * appsink, gpointer user_data)
    // eos = 1;
 //    g_main_loop_quit (hpipe->loop);
 }
+#define MAX(a ,b) ((a > b) ? a : b)
+#define MIN(a ,b) ((a < b) ? a : b)
+#define CLAP(a) (MAX((MIN(a, 0xff)), 0x00)) 
+void NV212BGR( unsigned char *imgY, unsigned char *imgDst,int width, int height )
+{
+	int w, h;
+	int shift = 14, offset = 8192;
+	int C0 = 22987, C1 = -11698, C2 = -5636, C3 = 29049;
+ 
+	int y1,y2,u1,v1;
+ 
+	unsigned char * pY1 = imgY;
+	unsigned char * pY2 = imgY+width;
+	unsigned char * pUV = imgY+width*height;
+	
+	unsigned char * pD1 = imgDst;
+	unsigned char * pD2 = imgDst+width*3;
+ 
+	for ( h = 0; h < height; h +=2 )
+	{
+		for ( w = 0; w < width; w +=2 )
+		{
+			v1 = *pUV-128;
+			pUV++;
+			u1 = *pUV-128;
+			pUV++;
+ 
+			
+			y1 = *pY1;
+			y2 = *pY2;
+ 
+			*pD1++ = CLAP(y1+((u1 * C3 + offset) >> shift));
+			*pD1++ = CLAP(y1+((u1 * C2 + v1 * C1 + offset) >> shift));
+			*pD1++ = CLAP(y1+((v1 * C0 + offset) >> shift));
+			*pD2++ = CLAP(y2+((u1 * C3 + offset) >> shift));
+			*pD2++ = CLAP(y2+((u1 * C2 + v1 * C1 + offset) >> shift));
+			*pD2++ = CLAP(y2+((v1 * C0 + offset) >> shift));
+ 
+			pY1++;
+			pY2++;
+			y1 = *pY1;
+			y2 = *pY2;
+ 
+			*pD1++ = CLAP(y1+((u1 * C3 + offset) >> shift));
+			*pD1++ = CLAP(y1+((u1 * C2 + v1 * C1 + offset) >> shift));
+			*pD1++ = CLAP(y1+((v1 * C0 + offset) >> shift));
+			*pD2++ = CLAP(y2+((u1 * C3 + offset) >> shift));
+			*pD2++ = CLAP(y2+((u1 * C2 + v1 * C1 + offset) >> shift));
+			*pD2++ = CLAP(y2+((v1 * C0 + offset) >> shift));
+			pY1++;
+			pY2++;
+ 
+		}
+		pY1 += width;
+		pY2 += width;
+		pD1 += 3*width;
+		pD2 += 3*width;
+ 
+	}
+}
 
 GstFlowReturn VideoLoad::new_buffer(GstAppSink *appsink, gpointer user_data)
 {
@@ -190,7 +250,8 @@ GstFlowReturn VideoLoad::new_buffer(GstAppSink *appsink, gpointer user_data)
 	cv::Mat showrgb;
     g_signal_emit_by_name (appsink, "pull-sample", &sample,NULL);
 	VideoLoadData loaddata;
-  //  printf("****************************\n");
+	OSA_BufInfo *bufinfo=NULL;
+   // printf("****************************\n");
     if (sample)
     {
         GstBuffer *buffer = NULL;
@@ -205,20 +266,32 @@ GstFlowReturn VideoLoad::new_buffer(GstAppSink *appsink, gpointer user_data)
         gst_caps_get_structure (caps, 0);
         buffer = gst_sample_get_buffer (sample);
         gst_buffer_map (buffer, &map, GST_MAP_READ);
-        memcpy(instance->rtspdata,map.data,map.size);
+	  bufinfo=(OSA_BufInfo*)(Queue::getinstance()->getempty(Queue::VIDEOLOADRTSP,0,OSA_TIMEOUT_NONE));
+	  if(bufinfo!=NULL)
+	  	{
+			
+				memcpy(bufinfo->virtAddr,map.data,map.size);
+				//printf("*****************VIDEOLOADRTSP++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+				Queue::getinstance()->putfull(Queue::VIDEOLOADRTSP,0,bufinfo);
+	  	}
+       
 		
-        printf("map.size = %lu\n", map.size);
+      //  printf("map.size = %lu\n", map.size);
         //cv::Mat frame_in(1920, 1080, CV_8UC3);
+        static Uint32 pretime1=0;
+	Uint32 currenttime=OSA_getCurTimeInMsec();
+	//if(currenttime-pretime>50||currenttime-pretime<30)
+		{
+			;
+			//OSA_printf("********lost %d ms %s timeoffset=%d ms**********\n", OSA_getCurTimeInMsec(), __func__,currenttime-pretime1);
+		}
+	
+	pretime1=currenttime;
         
-        show = Mat(1080, 1920, CV_8UC2, instance->rtspdata);
-	 showrgb = Mat(1080, 1920, CV_8UC3, instance->rtspdatargb);
-        cvtColor(show,showrgb,cv::COLOR_YUV420p2RGB);
-	//rtspdatelen=map.size;
-      	if(instance->callfun!=NULL)
-	{
-		if(RTSPURL)
-		instance->callfun(instance->rtspdatargb,&loaddata);
-	}
+       // show = Mat(1080, 1920, CV_8UC2, instance->rtspdata);
+	// showrgb = Mat(1080, 1920, CV_8UC3, instance->rtspdatargb);
+      //  cvtColor(show,showrgb,cv::COLOR_YUV2BGR_NV12);
+   
 
         gst_buffer_unmap(buffer, &map);
 
@@ -247,13 +320,17 @@ void VideoLoad::initgstreamerrtsp()
     launch_stream
 //    << "nvcamerasrc ! "
 //    << "video/x-raw(memory:NVMM), width="<< w <<", height="<< h <<", framerate=30/1 ! " 
-    << "rtspsrc location=rtsp://192.168.1.188:8554/test.264 latency=0 ! "
+    <<"rtspsrc location=rtsp://admin:abc12345@192.168.1.26:554/h264/ch0/main/av_stream latency=0 !"
+   // << "rtspsrc location=rtsp://192.168.1.188:8554/test.264 latency=0 ! "
     //<< "filesrc 1.avi ! decodebin ! "
     << "decodebin ! "
     << "nvvidconv ! "
-    << "video/x-raw, format=I420, width="<< w <<", height="<< h <<" ! "
+   // <<"video/x-raw, format=(string)RGB !"
+    << "video/x-raw, format=NV12, width="<< w <<", height="<< h <<" ! "
+  // <<"video/x-raw, format=NV12 !"
    // <<" videoconvert  ! "
-  //  <<"video/x-raw, format=(string)BGR !"
+  
+   // <<"video/x-raw, format=(string)NV12 !"
     << "appsink name=mysink ";
 
     launch_string = launch_stream.str();
@@ -290,6 +367,7 @@ void VideoLoad::create()
 {
 	record=Mat(1080,1920,CV_8UC3,cv::Scalar(0));
 	MAIN_threadRecvCreate();
+	MAIN_threadRecvCreatedata();
 	OSA_semCreate(&loadsem,1,0);
 	initgstreamerrtsp();
 	//initgstreamer();
@@ -299,6 +377,7 @@ void VideoLoad::create()
 void VideoLoad::destory()
 {
 	MAIN_threadRecvDestroy();
+	MAIN_threadRecvDestroydata();
 	OSA_semDelete(&loadsem);
 }
 
@@ -345,6 +424,8 @@ void VideoLoad::main_Recv_func()
 		//OSA_waitMsecs(30);
 		OSA_semWait(&loadsem,OSA_TIMEOUT_FOREVER);
 		//printf("********%s bengin******\n",__func__);
+		if(RTSPURL)
+			return;
 		if(getreadnewfile())
 			{
 				setreadnewfile(0);
@@ -435,7 +516,35 @@ void VideoLoad::main_Recv_func()
 	}
 
 }
+void VideoLoad::main_Recv_funcdata()
+{
+	
+	OSA_printf("+++++++++++++%s: Main Proc Tsk Is Entering...++++++++++++++++++\n",__func__);
+	unsigned char *data=NULL;
+	int angle=0;
+	int status;
+	//memset(&loaddata,0,sizeof(VideoLoadData));
+	static double gyrodata=0;
+	OSA_BufInfo *bufinfo;
+	VideoLoadData loaddata;
+	while(mainRecvThrObjdata.exitProcThread ==  false)
+		{
+			//OSA_semWait(&loadsem,OSA_TIMEOUT_FOREVER);
+			bufinfo=(OSA_BufInfo*)Queue::getinstance()->getfull(Queue::VIDEOLOADRTSP,0,OSA_TIMEOUT_FOREVER);
+			unsigned char *data=(unsigned char *)bufinfo->virtAddr;
+			//printf("(((((((((((((((((((((((((((((((((((((((((((((\n");
+			 NV212BGR(data,instance->rtspdatargb,1920,1080);
+			//rtspdatelen=map.size;
+		      	if(instance->callfun!=NULL)
+			{
+				//if(RTSPURL)
+				instance->callfun(instance->rtspdatargb,&loaddata);
+			}
 
+
+			Queue::getinstance()->putempty(Queue::VIDEOLOADRTSP, 0, bufinfo);
+		}
+}
 
 int VideoLoad::MAIN_threadRecvCreate(void)
 {
@@ -456,7 +565,24 @@ int VideoLoad::MAIN_threadRecvCreate(void)
 	return iRet;
 }
 
+int VideoLoad::MAIN_threadRecvCreatedata(void)
+{
+	int iRet = OSA_SOK;
+	iRet = OSA_semCreate(&mainRecvThrObjdata.procNotifySem ,1,0) ;
+	OSA_assert(iRet == OSA_SOK);
 
+
+	mainRecvThrObjdata.exitProcThread = false;
+
+	mainRecvThrObjdata.initFlag = true;
+
+	mainRecvThrObjdata.pParent = (void*)this;
+
+	iRet = OSA_thrCreate(&mainRecvThrObjdata.thrHandleProc, mainRecvTskdata, 0, 0, &mainRecvThrObjdata);
+	
+
+	return iRet;
+}
 int VideoLoad::MAIN_threadRecvDestroy(void)
 {
 	int iRet = OSA_SOK;
@@ -471,7 +597,20 @@ int VideoLoad::MAIN_threadRecvDestroy(void)
 
 	return iRet;
 }
+int VideoLoad::MAIN_threadRecvDestroydata(void)
+{
+	int iRet = OSA_SOK;
 
+	mainRecvThrObjdata.exitProcThread = true;
+	OSA_semSignal(&mainRecvThrObjdata.procNotifySem);
+
+	iRet = OSA_thrDelete(&mainRecvThrObjdata.thrHandleProc);
+
+	mainRecvThrObjdata.initFlag = false;
+	OSA_semDelete(&mainRecvThrObjdata.procNotifySem);
+
+	return iRet;
+}
 VideoLoad *VideoLoad::getinstance()
 {
 	if(instance==NULL)

@@ -317,9 +317,12 @@ int main_pano(int argc, char **argv)
 	CGlobalDate::Instance();
 	config=Config::getinstance();
 	config->loadconfig();
+
+	Queue::getinstance()->create();
+	
 	CMessage::getInstance()->MSGDRIV_create();
 	ConfigFile::getinstance()->create();
-	Queue::getinstance()->create();
+	
 	DxTimer::getinstance()->create();
 	DetectAlg::getinstance()->create();
 	StichAlg::getinstance()->create();

@@ -59,11 +59,13 @@ public:
 		STOREGO,
 		STORESAVE,
 		
+		
 	}STOREMOD;
 	typedef enum {
 		
 		STOREERASENUM,
 		STORESAVENUM,
+		STOREDEFAULT,
 		
 	}STOREMODNUM;
 

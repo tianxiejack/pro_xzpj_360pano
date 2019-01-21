@@ -2213,7 +2213,7 @@ void Render::Drawzero()
 			camrect.width=viewcamera[i].leftdownrect.width;
 			camrect.height=viewcamera[i].leftdownrect.height;
 			camrect.y=renderheight-(viewcamera[i].leftdownrect.y+viewcamera[i].leftdownrect.height);
-			printf("the x=%d y=%d w=%d h=%d mousey=%d mousex=%d \n",camrect.x,camrect.y,camrect.width,camrect.height,mousey,mousex);
+			//printf("the x=%d y=%d w=%d h=%d mousey=%d mousex=%d \n",camrect.x,camrect.y,camrect.width,camrect.height,mousey,mousex);
 			if(mousey>camrect.y&&mousey<camrect.y+camrect.height)
 				{
 					

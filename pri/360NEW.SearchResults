@@ -1,7 +1,30 @@
----- getempty Matches (6 in 6 files) ----
-ImageProcess.cpp (z:\home\wj\cuda-workspace\360pano\src):				outputif=(OSA_BufInfo *)queuebuf->getempty(Queue::TOPANOSTICH,0,OSA_TIMEOUT_NONE);
-Queuebuffer.cpp (z:\home\wj\cuda-workspace\360pano\src\buffer):void *Queue::getempty(int index,int chid ,int forever)
-Queuebuffer.hpp (z:\home\wj\cuda-workspace\360pano\src\buffer):		void *getempty(int index,int chid ,int forever);
-Render.cpp (z:\home\wj\cuda-workspace\360pano\src):	OSA_BufInfo *info=(OSA_BufInfo *)queue->getempty(Queue::DISPALYTORTP, 0,OSA_TIMEOUT_NONE);
-StichAlg.cpp (z:\home\wj\cuda-workspace\360pano\src\stich):		OSA_BufInfo *outputif=(OSA_BufInfo *)queuebuf->getempty(Queue::FROMEPANOSTICH,0,OSA_TIMEOUT_NONE);
-Videoload.cpp (z:\home\wj\cuda-workspace\360pano\src\record):	  bufinfo=(OSA_BufInfo*)Queue::getinstance()->getempty(Queue::VIDEOLOADRTSP,0,OSA_TIMEOUT_NONE);
+---- store Matches (32 in 11 files) ----
+H264VideoStreamFramer.cpp (z:\home\wj\cuda-workspace\360pano\src\live555\livemedia):    // Live555 will create and delete this class object many times. if you store it somewhere
+Inet.c (z:\home\wj\cuda-workspace\360pano\src\live555\groupsock): * store the type of the R.N.G.  Also, we remember the last location, since
+Main_pano.cpp (z:\home\wj\cuda-workspace\360pano\src):#include"store.hpp"
+MediaSession.cpp (z:\home\wj\cuda-workspace\360pano\src\live555\livemedia):      // and over again, so we store bad sockets in a table, and delete them all when we're done.
+MOG3.cpp (z:\home\wj\cuda-workspace\360pano\src\mov\src):    // for each gaussian mixture of each pixel bg model we store ...
+MP3ADUinterleaving.cpp (z:\home\wj\cuda-workspace\360pano\src\live555\livemedia):  // Use fDescriptors[MAX_CYCLE_SIZE] to store the incoming frame,
+MultiFramedRTPSource.cpp (z:\home\wj\cuda-workspace\360pano\src\live555\livemedia):    // Fill in the rest of the packet descriptor, and store it:
+Store.cpp (z:\home\wj\cuda-workspace\360pano\src\store):#include"store.hpp"
+Store.cpp (z:\home\wj\cuda-workspace\360pano\src\store)://#define DIRRECTDIR  "/home/ubuntu/calib/store.xml"
+Store.cpp (z:\home\wj\cuda-workspace\360pano\src\store):#define DIRRECTDIR "/home/ubuntu/config/store.xml"
+Store.cpp (z:\home\wj\cuda-workspace\360pano\src\store):	store.push_back(parm);
+Store.cpp (z:\home\wj\cuda-workspace\360pano\src\store):	//iter=store.begin()+4;//+id;
+Store.cpp (z:\home\wj\cuda-workspace\360pano\src\store):	for(iter=store.begin();iter!=store.end();iter++)
+Store.cpp (z:\home\wj\cuda-workspace\360pano\src\store):	if(count>=store.size())
+Store.cpp (z:\home\wj\cuda-workspace\360pano\src\store):	store.erase(iter);
+Store.cpp (z:\home\wj\cuda-workspace\360pano\src\store):	store.clear();
+Store.cpp (z:\home\wj\cuda-workspace\360pano\src\store):					store.push_back(parm);
+Store.cpp (z:\home\wj\cuda-workspace\360pano\src\store):	for(iter=store.begin();iter!=store.end();iter++)
+Store.cpp (z:\home\wj\cuda-workspace\360pano\src\store):	store.clear();
+Store.cpp (z:\home\wj\cuda-workspace\360pano\src\store):	//iter=store.begin()+4;//+id;
+Store.cpp (z:\home\wj\cuda-workspace\360pano\src\store):	for(iter=store.begin();iter!=store.end();iter++)
+Store.cpp (z:\home\wj\cuda-workspace\360pano\src\store):	if(count>=store.size())
+Store.cpp (z:\home\wj\cuda-workspace\360pano\src\store):	//store.erase(iter);
+Store.hpp (z:\home\wj\cuda-workspace\360pano\src\store): * store.hpp
+Store.hpp (z:\home\wj\cuda-workspace\360pano\src\store):		list<storepam> store;
+Vibe-background-sequential.c (z:\home\wj\cuda-workspace\360pano\src\mov\src):4. Pre-compute all the random numbers and decision + store the results in buffers + use relative offsets
+Vibe-background-sequential.c (z:\home\wj\cuda-workspace\360pano\src\mov\src):So, instead of doing one random test per pixel, it is possible to pre-store the results of this random tests. 
+Vibe-background-sequential.h (z:\home\wj\cuda-workspace\360pano\src\mov\inc): *   - they classify the pixels *image_data using the provided model and store
+Vibe-background-sequential.h (z:\home\wj\cuda-workspace\360pano\src\mov\inc): *   - they classify the pixels *image_data using the provided model and store

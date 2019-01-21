@@ -310,10 +310,12 @@ void CPortBase::plantformconfig()
  	};
 void CPortBase::recordconfig()
 	{
+		
 		int configchange=1;
+		
 		int recordclass=_globalDate->rcvBufQue.at(5);
-
 		int bitnum=8;
+		
 		for(int i=0;i<HELDWEEK;i++)
 			{
 				for(int j=0;j<HELDHOUR;j++)
@@ -321,22 +323,22 @@ void CPortBase::recordconfig()
 						//printf("%d \t",_globalDate->rcvBufQue.at(6+i*3));
 						if(j<8)
 							{
-							Status::getinstance()->recordpositionheld[recordclass][i][bitnum-1-j]=(_globalDate->rcvBufQue.at(6+i*3)>>j)&0x01;
+								Status::getinstance()->recordpositionheld[recordclass][i][bitnum-1-j]=(_globalDate->rcvBufQue.at(6+i*3)>>j)&0x01;
 							//printf("test%d \t",Status::getinstance()->recordpositionheld[recordclass][i][bitnum-1-j]);
 							}
 						else if(j<16)
-							Status::getinstance()->recordpositionheld[recordclass][i][2*bitnum-1-(j-8)]=(_globalDate->rcvBufQue.at(6+i*3+1)>>(j-bitnum))&0x01;
+								Status::getinstance()->recordpositionheld[recordclass][i][2*bitnum-1-(j-8)]=(_globalDate->rcvBufQue.at(6+i*3+1)>>(j-bitnum))&0x01;
 						else if(j<24)
 							{
-							Status::getinstance()->recordpositionheld[recordclass][i][3*bitnum-1-(j-16)]=(_globalDate->rcvBufQue.at(6+i*3+2)>>(j-2*bitnum))&0x01;
+								Status::getinstance()->recordpositionheld[recordclass][i][3*bitnum-1-(j-16)]=(_globalDate->rcvBufQue.at(6+i*3+2)>>(j-2*bitnum))&0x01;
 							//printf("test_%d \t",Status::getinstance()->recordpositionheld[recordclass][i][3*bitnum-1-(j-24)]);
 							}
 					}
-				//printf("\n");
 
 			}
 
-		/*
+		
+		
 		printf("the time\n");
 		for(int i=0;i<HELDWEEK;i++)
 			{
@@ -352,7 +354,10 @@ void CPortBase::recordconfig()
 				printf("\n");
 
 			}
-
+		
+		
+			
+		/*
 		printf("the mov\n");
 		for(int i=0;i<HELDWEEK;i++)
 			{
@@ -370,11 +375,7 @@ void CPortBase::recordconfig()
 				printf("\n");
 
 			}
-
-		
-		*/
-
-		
+			*/
 		if(configchange)
 			pM->MSGDRIV_send(MSGID_EXT_INPUT_RecordConfig,0);
 	}
@@ -556,8 +557,17 @@ void CPortBase::recordconfig()
 					CGlobalDate::Instance()->feedback=ACK_plantformconfig;
 					OSA_semSignal(&CGlobalDate::Instance()->m_semHndl_socket);	
 					break;
+
+				case 1:
+					CGlobalDate::Instance()->feedback=ACK_sensorconfig;
+					OSA_semSignal(&CGlobalDate::Instance()->m_semHndl_socket);	
+					break;
 				case 3:
 					CGlobalDate::Instance()->feedback=ACK_recordconfig;
+					OSA_semSignal(&CGlobalDate::Instance()->m_semHndl_socket);	
+					break;
+				case 4:
+					CGlobalDate::Instance()->feedback=ACK_mvconfig;
 					OSA_semSignal(&CGlobalDate::Instance()->m_semHndl_socket);	
 					break;
 				case 10:
@@ -804,6 +814,7 @@ void CPortBase::StoreMode(int mod)
 				pM->MSGDRIV_send(MSGID_EXT_INPUT_StoreMod, (void *)(Status::STORESAVE));
 			}
 		
+		
 
 	};
 
@@ -949,13 +960,13 @@ int CPortBase::prcRcvFrameBufQue(int method)
                 break;
             case 0x41:
             		Preset_Mtd();
-            	break;
+            		break;
             case 0x42:
                	 workMode();
-            	break;
+            		break;
             case 0x43:
             		targetCaptureMode();
-            	break;
+            		break;
 		case 0x60:
 			playercontrl();
 			break;
@@ -1667,17 +1678,40 @@ void  CPortBase:: ackrecordconfig(sendInfo * spBuf,int classid)
 		{
 			spBuf->sendBuff[6+k*3+0]=0;
 			spBuf->sendBuff[6+k*3+1]=0;
+			spBuf->sendBuff[6+k*3+2]=0;
 			for(int i=0;i<24;i++)
 				{
 					if(i<8)
-						spBuf->sendBuff[6+k*3+0]|=Status::getinstance()->recordpositionheld[classid][k][i]<<i;
+						spBuf->sendBuff[6+k*3+0]|=Status::getinstance()->recordpositionheld[classid][k][i]<<(7-i);
 					else if(i<16)
-						spBuf->sendBuff[6+k*3+1]|=Status::getinstance()->recordpositionheld[classid][k][i]<<(i-8);
+						spBuf->sendBuff[6+k*3+1]|=Status::getinstance()->recordpositionheld[classid][k][i]<<(15-i);
 					else if(i<24)
-						spBuf->sendBuff[6+k*3+2]|=Status::getinstance()->recordpositionheld[classid][k][i]<<(i-16);
+						spBuf->sendBuff[6+k*3+2]|=Status::getinstance()->recordpositionheld[classid][k][i]<<(23-i);
 				}
 
 		}
+	
+	printf("the classid=%d\n",classid);
+	for(int i=0;i<HELDWEEK;i++)
+		{
+			for(int j=0;j<HELDHOUR;j++)
+				{
+					if(j<8)
+						printf("%d \t",Status::getinstance()->recordpositionheld[classid][i][j]);
+					else if(j<16)
+						printf("%d \t",Status::getinstance()->recordpositionheld[classid][i][j]);
+					else if(j<24)
+						printf("%d \t",Status::getinstance()->recordpositionheld[classid][i][j]);					
+				}
+			printf("\n");
+
+		}
+	for(int i=0;i<21;i++)
+		{
+			printf("%d \t",spBuf->sendBuff[6+i]);
+
+		}
+	printf("\n");
 	
 	//spBuf->sendBuff[5]= (u_int8_t) (_globalDate->mainProStat[ACK_config_Rblock]&0xff);
 	sumCheck=sendCheck_sum(infosize+3,spBuf->sendBuff+1);

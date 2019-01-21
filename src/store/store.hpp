@@ -42,6 +42,8 @@ class Store{
 		void save();
 		void reload();
 
+		void erase();
+
 		void gostore(int num);
 
 		void registorfun();
